@@ -11,7 +11,14 @@ function gsreg(depvar::Array, indepvars::Array; noconstant::Bool=NOCONSTANT_DEFA
 end
 
 function gsreg(equation::String, data::DataFrame; noconstant::Bool=NOCONSTANT_DEFAULT)
-    return GSReg.gsreg([String(ss) for ss in split(replace(equation, r"\s+|\s+$/g", ","), ",")], data, noconstant=noconstant)
+    if contains(equation, "~")
+        equation = replace(equation, r"\s+|\s+$/g", "")
+        dep_indep = split(equation, "~")
+        equation = [String(ss) for ss in vcat(dep_indep[1], split(dep_indep[2], "+"))]
+    else
+        equation = [String(ss) for ss in split(replace(equation, r"\s+|\s+$/g", ","), ",")]
+    end
+    return GSReg.gsreg(equation, data, noconstant=noconstant)
 end
 
 function gsreg(equation::Array{String}, data::DataFrame; noconstant::Bool=NOCONSTANT_DEFAULT)

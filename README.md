@@ -35,13 +35,22 @@ result = GSReg.gsreg([:y, :x1, :x2, :x3], data, false)
 
 ```julia
 
-result = GSReg.gsreg(["y", "x1", "x2", "x3"], data, false)
+# Stata like
 result = GSReg.gsreg("y x1 x2 x3"], data, false)
+
+# Stata like with comma
 result = GSReg.gsreg("y,x1,x2,x3"], data, false)
+
+# R like
+result = GSReg.gsreg(["y ~ x1 + x2 + x3"], data, false)
+
+# Array of strings
+result = GSReg.gsreg(["y", "x1", "x2", "x3"], data, false)
 
 # Also, with wildcard
 result = GSReg.gsreg("y x*"], data, false)
 result = GSReg.gsreg("y x1 x*"], data, false)
+result = GSReg.gsreg("y ~ x*"], data, false)
 ```
 
 ## Credits
