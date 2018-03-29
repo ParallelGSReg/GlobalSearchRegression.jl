@@ -1,6 +1,6 @@
 The GSReg.jl package is licensed under the MIT "Expat" License:
 
-> Copyright (c) 2018: adanmauri.
+> Copyright (c) 2018 Demian Panigo, Valentín Mari, Adán Mauri Ungaro
 >
 > Permission is hereby granted, free of charge, to any person obtaining a copy
 > of this software and associated documentation files (the "Software"), to deal
