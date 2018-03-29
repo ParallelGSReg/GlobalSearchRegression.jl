@@ -12,6 +12,8 @@
 GSReg.gsreg(equation::String, data::DataFrame; noconstant::Bool=true)
 GSReg.gsreg(equation::Array{String}, data::DataFrame; noconstant::Bool=true)
 GSReg.gsreg(equation::Array{Symbol}, data::DataFrame; noconstant::Bool=true)
+GSReg.gsreg(equation::Array{Symbol}; data::DataFrame, noconstant::Bool=true)
+
 ```
 
 ## Basic usage
