@@ -36,15 +36,14 @@ result = GSReg.gsreg([:y, :x1, :x2, :x3], data; noconstant=true)
 ```julia
 
 # Stata like
-result = GSReg.gsreg("y x1 x2 x3"], data)
+result = GSReg.gsreg("y x1 x2 x3", data)
 
 # Stata like with comma
-result = GSReg.gsreg("y,x1,x2,x3"], data)
+result = GSReg.gsreg("y,x1,x2,x3", data)
 
 # R like
-result = GSReg.gsreg(["y ~ x1 + x2 + x3"], data)
-result = GSReg.gsreg(["y ~ x1 + x2 + x3"], data=data)
-
+result = GSReg.gsreg("y ~ x1 + x2 + x3", data)
+result = GSReg.gsreg("y ~ x1 + x2 + x3", data=data)
 
 # Array of strings
 result = GSReg.gsreg(["y", "x1", "x2", "x3"], data)
