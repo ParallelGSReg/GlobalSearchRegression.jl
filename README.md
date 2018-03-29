@@ -9,9 +9,9 @@
 ## Syntax
 
 ```julia
-GSReg.gsreg(equation::String, data::DataFrame, noconstant::Bool=true)
-GSReg.gsreg(equation::Array{String}, data::DataFrame, noconstant::Bool=true)
-GSReg.gsreg(equation::Array{Symbol}, data::DataFrame, noconstant::Bool=true)
+GSReg.gsreg(equation::String, data::DataFrame; noconstant::Bool=true)
+GSReg.gsreg(equation::Array{String}, data::DataFrame; noconstant::Bool=true)
+GSReg.gsreg(equation::Array{Symbol}, data::DataFrame; noconstant::Bool=true)
 ```
 
 ## Basic usage
@@ -28,7 +28,7 @@ To perform a regression analysis:
 using CSV
 data = CSV.read("data.csv")
 
-result = GSReg.gsreg([:y, :x1, :x2, :x3], data, false)
+result = GSReg.gsreg([:y, :x1, :x2, :x3], data; noconstant=true)
 ```
 
 ## Other usage methods:
@@ -36,21 +36,23 @@ result = GSReg.gsreg([:y, :x1, :x2, :x3], data, false)
 ```julia
 
 # Stata like
-result = GSReg.gsreg("y x1 x2 x3"], data, false)
+result = GSReg.gsreg("y x1 x2 x3"], data)
 
 # Stata like with comma
-result = GSReg.gsreg("y,x1,x2,x3"], data, false)
+result = GSReg.gsreg("y,x1,x2,x3"], data)
 
 # R like
-result = GSReg.gsreg(["y ~ x1 + x2 + x3"], data, false)
+result = GSReg.gsreg(["y ~ x1 + x2 + x3"], data)
+result = GSReg.gsreg(["y ~ x1 + x2 + x3"], data=data)
+
 
 # Array of strings
-result = GSReg.gsreg(["y", "x1", "x2", "x3"], data, false)
+result = GSReg.gsreg(["y", "x1", "x2", "x3"], data)
 
 # Also, with wildcard
-result = GSReg.gsreg("y x*"], data, false)
-result = GSReg.gsreg("y x1 x*"], data, false)
-result = GSReg.gsreg("y ~ x*"], data, false)
+result = GSReg.gsreg("y x*"], data)
+result = GSReg.gsreg("y x1 x*"], data)
+result = GSReg.gsreg("y ~ x*"], data)
 ```
 
 ## Credits
