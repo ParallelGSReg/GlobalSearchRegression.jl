@@ -51,11 +51,11 @@ result = GSReg.gsreg("y ~ x1 + x2 + x3", data=data)
 result = GSReg.gsreg(["y", "x1", "x2", "x3"], data)
 
 # Also, with wildcard
-result = GSReg.gsreg("y x*"], data)
-result = GSReg.gsreg("y x1 x*"], data)
-result = GSReg.gsreg("y ~ x*"], data)
+result = GSReg.gsreg("y x*", data)
+result = GSReg.gsreg("y x1 x*", data)
+result = GSReg.gsreg("y ~ x*", data)
 ```
 
 ## Credits
 
-The GSReg module, which perform regression analysis, was written primarily by [Demián Panigo](https://github.com/dpanigo/), [Valentín Mari](https://github.com/vmari/), [Adán Mauri Ungaro](https://github.com/adanmauri/). The GSReg module was inpired by GSReg for Stata, written by Pablo Gluzmann and [Demián Panigo](https://github.com/dpanigo/).
+The GSReg module, which perform regression analysis, was written primarily by [Demian Panigo](https://github.com/dpanigo/), [Valentín Mari](https://github.com/vmari/) and [Adán Mauri Ungaro](https://github.com/adanmauri/). The GSReg module was inpired by GSReg for Stata, written by Pablo Gluzmann and [Demian Panigo](https://github.com/dpanigo/).
