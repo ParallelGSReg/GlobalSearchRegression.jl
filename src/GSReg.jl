@@ -73,9 +73,9 @@ function gsreg(depvar::Array, indepvars::Array; noconstant::Bool=NOCONSTANT_DEFA
     return results
 end
 
-#function gsreg(equation::String; data::DataFrame=DataFrame(), noconstant::Bool=NOCONSTANT_DEFAULT)
-#    return gsreg(equation, data, noconstant=noconstant)
-#end
+function gsreg(equation::String; data::DataFrame=DataFrame(), noconstant::Bool=NOCONSTANT_DEFAULT)
+    return gsreg(equation, data, noconstant=noconstant)
+end
 
 function gsreg(equation::String, data::DataFrame; noconstant::Bool=NOCONSTANT_DEFAULT)
     if contains(equation, "~")
@@ -104,7 +104,7 @@ end
 function gsreg(equation::Array{Symbol}, data::DataFrame; noconstant::Bool=NOCONSTANT_DEFAULT)
     varnames = map(string, data.colindex.names)
     depvar = Array{Float64}(data[1:end, 1])
-    indepvars = Array{Float64}(data[1:end], equation[2:end])
+    indepvars = Array{Float64}(data[1:end, equation[2:end]])
     return GSReg.gsreg(depvar, indepvars, noconstant=noconstant, varnames=varnames)
 end
 
