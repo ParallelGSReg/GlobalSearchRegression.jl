@@ -2,6 +2,10 @@ module GSReg
 
 using DataFrames
 
+export
+    GSRegSingleResult,
+    gsreg
+
 NOCONSTANT_DEFAULT = false
 VARNAMES_DEFAULT = []
 
@@ -69,7 +73,7 @@ function gsreg(depvar::Array, indepvars::Array; noconstant::Bool=NOCONSTANT_DEFA
     return results
 end
 
-function gsreg(equation::String; data::DataFrame, noconstant::Bool=NOCONSTANT_DEFAULT)
+function gsreg(equation::String; data::DataFrame=DataFrame(), noconstant::Bool=NOCONSTANT_DEFAULT)
     return gsreg(equation, data, noconstant=noconstant)
 end
 
