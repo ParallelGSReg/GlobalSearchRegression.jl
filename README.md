@@ -21,7 +21,7 @@ GSReg.gsreg(equation::Array{Symbol}; data::DataFrame, noconstant::Bool=true)
 To load the module:
 
 ```julia
-include("gsreg.jl")
+Pkg.clone("git://git@github.com:adanmauri/GSReg.jl.git")
 ```
 
 To perform a regression analysis:
