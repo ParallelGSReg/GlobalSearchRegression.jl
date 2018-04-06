@@ -1,4 +1,20 @@
 
+NOCONSTANT_DEFAULT = false
+VARNAMES_DEFAULT = []
+
+function getCols(i)
+    cols = zeros(Int64, 0)
+    f = Int(ceil(log2(i+1)))
+    for flag in base(2, i)
+        if flag == '1'
+            prepend!(cols,f)
+        end
+        f -= 1
+    end
+    return cols
+end
+
+# OUT OF SAMPLE
 function gsreg(equation::String; data::DataFrame=DataFrame(), noconstant::Bool=NOCONSTANT_DEFAULT)
     return gsreg(equation, data, noconstant=noconstant)
 end
@@ -13,7 +29,6 @@ function gsreg(equation::String, data::DataFrame; noconstant::Bool=NOCONSTANT_DE
     end
     return gsreg(equation, data, noconstant=noconstant)
 end
-
 
 function gsreg(equation::Array{String}, data::DataFrame; noconstant::Bool=NOCONSTANT_DEFAULT)
     keys = names(data)
