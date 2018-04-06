@@ -10,6 +10,6 @@ include("other/utils.jl")
 include("types.jl")
 include("interface.jl")
 include("criteria.jl")
-include("main.jl")
+include("core.jl")
 
 end # module GSReg

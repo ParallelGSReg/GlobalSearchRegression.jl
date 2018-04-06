@@ -1,4 +1,4 @@
-function getCols(i)
+function get_cols(i)
     cols = zeros(Int64, 0)
     f = Int(ceil(log2(i+1)))
     for flag in base(2, i)
