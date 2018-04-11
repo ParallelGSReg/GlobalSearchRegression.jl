@@ -1,4 +1,4 @@
-function gsreg(depvar::Array, expvars::Array; intercept::Bool=NOCONSTANT_DEFAULT, varnames::Array{Symbol}=nothing)
+function gsreg(depvar::Array, expvars::Array; intercept::Bool=INTERCEPT_DEFAULT, varnames::Array{Symbol}=nothing)
     expvars_num = size(expvars, 2)
 
     if varnames == nothing
