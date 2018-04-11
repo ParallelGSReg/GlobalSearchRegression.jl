@@ -1,13 +1,15 @@
+function gsreg(equation::String; data::DataFrame=nothing, intercept::Bool=INTERCEPT_DEFAULT,
+               outsample::Int=OUTSAMPLE_DEFAULT, samesample::Bool=SAMESAMPLE_DEFAULT, threads=THREADS_DEFAULT,
+               criteria=CRITERIA_DEFAULT, resultscsv::String=CSV_DEFAULT, csv::String=CSV_DEFAULT)
 
-NOCONSTANT_DEFAULT = false
-VARNAMES_DEFAULT = []
-
-# OUT OF SAMPLE
-function gsreg(equation::String; data::DataFrame=DataFrame(), noconstant::Bool=NOCONSTANT_DEFAULT)
-    return gsreg(equation, data, noconstant=noconstant)
+    return gsreg(equation, data, intercept=intercept, outsample=outsample, samesample=samesample, threads=threads,
+                 criteria=criteria, resultscsv=resultscsv, csv=csv)
 end
 
-function gsreg(equation::String, data::DataFrame; noconstant::Bool=NOCONSTANT_DEFAULT)
+function gsreg(equation::String, data::DataFrame; intercept::Bool=INTERCEPT_DEFAULT,
+               outsample::Int=OUTSAMPLE_DEFAULT, samesample::Bool=SAMESAMPLE_DEFAULT, threads=THREADS_DEFAULT,
+               criteria=CRITERIA_DEFAULT, resultscsv::String=CSV_DEFAULT, csv::String=CSV_DEFAULT)
+
     if contains(equation, "~")
         equation = replace(equation, r"\s+|\s+$/g", "")
         dep_indep = split(equation, "~")
@@ -15,25 +17,83 @@ function gsreg(equation::String, data::DataFrame; noconstant::Bool=NOCONSTANT_DE
     else
         equation = [String(ss) for ss in split(replace(equation, r"\s+|\s+$/g", ","), ",")]
     end
-    return gsreg(equation, data, noconstant=noconstant)
+
+    return gsreg(equation, data, intercept=intercept, outsample=outsample, samesample=samesample, threads=threads,
+                 criteria=criteria, resultscsv=resultscsv, csv=csv)
 end
 
-function gsreg(equation::Array{String}, data::DataFrame; noconstant::Bool=NOCONSTANT_DEFAULT)
+function gsreg(equation::Array{String}, data::DataFrame; intercept::Bool=INTERCEPT_DEFAULT,
+    outsample::Int=OUTSAMPLE_DEFAULT, samesample::Bool=SAMESAMPLE_DEFAULT, threads=THREADS_DEFAULT,
+    criteria=CRITERIA_DEFAULT, resultscsv::String=CSV_DEFAULT, csv::String=CSV_DEFAULT)
+
     keys = names(data)
     n_equation = []
     for e in equation
+        e = replace("*", ".", e)
         if e[end] == '*'
             append!(n_equation, filter!(x->x!=nothing, [String(key)[1:length(e[1:end-1])] == e[1:end-1]?String(key):nothing for key in keys]))
         else
             append!(n_equation, [e])
         end
     end
-    return gsreg(map(Symbol, unique(n_equation)), data, noconstant=noconstant)
+
+    return gsreg(map(Symbol, unique(n_equation)), data, intercept=intercept, outsample=outsample)
 end
 
-function gsreg(equation::Array{Symbol}, data::DataFrame; noconstant::Bool=NOCONSTANT_DEFAULT)
+function gsreg(equation::Array{Symbol}, data::DataFrame; intercept::Bool=INTERCEPT_DEFAULT,
+               outsample::Int=OUTSAMPLE_DEFAULT, samesample::Bool=SAMESAMPLE_DEFAULT, threads=THREADS_DEFAULT,
+               criteria=CRITERIA_DEFAULT, resultscsv::String=CSV_DEFAULT, csv::String=CSV_DEFAULT)
+
+    if outsample != OUTSAMPLE_DEFAULT
+        if outsample < 1
+            error(OUTSAMPLE_LOWER_VALUE)
+        elseif outsample > size(data,1)
+            error(OUTSAMPLE_HIGHER_VALUE)
+        end
+    end
+
+    if criteria == CRITERIA_DEFAULT
+        if outsample != OUTSAMPLE_DEFAULT
+            criteria = CRITERIA_DEFAULT_OUTSAMPLE
+        else
+            criteria = CRITERIA_DEFAULT_INSAMPLE
+        end
+    end 
+    
+    if resultscsv != csv
+        if resultscsv != CSV_DEFAULT && csv != CSV_DEFAULT
+            error(CSV_DUPLICATED_PARAMETERS)
+        end
+    end
+
     varnames = map(Symbol, data.colindex.names)
     depvar = Array{Float64}(data[1:end, 1])
     indepvars = Array{Float64}(data[1:end, equation[2:end]])
-    return gsreg(depvar, indepvars, noconstant=noconstant, varnames=varnames)
+    
+    return gsreg(depvar, indepvars, intercept=intercept, varnames=varnames, outsample=outsample)
 end
+
+"""
+change noconstant to intercept (changing expected values)
+
+GSReg.gsreg( resultscsv = "result" )   # Stata like
+GSReg.gsreg( csv = "result" )          # R like
+GSReg.gsreg( threads = 12 )            # Max nthreads - 1
+GSReg.gsreg( samesample = true )       # Poner un warning
+# result = GSReg.gsreg( "y ~ ." )
+# result = GSReg.gsreg( noconstant = true )
+# result = GSReg.gsreg( outsample = 123 )
+
+Validar CSV
+
+
+TODO: Read about
+
+function (::Core.kwftype(typeof(circle)))(kw::Array, circle, center, radius)
+    options = Any[]
+    color = arg associated with :color, or black if not found
+    fill = arg associated with :fill, or true if not found
+    # push remaining elements of kw into options array
+    #circle#1(color, fill, options, circle, center, radius)
+end
+"""

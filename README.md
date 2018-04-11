@@ -45,10 +45,20 @@ result = GSReg.gsreg("y ~ x1 + x2 + x3", data=data)
 result = GSReg.gsreg(["y", "x1", "x2", "x3"], data)
 
 # Also, with wildcard
+result = GSReg.gsreg("y *", data)
 result = GSReg.gsreg("y x*", data)
-result = GSReg.gsreg("y x1 x*", data)
+result = GSReg.gsreg("y x1 z*", data)
 result = GSReg.gsreg("y ~ x*", data)
+result = GSReg.gsreg("y ~ .", data)
 ```
+
+outsample
+samesample
+threads
+criteria => r2adj
+            rmseout
+
+Go to usage comparison for more information about how to use GSReg with a R and Stata comparison. *TODO*
 
 ## Credits
 

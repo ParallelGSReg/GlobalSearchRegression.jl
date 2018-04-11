@@ -49,3 +49,22 @@ function get_result_header(indepvars_num)
     push!(headers, :sse)
     push!(headers, :R2)
 end
+
+
+function get_available_criteria_by_sample(sample)
+    return get_available_criteria_by("sample", sample)
+end
+
+function get_available_criteria_by_index(index)
+    return get_available_criteria_by("index", index)
+end
+
+function get_available_criteria_by(by, value)
+    criterias = []
+    for k in keys(AVAILABLE_CRITERIA)
+        if value == AVAILABLE_CRITERIA[k][by]
+            push!(criterias, k)
+        end
+    end
+    return criterias
+end

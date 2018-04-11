@@ -1,14 +1,14 @@
-function gsreg(depvar::Array, indepvars::Array; noconstant::Bool=NOCONSTANT_DEFAULT, varnames::Array{Symbol}=nothing)
-    indepvars_num = size(indepvars, 2)
+function gsreg(depvar::Array, expvars::Array; intercept::Bool=NOCONSTANT_DEFAULT, varnames::Array{Symbol}=nothing)
+    expvars_num = size(expvars, 2)
 
     if varnames == nothing
-        varnames = get_default_varnames(indepvars_num)
+        varnames = get_default_varnames(expvars_num)
     end
 
-    num_operations = 2 ^ indepvars_num - 1
+    num_operations = 2 ^ expvars_num - 1
 
-    if !noconstant
-        indepvars = hcat(ones(size(indepvars, 1)), indepvars)
+    if intercept
+        expvars = hcat(ones(size(expvars, 1)), expvars)
         push!(varnames, :_cons)
     end
         
@@ -16,10 +16,10 @@ function gsreg(depvar::Array, indepvars::Array; noconstant::Bool=NOCONSTANT_DEFA
     for i = 1:num_operations
         cols = get_cols(i)
 
-        if !noconstant
-            append!(cols, indepvars_num+1) #add constant
+        if intercept
+            append!(cols, expvars_num + 1) #add constant
         end
-        single_result = GSRegSingleResult(@view(indepvars[1:end, cols]), depvar)
+        single_result = GSRegSingleResult(@view(expvars[1:end, cols]), depvar)
         push!(results, get_partial_row(single_result))
     end
 
