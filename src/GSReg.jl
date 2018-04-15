@@ -38,7 +38,7 @@ AVAILABLE_CRITERIA = Dict(
     "rmsein" => Dict(
         "sample" => "in",
         "index" => "min"
-    ), 
+    ),
     "rmseout" => Dict(
         "sample" => "out",
         "index" => "min"
@@ -49,8 +49,6 @@ include("strings.jl")
 include("types.jl")
 include("other/utils.jl")
 include("interface.jl")
-include("criteria.jl")
 include("core.jl")
 
 end # module GSReg
-    
