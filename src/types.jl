@@ -1,3 +1,25 @@
+POS_NUM_VARS = 3
+RESULT_ARRAY = Dict(
+    "b" => 1,
+    "bstd" => 2,
+    "nobs" => 1,
+    "ncoef" => 2,
+    "sse" => 3,
+    "rmse" => 4,
+    "r2" => 5
+)
+
+get_variable_pos(col, n) = POS_NUM_VARS*col+n
+get_b_pos(col) = get_variable_pos(col, RESULT_ARRAY["b"])
+get_bstd_pos(col) = get_variable_pos(col, RESULT_ARRAY["bstd"])
+
+get_result_pos(cols_size, n) = cols_size * POS_NUM_VARS + n
+get_nobs_pos(cols_size) = get_result_pos(cols_size, RESULT_ARRAY["nobs"])
+get_ncoef_pos(cols_size) = get_result_pos(cols_size, RESULT_ARRAY["ncoef"])
+get_sse_pos(cols_size) = get_result_pos(cols_size, RESULT_ARRAY["sse"])
+get_rmse_pos(cols_size) = get_result_pos(cols_size, RESULT_ARRAY["rmse"])
+get_r2_pos(cols_size) = get_result_pos(cols_size, RESULT_ARRAY["r2"])
+
 function gsreg_single_result!(results, order, detvar, expvars)
     qrf = qrfact(expvars)
     b = qrf \ detvar                    # estimate
@@ -12,18 +34,18 @@ function gsreg_single_result!(results, order, detvar, expvars)
     cols = get_cols(order)
     results[order,1] = order
     for (index, col) in enumerate(cols)
-        results[order, 2col+1] = b[index]
-        results[order, 2col+2] = bstd[index]
+        results[order, get_b_pos(col)] = b[index]
+        results[order, get_bstd_pos(col)] = bstd[index]
         # este sería el T
         # results[order, 2col+3] = b[index] / bstd[index]
     end
 
-    ## calcular size en una function ##
-    results[order,size(cols,2)*3 + 1] = nobs
-    results[order,size(cols,2)*3 + 2] = ncoef
-    results[order,size(cols,2)*3 + 3] = sse
-    results[order,size(cols,2)*3 + 4] = rmse
-    results[order,size(cols,2)*3 + 5] = r2
+    cols_size = size(cols,2)
+    results[order, get_nobs_pos(cols_size)] = nobs
+    results[order, get_ncoef_pos(cols_size)] = ncoef
+    results[order, get_sse_pos(cols_size)] = sse
+    results[order, get_rmse_pos(cols_size)] = rmse
+    results[order, get_r2_pos(cols_size)] = r2
 end
 
 type GSRegResult
