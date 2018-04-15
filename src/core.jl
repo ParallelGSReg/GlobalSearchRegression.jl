@@ -11,7 +11,7 @@ function gsreg(depvar::Array, expvars::Array; intercept::Bool=INTERCEPT_DEFAULT,
         expvars = hcat(ones(size(expvars, 1)), expvars)
         push!(varnames, :_cons)
     end
-        
+
     results = DataFrame()
     for i = 1:num_operations
         cols = get_cols(i)

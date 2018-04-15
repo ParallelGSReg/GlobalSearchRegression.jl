@@ -2,11 +2,13 @@ POS_NUM_VARS = 3
 RESULT_ARRAY = Dict(
     "b" => 1,
     "bstd" => 2,
+
     "nobs" => 1,
     "ncoef" => 2,
     "sse" => 3,
     "rmse" => 4,
     "r2" => 5
+	# Which results are missing?
 )
 
 get_variable_pos(col, n) = POS_NUM_VARS*col+n

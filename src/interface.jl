@@ -37,21 +37,10 @@ function gsreg(equation::Array{String}, data::DataFrame; intercept::Bool=INTERCE
         end
     end
 
-    return gsreg(map(Symbol, unique(n_equation)), data, intercept=intercept, outsample=outsample)
+    return gsreg(map(Symbol, unique(n_equation)), data, intercept=intercept, outsample=outsample, samesample=samesample, threads=threads,
+                 criteria=criteria, resultscsv=resultscsv, csv=csv)
 end
 
-
-"""
-equation = las variables que se van a seleccionar
-data = data array con todos los datos
-intercept =
-outsample = cantidad de observaciones a excluir
-samesample = excluir observaciones que no tengan algunas de las variables
-threads = cantidad de threads a usar (paralelismo o no)
-criteria = criterios de comparacion (r2adj, caic, aic, bic, cp, rmsein, rmseout)
-resultscsv = salida a un csv
-csv = salida a un csv
-"""
 function gsreg(equation::Array{Symbol}, data::DataFrame; intercept::Bool=INTERCEPT_DEFAULT,
                outsample::Int=OUTSAMPLE_DEFAULT, samesample::Bool=SAMESAMPLE_DEFAULT, threads=THREADS_DEFAULT,
                criteria=CRITERIA_DEFAULT, resultscsv::String=CSV_DEFAULT, csv::String=CSV_DEFAULT)
@@ -84,7 +73,8 @@ function gsreg(equation::Array{Symbol}, data::DataFrame; intercept::Bool=INTERCE
     depvar = Array{Float64}(data[1:end, 1])
     expvars = Array{Float64}(data[1:end, equation[2:end]])
 
-    results = gsreg(depvar, expvars, intercept=intercept, varnames=varnames, outsample=outsample)
+    results = gsreg(depvar, expvars, data, intercept=intercept, outsample=outsample, samesample=samesample,
+                    threads=threads, criteria=criteria)
 
     if resultscsv != nothing
         export_csv(results, resultscsv)
@@ -93,19 +83,17 @@ end
 
 
 """
-GSReg.gsreg( resultscsv = "result" )   # Stata like
-GSReg.gsreg( csv = "result" )          # R like
-GSReg.gsreg( threads = 12 )            # Max nthreads - 1
-GSReg.gsreg( samesample = true )       # Poner un warning
-# result = GSReg.gsreg( "y ~ ." )
-# result = GSReg.gsreg( noconstant = true )
-# result = GSReg.gsreg( outsample = 123 )
-
-Validar CSV
-
+equation = las variables que se van a seleccionar
+data = data array con todos los datos
+intercept = include intercept (old no constant)
+outsample = cantidad de observaciones a excluir
+samesample = excluir observaciones que no tengan algunas de las variables
+threads = cantidad de threads a usar (paralelismo o no)
+criteria = criterios de comparacion (r2adj, caic, aic, bic, cp, rmsein, rmseout)
+resultscsv = salida a un csv
+csv = salida a un csv
 
 TODO: Read about
-
 function (::Core.kwftype(typeof(circle)))(kw::Array, circle, center, radius)
     options = Any[]
     color = arg associated with :color, or black if not found
