@@ -69,11 +69,7 @@ function gsreg(equation::Array{Symbol}, data::DataFrame; intercept::Bool=INTERCE
         end
     end
 
-    varnames = map(Symbol, data.colindex.names)
-    depvar = Array{Float64}(data[1:end, 1])
-    expvars = Array{Float64}(data[1:end, equation[2:end]])
-
-    results = gsreg(depvar, expvars, data, intercept=intercept, outsample=outsample, samesample=samesample,
+    results = gsreg(equation[1], equation[2:end], data, intercept=intercept, outsample=outsample, samesample=samesample,
                     threads=threads, criteria=criteria)
 
     if resultscsv != nothing

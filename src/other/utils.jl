@@ -15,39 +15,6 @@ function get_default_varnames(expvars_num::Integer)
     [ :y ; [ Symbol("x$i") for i = 1:expvars_num ] ]
 end
 
-function get_result_row( single_row::GSRegSingleResult )
-    result_row = Array{Symbol}(0)
-    push!(headers,:ID)
-    for i = 1:single_row.b
-        push!(headers, Symbol(string("x", i)))
-        push!(headers, Symbol(string("x", i, "T")))
-    end
-    push!(headers, :sse)
-    push!(headers, :R2)
-
-
-    to_push = zeros(Float64,0)
-    for b in single_result.b
-        push!(to_push, b)
-        push!(to_push, 0)
-    end
-    push!(to_push,single_result.sse)
-    push!(to_push,single_result.R2)
-    return []
-end
-
-function get_result_header(indepvars_num)
-    headers = Array{Symbol}(0)
-    push!(headers,:ID)
-    for i = 1:indepvars_num
-        push!(headers, Symbol(string("x", i)))
-        push!(headers, Symbol(string("x", i, "T")))
-    end
-    push!(headers, :sse)
-    push!(headers, :R2)
-end
-
-
 function get_available_criteria_by_sample(sample)
     return get_available_criteria_by("sample", sample)
 end
