@@ -3,31 +3,27 @@ function gsreg_single_result!(results, order, detvar, expvars)
     b = qrf \ detvar                    # estimate
     nobs = size(detvar, 1)              # number of observations
     ncoef = size(expvars, 2)            # number of coefficients
-    df_e = nobs - ncoef                 # degrees of freedom, error
-    df_r = ncoef - 1                    # degrees of freedom, regression
     er = detvar - expvars * b           # residuals
     sse = sum(er .^ 2)                  # SSE - sum of squared errors
-    rmse = sse / df_e                   # root min squared error
-    bvcov = inv(qrf[:R]'qrf[:R]) * rmse  # variance - covariance matrix
+    bvcov = inv(qrf[:R]'qrf[:R]) * sse  # variance - covariance matrix
     bstd = sqrt.(diag(bvcov))           # standard deviation of beta coefficients
     r2 = 1 - var(er) / var(detvar)      # model R-squared
 
     cols = get_cols(order)
-
     results[order,1] = order
-
     for (index, col) in enumerate(cols)
         results[order, 2col+1] = b[index]
+        results[order, 2col+2] = bstd[index]
         # este sería el T
-        # results[order, 2col+2] = b[index]
+        # results[order, 2col+3] = b[index] / bstd[index]
     end
 
     ## calcular size en una function ##
-    results[order,size(cols,2)*2 + 1] = nobs
-    results[order,size(cols,2)*2 + 2] = ncoef
-    results[order,size(cols,2)*2 + 3] = sse
-    results[order,size(cols,2)*2 + 4] = rmse
-    results[order,size(cols,2)*2 + 5] = r2
+    results[order,size(cols,2)*3 + 1] = nobs
+    results[order,size(cols,2)*3 + 2] = ncoef
+    results[order,size(cols,2)*3 + 3] = sse
+    results[order,size(cols,2)*3 + 4] = rmse
+    results[order,size(cols,2)*3 + 5] = r2
 end
 
 type GSRegResult
@@ -76,4 +72,10 @@ end
 
 function r2adj()
     return 1 - (1 - r2) * ((obs - 1) / (obs - nvar))
+end
+
+function rmse()
+    df_r = ncoef - 1                    # degrees of freedom, regression
+    df_e = nobs - ncoef                 #
+    return rmse = sse / df_e
 end
