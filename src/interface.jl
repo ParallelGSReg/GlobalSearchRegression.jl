@@ -91,9 +91,8 @@ function gsreg(equation::Array{Symbol}, data::DataFrame; intercept::Bool=INTERCE
     end
 end
 
-"""
-change noconstant to intercept (changing expected values)
 
+"""
 GSReg.gsreg( resultscsv = "result" )   # Stata like
 GSReg.gsreg( csv = "result" )          # R like
 GSReg.gsreg( threads = 12 )            # Max nthreads - 1
