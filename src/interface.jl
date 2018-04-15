@@ -40,6 +40,18 @@ function gsreg(equation::Array{String}, data::DataFrame; intercept::Bool=INTERCE
     return gsreg(map(Symbol, unique(n_equation)), data, intercept=intercept, outsample=outsample)
 end
 
+
+"""
+equation = las variables que se van a seleccionar
+data = data array con todos los datos
+intercept =
+outsample = cantidad de observaciones a excluir
+samesample = excluir observaciones que no tengan algunas de las variables
+threads = cantidad de threads a usar (paralelismo o no)
+criteria = criterios de comparacion (r2adj, caic, aic, bic, cp, rmsein, rmseout)
+resultscsv = salida a un csv
+csv = salida a un csv
+"""
 function gsreg(equation::Array{Symbol}, data::DataFrame; intercept::Bool=INTERCEPT_DEFAULT,
                outsample::Int=OUTSAMPLE_DEFAULT, samesample::Bool=SAMESAMPLE_DEFAULT, threads=THREADS_DEFAULT,
                criteria=CRITERIA_DEFAULT, resultscsv::String=CSV_DEFAULT, csv::String=CSV_DEFAULT)
@@ -58,19 +70,25 @@ function gsreg(equation::Array{Symbol}, data::DataFrame; intercept::Bool=INTERCE
         else
             criteria = CRITERIA_DEFAULT_INSAMPLE
         end
-    end 
-    
+    end
+
     if resultscsv != csv
         if resultscsv != CSV_DEFAULT && csv != CSV_DEFAULT
             error(CSV_DUPLICATED_PARAMETERS)
+        elseif csv != CSV_DEFAULT
+            resultscsv = csv
         end
     end
 
     varnames = map(Symbol, data.colindex.names)
     depvar = Array{Float64}(data[1:end, 1])
-    indepvars = Array{Float64}(data[1:end, equation[2:end]])
-    
-    return gsreg(depvar, indepvars, intercept=intercept, varnames=varnames, outsample=outsample)
+    expvars = Array{Float64}(data[1:end, equation[2:end]])
+
+    results = gsreg(depvar, expvars, intercept=intercept, varnames=varnames, outsample=outsample)
+
+    if resultscsv != nothing
+        export_csv(results, resultscsv)
+    end
 end
 
 """

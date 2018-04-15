@@ -10,12 +10,9 @@ function get_cols(i)
     return cols
 end
 
-function get_default_varnames(indepvars_num)
-    varnames = [:y]
-    for i = 1:indepvars_num
-        push!(varnames,Symbol(string("x",i)))
-    end
-    return varnames
+# returns an array of symbols with y as first item.
+function get_default_varnames(expvars_num::Integer)
+    [ :y ; [ Symbol("x$i") for i = 1:expvars_num ] ]
 end
 
 function get_result_row( single_row::GSRegSingleResult )
