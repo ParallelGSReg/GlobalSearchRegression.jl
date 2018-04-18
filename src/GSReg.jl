@@ -10,8 +10,8 @@ OUTSAMPLE_DEFAULT = -1
 SAMESAMPLE_DEFAULT = false
 THREADS_DEFAULT = nthreads()
 CRITERIA_DEFAULT = nothing
-CRITERIA_DEFAULT_OUTSAMPLE = [ "rmseout" ]
-CRITERIA_DEFAULT_INSAMPLE = [ "r2adj" ]
+CRITERIA_DEFAULT_OUTSAMPLE = [ :rmseout ]
+CRITERIA_DEFAULT_INSAMPLE = [ :r2adj ]
 CSV_DEFAULT = "gsreg.csv"
 
 # NOTE:
@@ -53,18 +53,32 @@ AVAILABLE_CRITERIA = Dict(
 AVAILABLE_VARIABLES = [ :b, :bstd, :t_test ]
 AVAILABLE_CRITERIA = Dict(
     :r2adj => Dict(
+        "verbose_title" => "Adjusted R²",
+        "verbose_show" => false
     ),
     :bic => Dict(
+        "verbose_title" => "BIC",
+        "verbose_show" => true
     ),
     :aic => Dict(
+        "verbose_title" => "AIC",
+        "verbose_show" => true
     ),
     :aicc => Dict(
+        "verbose_title" => "AIC Corrected",
+        "verbose_show" => true
     ),
     :cp => Dict(
+        "verbose_title" => "Mallows's Cp",
+        "verbose_show" => true
     ),
     :rmse => Dict(
+        "verbose_title" => "RMSE",
+        "verbose_show" => true
     ),
     :sse => Dict(
+        "verbose_title" => "SSE",
+        "verbose_show" => true
     )
 )
 

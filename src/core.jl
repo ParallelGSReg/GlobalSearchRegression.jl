@@ -6,8 +6,6 @@ function gsreg(depvar, expvars, data; intercept=nothing, outsample=nothing, same
 end
 
 function gsreg_single_result!(results, order, varnames, cols, depvar, expvars)
-    # TODO:
-    # (adanmauri) This is not working with more than one expvar
     qrf = qrfact(expvars)
     b = qrf \ depvar                        # estimate
     nobs = size(depvar, 1)                  # number of observations
@@ -23,6 +21,7 @@ function gsreg_single_result!(results, order, varnames, cols, depvar, expvars)
 
     results[order, :index] = order
 
+    cols = get_selected_cols(order)
     for (index, col) in enumerate(cols)
         results[order, Symbol(string(varnames[col],"_b"))] = b[index]
         results[order, Symbol(string(varnames[col],"_bstd"))] = bstd[index]
@@ -70,9 +69,9 @@ function proc!(result::GSRegResult)
     result.nobs = size(result.data, 1)
 
     if result.intercept
-        result.data = hcat(result.data, ones(result.nobs)
-        push!(varnames, :_cons)
+        result.data = hcat(result.data, ones(result.nobs))
         push!(result.expvars, :_cons)
+        push!(result.varnames, :_cons)
     end
 
     criteria = collect(keys(AVAILABLE_CRITERIA))
@@ -83,9 +82,8 @@ function proc!(result::GSRegResult)
 
     data_cols_num = size(result.data, 2)
 
-    Threads.@threads for i = 1:num_operations
+    for i = 1:num_operations
         cols = get_selected_cols(i)
-
         if result.intercept
             append!(cols, data_cols_num)
         end
@@ -126,11 +124,18 @@ function Base.show(io::IO, result::GSRegResult)
     @printf(" Selected covariates                 Coef.        Std.         t-test         \n")
     @printf("──────────────────────────────────────────────────────────────────────────────\n")
     for expvar in result.expvars
-    @printf(" %-30s\n", expvar)
+    @printf(" %-30s      %-10d   %-10d   %-10d\n", expvar, 1, 1, 1)
     end
-
-
-
+    @printf("──────────────────────────────────────────────────────────────────────────────\n")
+    @printf(" Observations                        %-10d\n", result.nobs)
+    @printf(" Adjusted R²                         %-10d\n", 1) #result.results[:r2adj])
+    @printf(" F-statistic                         %-10d\n", 2)
+    for criteria in result.criteria
+        if AVAILABLE_CRITERIA[criteria]["verbose_show"]
+    @printf(" %-30s      %-10d\n", AVAILABLE_CRITERIA[criteria]["verbose_title"], 1)
+        end
+    end
+    @printf("──────────────────────────────────────────────────────────────────────────────\n")
 """    @printf("Number of obs %d\n", result.nobs)
 F(2, 9999999997) # Calcular
 Prob > F # Calcular
