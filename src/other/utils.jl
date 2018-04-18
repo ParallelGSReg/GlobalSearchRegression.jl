@@ -27,6 +27,9 @@ function in_vector(sub_vector, vector)
     return true
 end
 
+function export_csv(output, dataframe)
+    CSV.write(output, dataframe)
+end
 # NOTE:
 # Frozen until we know what to do with this
 """

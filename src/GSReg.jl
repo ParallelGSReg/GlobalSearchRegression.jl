@@ -2,6 +2,7 @@ module GSReg
 
 using DataFrames
 using Base.Threads
+using CSV
 
 export gsreg
 

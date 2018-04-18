@@ -136,17 +136,4 @@ function Base.show(io::IO, result::GSRegResult)
         end
     end
     @printf("──────────────────────────────────────────────────────────────────────────────\n")
-"""    @printf("Number of obs %d\n", result.nobs)
-F(2, 9999999997) # Calcular
-Prob > F # Calcular
-Adj R-squared
-Root MSE
-(selected criteria)
-
---------------------------------------------------------------
-Dependent variable |	Coef.	Std. Err.	t	P>|t|
-	        y1 |
---------------------------------------------------------------
-	       gx7 |
-"""
 end
