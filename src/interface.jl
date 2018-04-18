@@ -81,7 +81,6 @@ function gsreg(equation::Array{Symbol}, data::DataFrame; intercept::Bool=INTERCE
     results = gsreg(equation[1], equation[2:end], data, intercept=intercept, outsample=outsample, samesample=samesample,
                     threads=threads, criteria=criteria)
 
-
     if resultscsv != nothing
         #export_csv(results, resultscsv)
     end
