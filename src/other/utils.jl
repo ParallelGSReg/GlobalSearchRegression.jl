@@ -1,17 +1,6 @@
 function get_selected_cols(i)
     # NOTE:
     # (adanmauri) Get cols entirely changed because we need start from index 2
-    """
-    cols = zeros(Int64, 0)
-    f = Int(ceil(log2(i+1)))
-    for flag in base(2, i)
-        if flag == '1'
-            prepend!(cols,f)
-        end
-        f -= 1
-    end
-    return cols
-    """
     cols = zeros(Int64, 0)
     binary = bin(i)
     k = 2
