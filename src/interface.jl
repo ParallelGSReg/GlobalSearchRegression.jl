@@ -29,7 +29,7 @@ function gsreg(equation::Array{String}, data::DataFrame; intercept::Bool=INTERCE
     keys = names(data)
     n_equation = []
     for e in equation
-        e = replace("*", ".", e)
+        replace("*", ".", e)
         if e[end] == '*'
             append!(n_equation, filter!(x->x!=nothing, [String(key)[1:length(e[1:end-1])] == e[1:end-1]?String(key):nothing for key in keys]))
         else
@@ -69,12 +69,17 @@ function gsreg(equation::Array{Symbol}, data::DataFrame; intercept::Bool=INTERCE
         end
     end
 
+    # NOTE:
+    # Converting data DataFrame to array
+    data = convert(Array{Float64}, data)
     results = gsreg(equation[1], equation[2:end], data, intercept=intercept, outsample=outsample, samesample=samesample,
                     threads=threads, criteria=criteria)
 
+
     if resultscsv != nothing
-        export_csv(results, resultscsv)
+        #export_csv(results, resultscsv)
     end
+    return results
 end
 
 
