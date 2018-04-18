@@ -48,6 +48,8 @@ type GSRegResult
     results                 # aca va la posta
     proc                    # flag de que fue procesado
     post_proc               # flag que fue post procesado
+    varnames
+    nobs
     function GSRegResult(
         depvar::Symbol,
         expvars::Array{Symbol},
@@ -64,26 +66,29 @@ end
 function proc!(result::GSRegResult)
     expvars_num = size(result.expvars, 1)
     num_operations = 2 ^ expvars_num - 1
-    varnames = [ result.depvar ; result.expvars ]
+    result.varnames = [ result.depvar ; result.expvars ]
+    result.nobs = size(result.data, 1)
 
     if result.intercept
-        result.data = hcat(result.data, ones(size(result.data, 1)))
-        push!(varnames, :_cons)
+        result.data = hcat(result.data, ones(result.nobs))
+        push!(result.varnames, :_cons)
     end
 
     criteria = collect(keys(AVAILABLE_CRITERIA))
 
-    headers = vcat([:index ], [Symbol(string(v,n)) for v in varnames for n in ["_b","_bstd","_t"]], [:nobs, :ncoef, :r2], criteria)
+    headers = vcat([:index ], [Symbol(string(v,n)) for v in result.varnames for n in ["_b","_bstd","_t"]], [:nobs, :ncoef, :r2], criteria)
     results = DataFrame(vec([Float64 for i in headers]), vec(headers), num_operations)
+    results[:] = 0
 
     data_cols_num = size(result.data, 2)
 
     for i = 1:num_operations
         cols = get_selected_cols(i)
+
         if result.intercept
             append!(cols, data_cols_num)
         end
-        gsreg_single_result!(results, i, varnames, @view(result.data[1:end, 1]), @view(result.data[1:end, cols]))
+        gsreg_single_result!(results, i, result.varnames, @view(result.data[1:end, 1]), @view(result.data[1:end, cols]))
     end
 
     result.results = results
@@ -102,13 +107,40 @@ function post_proc!(result::GSRegResult)
         res[:cp] = (res[:nobs] - max(res[:ncoef]) - 2) * (res[:rmse]/min(res[:rmse])) - (res[:nobs] - 2 * res[:ncoef])
         res[:bic] = res[:nobs] * log(res[:rmse]) + ( res[:ncoef] - 1 ) * log(res[:nobs]) + res[:nobs] + res[:nobs] * log(2π)
         res[:r2adj] = 1 - (1 - res[:r2]) * ((res[:nobs] - 1) / (res[:nobs] - res[:ncoef]))
-
         # TODO:
         # Calculate t_test value
     end
     result.post_proc = true
 end
 
-function Base.show(io::IO, r::GSRegResult)
-    print("esto es un GSRegResult con esto adentro")
+function Base.show(io::IO, result::GSRegResult)
+    @printf("\n")
+    @printf("══════════════════════════════════════════════════════════════════════════════\n")
+    @printf("                              Best model results                              \n")
+    @printf("══════════════════════════════════════════════════════════════════════════════\n")
+    @printf("                                                                              \n")
+    @printf("                                     Dependent variable: %s                   \n", result.depvar)
+    @printf("                                     ─────────────────────────────────────────\n")
+    @printf("                                                                              \n")
+    @printf(" Selected covariates                 Coef.        Std.         t-test         \n")
+    @printf("──────────────────────────────────────────────────────────────────────────────\n")
+    for expvar in result.expvars
+    @printf(" %-30s\n", expvar)
+    end
+
+
+
+"""    @printf("Number of obs %d\n", result.nobs)
+F(2, 9999999997) # Calcular
+Prob > F # Calcular
+Adj R-squared
+Root MSE
+(selected criteria)
+
+--------------------------------------------------------------
+Dependent variable |	Coef.	Std. Err.	t	P>|t|
+	        y1 |
+--------------------------------------------------------------
+	       gx7 |
+"""
 end

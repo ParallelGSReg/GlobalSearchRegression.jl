@@ -69,6 +69,14 @@ function gsreg(equation::Array{Symbol}, data::DataFrame; intercept::Bool=INTERCE
         end
     end
 
+    if size(data, 1) < size(equation[2:end], 1) + 1
+        error(NO_ENOUGH_OBSERVATIONS)
+    end
+
+    if !in_vector(equation,names(data))
+        error(SELECTED_VARIABLES_DOES_NOT_EXISTS)
+    end
+
     data = convert(Array{Float64}, data)
     results = gsreg(equation[1], equation[2:end], data, intercept=intercept, outsample=outsample, samesample=samesample,
                     threads=threads, criteria=criteria)
