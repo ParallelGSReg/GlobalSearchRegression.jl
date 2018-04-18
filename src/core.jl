@@ -5,7 +5,7 @@ function gsreg(depvar, expvars, data; intercept=nothing, outsample=nothing, same
     return result
 end
 
-function gsreg_single_result!(results, order, varnames, depvar, expvars)
+function gsreg_single_result!(results, order, varnames, cols, depvar, expvars)
     # TODO:
     # (adanmauri) This is not working with more than one expvar
     qrf = qrfact(expvars)
@@ -23,10 +23,10 @@ function gsreg_single_result!(results, order, varnames, depvar, expvars)
 
     results[order, :index] = order
 
-    cols = get_selected_cols(order)
     for (index, col) in enumerate(cols)
         results[order, Symbol(string(varnames[col],"_b"))] = b[index]
         results[order, Symbol(string(varnames[col],"_bstd"))] = bstd[index]
+        #results[order, Symbol(string(varnames[col],"_t"))] = b[index] / bstd[index]
     end
 
     results[order, :nobs] = nobs
@@ -69,21 +69,23 @@ function proc!(result::GSRegResult)
     if result.intercept
         result.data = hcat(result.data, ones(size(result.data, 1)))
         push!(varnames, :_cons)
+        push!(result.expvars, :_cons)
     end
 
     criteria = collect(keys(AVAILABLE_CRITERIA))
 
-    headers = vcat([:index ], [Symbol(string(v,n)) for v in varnames for n in ["_b","_bstd","_t"]], [:nobs, :ncoef, :r2], criteria)
+    headers = vcat([:index ], [Symbol(string(v,n)) for v in result.expvars for n in ["_b","_bstd","_t"]], [:nobs, :ncoef, :r2], criteria)
     results = DataFrame(vec([Float64 for i in headers]), vec(headers), num_operations)
+    results[:] = 0
 
     data_cols_num = size(result.data, 2)
 
-    for i = 1:num_operations
+    Threads.@threads for i = 1:num_operations
         cols = get_selected_cols(i)
         if result.intercept
             append!(cols, data_cols_num)
         end
-        gsreg_single_result!(results, i, varnames, @view(result.data[1:end, 1]), @view(result.data[1:end, cols]))
+        gsreg_single_result!(results, i, varnames, cols, @view(result.data[1:end, 1]), @view(result.data[1:end, cols]))
     end
 
     result.results = results
