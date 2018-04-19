@@ -16,7 +16,7 @@ function gsreg_single_result!(results, order, varnames, cols, depvar, expvars)
     sse = sum(er .^ 2)                      # residual sum of squares
     df_e = nobs - ncoef                     # degrees of freedom
     se2 = sse / df_e                        # residual variance
-    rmse = sqrt(sse) / nobs                 # root mean squared error
+    rmse = sqrt(sse / nobs)                 # root mean squared error
     bvcov = inv(qrf[:R]'qrf[:R]) * se2      # variance - covariance matrix
     bstd = sqrt.(diag(bvcov))               # standard deviation of beta coefficients
     r2 = 1 - var(er) / var(depvar)          # model R-squared
@@ -99,7 +99,7 @@ function post_proc!(result::GSRegResult)
         # NOTE:
         # (adanmauri) Is it nvar equal ncoef? If not, change ncoef to nvar
         # Generate by demand
-        res[:aic] = res[:nobs] * log(res[:rmse]) + 2( res[:ncoef] - 1 ) + res[:rmse] + res[:rmse] * log(2π)
+        res[:aic] = 2 * res[:ncoef] + res[:nobs] * log(res[:sse]/res[:nobs])
         res[:aicc] = res[:aic] + (2(res[:ncoef] + 1) * (res[:ncoef]+2)) / (res[:nobs]-(res[:ncoef] + 1 ) - 1)
         res[:cp] = (res[:nobs] - max(res[:ncoef]) - 2) * (res[:rmse]/min(res[:rmse])) - (res[:nobs] - 2 * res[:ncoef])
         res[:bic] = res[:nobs] * log(res[:rmse]) + ( res[:ncoef] - 1 ) * log(res[:nobs]) + res[:nobs] + res[:nobs] * log(2π)
