@@ -6,8 +6,6 @@ function gsreg(depvar, expvars, data; intercept=nothing, outsample=nothing, same
 end
 
 function gsreg_single_result!(results, order, varnames, cols, depvar, expvars)
-    # TODO:
-    # (adanmauri) This is not working with more than one expvar
     qrf = qrfact(expvars)
     b = qrf \ depvar                        # estimate
     nobs = size(depvar, 1)                  # number of observations
@@ -23,6 +21,7 @@ function gsreg_single_result!(results, order, varnames, cols, depvar, expvars)
 
     results[order, :index] = order
 
+    cols = get_selected_cols(order)
     for (index, col) in enumerate(cols)
         results[order, Symbol(string(varnames[col],"_b"))] = b[index]
         results[order, Symbol(string(varnames[col],"_bstd"))] = bstd[index]
@@ -48,6 +47,8 @@ type GSRegResult
     results                 # aca va la posta
     proc                    # flag de que fue procesado
     post_proc               # flag que fue post procesado
+    varnames
+    nobs
     function GSRegResult(
         depvar::Symbol,
         expvars::Array{Symbol},
@@ -64,12 +65,13 @@ end
 function proc!(result::GSRegResult)
     expvars_num = size(result.expvars, 1)
     num_operations = 2 ^ expvars_num - 1
-    varnames = [ result.depvar ; result.expvars ]
+    result.varnames = [ result.depvar ; result.expvars ]
+    result.nobs = size(result.data, 1)
 
     if result.intercept
-        result.data = hcat(result.data, ones(size(result.data, 1)))
-        push!(varnames, :_cons)
+        result.data = hcat(result.data, ones(result.nobs))
         push!(result.expvars, :_cons)
+        push!(result.varnames, :_cons)
     end
 
     criteria = collect(keys(AVAILABLE_CRITERIA))
@@ -80,12 +82,12 @@ function proc!(result::GSRegResult)
 
     data_cols_num = size(result.data, 2)
 
-    Threads.@threads for i = 1:num_operations
+    for i = 1:num_operations
         cols = get_selected_cols(i)
         if result.intercept
             append!(cols, data_cols_num)
         end
-        gsreg_single_result!(results, i, varnames, cols, @view(result.data[1:end, 1]), @view(result.data[1:end, cols]))
+        gsreg_single_result!(results, i, result.varnames, cols, @view(result.data[1:end, 1]), @view(result.data[1:end, cols]))
     end
 
     result.results = results
@@ -104,13 +106,34 @@ function post_proc!(result::GSRegResult)
         res[:cp] = (res[:nobs] - max(res[:ncoef]) - 2) * (res[:rmse]/min(res[:rmse])) - (res[:nobs] - 2 * res[:ncoef])
         res[:bic] = res[:nobs] * log(res[:rmse]) + ( res[:ncoef] - 1 ) * log(res[:nobs]) + res[:nobs] + res[:nobs] * log(2π)
         res[:r2adj] = 1 - (1 - res[:r2]) * ((res[:nobs] - 1) / (res[:nobs] - res[:ncoef]))
-
         # TODO:
         # Calculate t_test value
     end
     result.post_proc = true
 end
 
-function Base.show(io::IO, r::GSRegResult)
-    print("esto es un GSRegResult con esto adentro")
+function Base.show(io::IO, result::GSRegResult)
+    @printf("\n")
+    @printf("══════════════════════════════════════════════════════════════════════════════\n")
+    @printf("                              Best model results                              \n")
+    @printf("══════════════════════════════════════════════════════════════════════════════\n")
+    @printf("                                                                              \n")
+    @printf("                                     Dependent variable: %s                   \n", result.depvar)
+    @printf("                                     ─────────────────────────────────────────\n")
+    @printf("                                                                              \n")
+    @printf(" Selected covariates                 Coef.        Std.         t-test         \n")
+    @printf("──────────────────────────────────────────────────────────────────────────────\n")
+    for expvar in result.expvars
+    @printf(" %-30s      %-10d   %-10d   %-10d\n", expvar, 1, 1, 1)
+    end
+    @printf("──────────────────────────────────────────────────────────────────────────────\n")
+    @printf(" Observations                        %-10d\n", result.nobs)
+    @printf(" Adjusted R²                         %-10d\n", 1) #result.results[:r2adj])
+    @printf(" F-statistic                         %-10d\n", 2)
+    for criteria in result.criteria
+        if AVAILABLE_CRITERIA[criteria]["verbose_show"]
+    @printf(" %-30s      %-10d\n", AVAILABLE_CRITERIA[criteria]["verbose_title"], 1)
+        end
+    end
+    @printf("──────────────────────────────────────────────────────────────────────────────\n")
 end

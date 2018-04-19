@@ -18,7 +18,18 @@ function get_default_varnames(expvars_num::Integer)
     [ :y ; [ Symbol("x$i") for i = 1:expvars_num ] ]
 end
 
+function in_vector(sub_vector, vector)
+    for sv in sub_vector
+        if !in(sv, vector)
+            return false
+        end
+    end
+    return true
+end
 
+function export_csv(output, dataframe)
+    CSV.write(output, dataframe)
+end
 # NOTE:
 # Frozen until we know what to do with this
 """
