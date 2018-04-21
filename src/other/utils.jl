@@ -13,6 +13,7 @@ function get_selected_cols(i)
     return cols
 end
 
+
 # returns an array of symbols with y as first item.
 function get_default_varnames(expvars_num::Integer)
     [ :y ; [ Symbol("x$i") for i = 1:expvars_num ] ]

@@ -6,10 +6,10 @@ function gsreg(depvar, expvars, data; intercept=nothing, outsample=nothing, same
 end
 
 function gsreg_single_result!(results, order, varnames, cols, depvar, expvars)
+    nobs = size(depvar, 1)
+    ncoef = size(expvars, 2)
     qrf = qrfact(expvars)
     b = qrf \ depvar                        # estimate
-    nobs = size(depvar, 1)                  # number of observations
-    ncoef = size(expvars, 2)                # number of coefficients
     er = depvar - expvars * b               # residuals
     sse = sum(er .^ 2)                      # residual sum of squares
     df_e = nobs - ncoef                     # degrees of freedom
@@ -25,7 +25,7 @@ function gsreg_single_result!(results, order, varnames, cols, depvar, expvars)
     for (index, col) in enumerate(cols)
         results[order, Symbol(string(varnames[col],"_b"))] = b[index]
         results[order, Symbol(string(varnames[col],"_bstd"))] = bstd[index]
-        #results[order, Symbol(string(varnames[col],"_t"))] = b[index] / bstd[index]
+        results[order, Symbol(string(varnames[col],"_t"))] = b[index] / bstd[index]
     end
 
     results[order, :nobs] = nobs
@@ -82,7 +82,7 @@ function proc!(result::GSRegResult)
 
     data_cols_num = size(result.data, 2)
 
-    for i = 1:num_operations
+    Threads.@threads for i = 1:num_operations
         cols = get_selected_cols(i)
         if result.intercept
             append!(cols, data_cols_num)
@@ -97,15 +97,17 @@ end
 function post_proc!(result::GSRegResult)
     # TODO:
     # @simd?
-    for res in eachrow(result.results)
+    nops = size(result.results, 1);
+
+    Threads.@threads for i = 1:nops
         # NOTE:
         # (adanmauri) Is it nvar equal ncoef? If not, change ncoef to nvar
         # Generate by demand
-        res[:aic] = 2 * res[:ncoef] + res[:nobs] * log(res[:sse]/res[:nobs])
-        res[:aicc] = res[:aic] + (2(res[:ncoef] + 1) * (res[:ncoef]+2)) / (res[:nobs]-(res[:ncoef] + 1 ) - 1)
-        res[:cp] = (res[:nobs] - max(res[:ncoef]) - 2) * (res[:rmse]/min(res[:rmse])) - (res[:nobs] - 2 * res[:ncoef])
-        res[:bic] = res[:nobs] * log(res[:rmse]) + ( res[:ncoef] - 1 ) * log(res[:nobs]) + res[:nobs] + res[:nobs] * log(2π)
-        res[:r2adj] = 1 - (1 - res[:r2]) * ((res[:nobs] - 1) / (res[:nobs] - res[:ncoef]))
+        result.results[i, :aic] = 2 * result.results[i, :ncoef] + result.results[i, :nobs] * log(result.results[i, :sse]/result.results[i, :nobs])
+        result.results[i, :aicc] = result.results[i, :aic] + (2(result.results[i, :ncoef] + 1) * (result.results[i, :ncoef]+2)) / (result.results[i, :nobs]-(result.results[i, :ncoef] + 1 ) - 1)
+        result.results[i, :cp] = (result.results[i, :nobs] - max(result.results[i, :ncoef]) - 2) * (result.results[i, :rmse]/min(result.results[i, :rmse])) - (result.results[i, :nobs] - 2 * result.results[i, :ncoef])
+        result.results[i, :bic] = result.results[i, :nobs] * log(result.results[i, :rmse]) + ( result.results[i, :ncoef] - 1 ) * log(result.results[i, :nobs]) + result.results[i, :nobs] + result.results[i, :nobs] * log(2π)
+        result.results[i, :r2adj] = 1 - (1 - result.results[i, :r2]) * ((result.results[i, :nobs] - 1) / (result.results[i, :nobs] - result.results[i, :ncoef]))
         # TODO:
         # Calculate t_test value
     end
