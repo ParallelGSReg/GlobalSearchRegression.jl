@@ -3,6 +3,7 @@ module GSReg
 using DataFrames
 using Base.Threads
 using CSV
+using Compat, Compat.LinearAlgebra
 
 export gsreg
 

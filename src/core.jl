@@ -5,7 +5,17 @@ function gsreg(depvar, expvars, data; intercept=nothing, outsample=nothing, same
     return result
 end
 
-function gsreg_single_result!(results, order, varnames, cols, depvar, expvars)
+function gsreg_single_result!(result, results, order)
+    """    data_cols_num = size(result.data, 2)
+    cols = get_selected_cols(order)
+    if result.intercept
+        append!(cols, data_cols_num)
+    end
+
+    depvar = @view(result.data[1:end, 1])
+    expvars = @view(result.data[1:end, cols])
+    varnames = result.varnames
+
     nobs = size(depvar, 1)
     ncoef = size(expvars, 2)
     qrf = qrfact(expvars)
@@ -15,9 +25,8 @@ function gsreg_single_result!(results, order, varnames, cols, depvar, expvars)
     df_e = nobs - ncoef                     # degrees of freedom
     se2 = sse / df_e                        # residual variance
     rmse = sqrt(sse / nobs)                 # root mean squared error
-    bvcov = inv(qrf[:R]'qrf[:R]) * se2      # variance - covariance matrix
-    bstd = sqrt.(diag(bvcov))               # standard deviation of beta coefficients
     r2 = 1 - var(er) / var(depvar)          # model R-squared
+    bstd = sqrt.(sum( (UpperTriangular(qrf[:R]) \ eye(ncoef)) .^ 2, 2) * se2 ) # std deviation of coefficients
 
     results[order, :index] = order
 
@@ -25,7 +34,6 @@ function gsreg_single_result!(results, order, varnames, cols, depvar, expvars)
     for (index, col) in enumerate(cols)
         results[order, Symbol(string(varnames[col],"_b"))] = b[index]
         results[order, Symbol(string(varnames[col],"_bstd"))] = bstd[index]
-        results[order, Symbol(string(varnames[col],"_t"))] = b[index] / bstd[index]
     end
 
     results[order, :nobs] = nobs
@@ -33,7 +41,27 @@ function gsreg_single_result!(results, order, varnames, cols, depvar, expvars)
     results[order, :sse] = sse
     results[order, :rmse] = rmse
     results[order, :r2] = r2
+    if (i > 1000)
+        gc()
+    end
+    i = i + 1"""
+    varnames = result.varnames
+
+    results[order, :index] = order
+
+    cols = get_selected_cols(order)
+    for (index, col) in enumerate(cols)
+        results[order, Symbol(string(varnames[col],"_b"))] = 1
+        results[order, Symbol(string(varnames[col],"_bstd"))] = 1
+    end
+
+    results[order, :nobs] = 1
+    results[order, :ncoef] = 1
+    results[order, :sse] = 1
+    results[order, :rmse] = 1
+    results[order, :r2] = 1
 end
+
 
 type GSRegResult
     depvar::Symbol          # la variable independiente
@@ -80,14 +108,12 @@ function proc!(result::GSRegResult)
     results = DataFrame(vec([Float64 for i in headers]), vec(headers), num_operations)
     results[:] = 0
 
-    data_cols_num = size(result.data, 2)
-
+    """
+    operation_matrix_header = [:nobs, :ncoef, :qrf, :b, :er, :sse, :df_e, :se2, :rmse, :r2, :bstd]
+    operations_matrix = DataFrame(vec([Float64 for i in operation_matrix_header]), vec(headers), nthreads())
+    """
     Threads.@threads for i = 1:num_operations
-        cols = get_selected_cols(i)
-        if result.intercept
-            append!(cols, data_cols_num)
-        end
-        gsreg_single_result!(results, i, result.varnames, cols, @view(result.data[1:end, 1]), @view(result.data[1:end, cols]))
+        gsreg_single_result!(result, results, i)
     end
 
     result.results = results
@@ -97,8 +123,7 @@ end
 function post_proc!(result::GSRegResult)
     # TODO:
     # @simd?
-    nops = size(result.results, 1);
-
+    """nops = size(result.results, 1)
     Threads.@threads for i = 1:nops
         # NOTE:
         # (adanmauri) Is it nvar equal ncoef? If not, change ncoef to nvar
@@ -110,7 +135,7 @@ function post_proc!(result::GSRegResult)
         result.results[i, :r2adj] = 1 - (1 - result.results[i, :r2]) * ((result.results[i, :nobs] - 1) / (result.results[i, :nobs] - result.results[i, :ncoef]))
         # TODO:
         # Calculate t_test value
-    end
+    end"""
     result.post_proc = true
 end
 
