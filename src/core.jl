@@ -5,8 +5,8 @@ function gsreg(depvar, expvars, data; intercept=nothing, outsample=nothing, same
     return result
 end
 
-function gsreg_single_result!(result, results, order)
-    """    data_cols_num = size(result.data, 2)
+function gsreg_single_result!(result, order)
+    data_cols_num = size(result.data, 2)
     cols = get_selected_cols(order)
     if result.intercept
         append!(cols, data_cols_num)
@@ -28,43 +28,22 @@ function gsreg_single_result!(result, results, order)
     r2 = 1 - var(er) / var(depvar)          # model R-squared
     bstd = sqrt.(sum( (UpperTriangular(qrf[:R]) \ eye(ncoef)) .^ 2, 2) * se2 ) # std deviation of coefficients
 
-    results[order, :index] = order
-
+    result.results[order, :index] = order
     cols = get_selected_cols(order)
     for (index, col) in enumerate(cols)
-        results[order, Symbol(string(varnames[col],"_b"))] = b[index]
-        results[order, Symbol(string(varnames[col],"_bstd"))] = bstd[index]
+        result.results[order, Symbol(string(varnames[col],"_b"))] = b[index]
+        result.results[order, Symbol(string(varnames[col],"_bstd"))] = bstd[index]
     end
 
-    results[order, :nobs] = nobs
-    results[order, :ncoef] = ncoef
-    results[order, :sse] = sse
-    results[order, :rmse] = rmse
-    results[order, :r2] = r2
-    if (i > 1000)
-        gc()
-    end
-    i = i + 1"""
-    varnames = result.varnames
+    result.results[order, :nobs] = nobs
+    result.results[order, :ncoef] = ncoef
+    result.results[order, :sse] = sse
+    result.results[order, :rmse] = rmse
 
-    results[order, :index] = order
-
-    cols = get_selected_cols(order)
-    for (index, col) in enumerate(cols)
-        results[order, Symbol(string(varnames[col],"_b"))] = 1
-        results[order, Symbol(string(varnames[col],"_bstd"))] = 1
-    end
-
-    results[order, :nobs] = 1
-    results[order, :ncoef] = 1
-    results[order, :sse] = 1
-    results[order, :rmse] = 1
-    results[order, :r2] = 1
 end
 
-
 type GSRegResult
-    depvar::Symbol          # la variable independiente
+    depvar::Symbol
     expvars::Array{Symbol}  # los nombres de las variables que se van a combinar
     data                    # data array con todos los datos
     intercept               # add constant of ones
@@ -105,18 +84,28 @@ function proc!(result::GSRegResult)
     criteria = collect(keys(AVAILABLE_CRITERIA))
 
     headers = vcat([:index ], [Symbol(string(v,n)) for v in result.expvars for n in ["_b","_bstd","_t"]], [:nobs, :ncoef, :r2], criteria)
-    results = DataFrame(vec([Float64 for i in headers]), vec(headers), num_operations)
-    results[:] = 0
+    result.results = DataFrame(vec([Float64 for i in headers]), vec(headers), num_operations)
+    result.results[:] = 0
 
-    """
-    operation_matrix_header = [:nobs, :ncoef, :qrf, :b, :er, :sse, :df_e, :se2, :rmse, :r2, :bstd]
-    operations_matrix = DataFrame(vec([Float64 for i in operation_matrix_header]), vec(headers), nthreads())
-    """
-    Threads.@threads for i = 1:num_operations
-        gsreg_single_result!(result, results, i)
+    #operation_matrix_header = [:nobs, :ncoef, :qrf, :b, :er, :sse, :df_e, :se2, :rmse, :r2, :bstd]
+    #operations_matrix = DataFrame(vec([Float64 for i in operation_matrix_header]), vec(headers), nthreads())
+    #operation_matrix_header = [:qrf, :b, :er, :bstd]
+    #result.operations_matrix = DataFrame(vec([Array for i in operation_matrix_header]), vec(headers), nworkers)
+    nworkers = nthreads()
+    operation_by_workers = div(num_operations, nworkers)
+    resto = mod(num_operations, nworkers)
+
+    Threads.@threads for i = 1:nworkers
+        for j = 1:operation_by_workers
+            #ccall(:jl_,Void,(Any,), "i: $(i) - j: $(j) w: $(Threads.threadid())")
+            gsreg_single_result!(result, (i-1) * operation_by_workers + j)
+        end
+        if i <= resto
+            gsreg_single_result!(result, nworkers * operation_by_workers + i)
+        end
     end
 
-    result.results = results
+
     result.proc = true
 end
 
