@@ -48,6 +48,7 @@ function gsreg_single_result!(result, order)
     result.results[order, :ncoef] = ncoef
     result.results[order, :sse] = sse
     result.results[order, :rmse] = rmse
+    result.results[order, :r2] = r2
 
 end
 
@@ -118,25 +119,29 @@ function proc!(result::GSRegResult)
         end
     end
 
-    tic()
     for varname in result.expvars
         result.results[Symbol(string(String(varname),"_t"))] = result.results[Symbol(string(String(varname),"_b"))] ./ result.results[Symbol(string(String(varname),"_bstd"))]
     end
-    """result.results[:aic] = 2 * result.results[:ncoef] + result.results[:nobs] * log(result.results[:sse]/result.results[:nobs])
-    result.results[:aicc] = result.results[:aic] + (2(result.results[:ncoef] + 1) * (result.results[:ncoef]+2)) / (result.results[:nobs]-(result.results[:ncoef] + 1 ) - 1)
-    result.results[:cp] = (result.results[:nobs] - max(result.results[:ncoef]) - 2) * (result.results[:rmse]/min(result.results[:rmse])) - (result.results[:nobs] - 2 * result.results[:ncoef])
-    result.results[:bic] = result.results[:nobs] * log(result.results[:rmse]) + ( result.results[:ncoef] - 1 ) * log(result.results[:nobs]) + result.results[:nobs] + result.results[:nobs] * log(2π)
-    result.results[:r2adj] = 1 - (1 - result.results[:r2]) * ((result.results[:nobs] - 1) / (result.results[:nobs] - result.results[:ncoef]))"""
-    toc()
 
-    """tic()
-    Threads.@threads for i = 1:num_operations
-        for v in get_selected_cols(i)
-            varname = result.varnames[v]
-            result.results[i,Symbol(string(String(varname),"_t"))] = result.results[i,Symbol(string(String(varname),"_b"))] / result.results[i,Symbol(string(String(varname),"_bstd"))]
-        end
+    if :aic in result.criteria || :aicc in result.criteria
+        result.results[:aic] = 2 * result.results[:ncoef] + result.results[:nobs] .* log.(result.results[:sse] ./ result.results[:nobs])
     end
-    toc()"""
+
+    if :aicc in result.criteria
+        result.results[:aicc] = result.results[:aic] + (2(result.results[:ncoef] + 1) .* (result.results[:ncoef]+2)) ./ (result.results[:nobs] - (result.results[:ncoef] + 1 ) - 1)
+    end
+
+    if :cp in result.criteria
+        result.results[:cp] = (result.results[:nobs] - maximum(result.results[:ncoef]) - 2) .* (result.results[:rmse] ./ minimum(result.results[:rmse])) - (result.results[:nobs] - 2 .* result.results[:ncoef])
+    end
+
+    if :bic in result.criteria
+        result.results[:bic] = result.results[:nobs] .* log.(result.results[:rmse]) + ( result.results[:ncoef] - 1 ) .* log.(result.results[:nobs]) + result.results[:nobs] + result.results[:nobs] .* log(2π)
+    end
+
+    if :r2adj in result.criteria
+        result.results[:r2adj] = 1 - (1 - result.results[:r2]) .* ((result.results[:nobs] - 1) ./ (result.results[:nobs] - result.results[:ncoef]))
+    end
 end
 
 function Base.show(io::IO, result::GSRegResult)

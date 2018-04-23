@@ -29,10 +29,20 @@ function in_vector(sub_vector, vector)
 end
 
 function export_csv(output, result)
-    criteria = collect(keys(AVAILABLE_CRITERIA))
-    headers = vcat([:index ], [Symbol(string(v,n)) for v in result.expvars for n in ["_b","_t"]], [:nobs, :ncoef, :r2], criteria)
+    criteria = result.criteria
+
+    if !(:r2adj in criteria)
+        criteria = vcat(criteria, [:r2adj])
+    end
+
+    if result.outsample > OUTSAMPLE_DEFAULT && !(:rmseout in criteria)
+        criteria = vcat(criteria, [:rmseout])
+    end
+
+    headers = vcat([:index ], [Symbol(string(v,n)) for v in result.expvars for n in ["_b","_t"]], [:nobs, :ncoef], criteria)
     CSV.write(output, result.results[headers])
 end
+
 # NOTE:
 # Frozen until we know what to do with this
 """

@@ -53,6 +53,22 @@ function gsreg(equation::Array{Symbol}, data::DataFrame; intercept::Bool=INTERCE
             error(OUTSAMPLE_HIGHER_VALUE)
         end
     end
+    """
+    println(typeof(criteria))
+
+    if typeof(criteria) == Array{String,1}
+        criteria = map(Symbol, unique(criteria))
+    end
+
+
+    # Array{Symbol,1}
+    # Array{String,1}
+    # Symbol
+    # String
+
+    return criteria
+    """
+
 
     if criteria == CRITERIA_DEFAULT
         if outsample != OUTSAMPLE_DEFAULT
