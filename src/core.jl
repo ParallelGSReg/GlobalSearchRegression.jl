@@ -142,6 +142,15 @@ function proc!(result::GSRegResult)
     if :r2adj in result.criteria
         result.results[:r2adj] = 1 - (1 - result.results[:r2]) .* ((result.results[:nobs] - 1) ./ (result.results[:nobs] - result.results[:ncoef]))
     end
+
+    len_criteria = length(criteria)
+    result.results[:order] = 0
+    for criteria in result.criteria
+        result.results[:order] += AVAILABLE_CRITERIA[criteria]["index"] * (1 / len_criteria) * ( (result.results[criteria] - mean(result.results[criteria]) ) ./ std(result.results[criteria]) )
+    end
+
+    sort!(result.results, cols = [:order], rev = true);
+
 end
 
 function Base.show(io::IO, result::GSRegResult)
