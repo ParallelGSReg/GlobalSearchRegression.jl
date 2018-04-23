@@ -28,8 +28,10 @@ function in_vector(sub_vector, vector)
     return true
 end
 
-function export_csv(output, dataframe)
-    CSV.write(output, dataframe)
+function export_csv(output, result)
+    criteria = collect(keys(AVAILABLE_CRITERIA))
+    headers = vcat([:index ], [Symbol(string(v,n)) for v in result.expvars for n in ["_b","_t"]], [:nobs, :ncoef, :r2], criteria)
+    CSV.write(output, result.results[headers])
 end
 # NOTE:
 # Frozen until we know what to do with this

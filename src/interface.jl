@@ -46,9 +46,10 @@ function gsreg(equation::Array{Symbol}, data::DataFrame; intercept::Bool=INTERCE
                criteria=CRITERIA_DEFAULT, resultscsv::String=CSV_DEFAULT, csv::String=CSV_DEFAULT)
 
     if outsample != OUTSAMPLE_DEFAULT
-        if outsample < 1
+        if outsample < 0
             error(OUTSAMPLE_LOWER_VALUE)
-        elseif outsample > size(data,1)
+        elseif size(data, 1) - outsample < INSAMPLE_MIN_SIZE + size(data, 2) - 1
+            # generalized concensus to obtain gaussian errors
             error(OUTSAMPLE_HIGHER_VALUE)
         end
     end
@@ -82,7 +83,7 @@ function gsreg(equation::Array{Symbol}, data::DataFrame; intercept::Bool=INTERCE
                     threads=threads, criteria=criteria)
 
     if resultscsv != nothing
-        export_csv(resultscsv, result.results)
+        export_csv(resultscsv, result)
     end
     return result
 end

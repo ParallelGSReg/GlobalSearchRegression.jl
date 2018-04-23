@@ -1,7 +1,6 @@
 function gsreg(depvar, expvars, data; intercept=nothing, outsample=nothing, samesample=nothing, threads=nothing, criteria=nothing)
     result = GSRegResult(depvar, expvars, data, intercept, outsample, samesample, threads, criteria)
     proc!(result)
-    post_proc!(result)
     return result
 end
 
@@ -12,21 +11,31 @@ function gsreg_single_result!(result, order)
         append!(cols, data_cols_num)
     end
 
-    depvar = @view(result.data[1:end, 1])
-    expvars = @view(result.data[1:end, cols])
+    depvar = @view(result.data[1:end-result.outsample, 1])
+    expvars = @view(result.data[1:end-result.outsample, cols])
+
     varnames = result.varnames
 
     nobs = size(depvar, 1)
     ncoef = size(expvars, 2)
     qrf = qrfact(expvars)
     b = qrf \ depvar                        # estimate
-    er = depvar - expvars * b               # residuals
+    er = depvar - expvars * b               # in-sample residuals
     sse = sum(er .^ 2)                      # residual sum of squares
     df_e = nobs - ncoef                     # degrees of freedom
     se2 = sse / df_e                        # residual variance
     rmse = sqrt(sse / nobs)                 # root mean squared error
     r2 = 1 - var(er) / var(depvar)          # model R-squared
     bstd = sqrt.(sum( (UpperTriangular(qrf[:R]) \ eye(ncoef)) .^ 2, 2) * se2 ) # std deviation of coefficients
+
+    if result.outsample > 0
+        depvar_out = @view(result.data[end-result.outsample:end, 1])
+        expvars_out = @view(result.data[end-result.outsample:end, cols])
+        erout = depvar_out - expvars_out * b          # out-of-sample residuals
+        sseout = sum(erout .^ 2)                      # residual sum of squares
+        rmseout = sqrt(sseout / result.outsample)        # root mean squared error
+        result.results[order, :rmseout] = rmseout
+    end
 
     result.results[order, :index] = order
     cols = get_selected_cols(order)
@@ -84,8 +93,12 @@ function proc!(result::GSRegResult)
     criteria = collect(keys(AVAILABLE_CRITERIA))
 
     headers = vcat([:index ], [Symbol(string(v,n)) for v in result.expvars for n in ["_b","_bstd","_t"]], [:nobs, :ncoef, :r2], criteria)
-    result.results = DataFrame(vec([Float64 for i in headers]), vec(headers), num_operations)
-    result.results[:] = 0
+    result.results = DataFrame(
+        vec([Union{Float64,Missing,Int} for i in headers]),
+        vec(headers),
+        num_operations
+        )
+    result.results[:] = missing
 
     #operation_matrix_header = [:nobs, :ncoef, :qrf, :b, :er, :sse, :df_e, :se2, :rmse, :r2, :bstd]
     #operations_matrix = DataFrame(vec([Float64 for i in operation_matrix_header]), vec(headers), nthreads())
@@ -105,27 +118,25 @@ function proc!(result::GSRegResult)
         end
     end
 
+    tic()
+    for varname in result.expvars
+        result.results[Symbol(string(String(varname),"_t"))] = result.results[Symbol(string(String(varname),"_b"))] ./ result.results[Symbol(string(String(varname),"_bstd"))]
+    end
+    """result.results[:aic] = 2 * result.results[:ncoef] + result.results[:nobs] * log(result.results[:sse]/result.results[:nobs])
+    result.results[:aicc] = result.results[:aic] + (2(result.results[:ncoef] + 1) * (result.results[:ncoef]+2)) / (result.results[:nobs]-(result.results[:ncoef] + 1 ) - 1)
+    result.results[:cp] = (result.results[:nobs] - max(result.results[:ncoef]) - 2) * (result.results[:rmse]/min(result.results[:rmse])) - (result.results[:nobs] - 2 * result.results[:ncoef])
+    result.results[:bic] = result.results[:nobs] * log(result.results[:rmse]) + ( result.results[:ncoef] - 1 ) * log(result.results[:nobs]) + result.results[:nobs] + result.results[:nobs] * log(2π)
+    result.results[:r2adj] = 1 - (1 - result.results[:r2]) * ((result.results[:nobs] - 1) / (result.results[:nobs] - result.results[:ncoef]))"""
+    toc()
 
-    result.proc = true
-end
-
-function post_proc!(result::GSRegResult)
-    # TODO:
-    # @simd?
-    """nops = size(result.results, 1)
-    Threads.@threads for i = 1:nops
-        # NOTE:
-        # (adanmauri) Is it nvar equal ncoef? If not, change ncoef to nvar
-        # Generate by demand
-        result.results[i, :aic] = 2 * result.results[i, :ncoef] + result.results[i, :nobs] * log(result.results[i, :sse]/result.results[i, :nobs])
-        result.results[i, :aicc] = result.results[i, :aic] + (2(result.results[i, :ncoef] + 1) * (result.results[i, :ncoef]+2)) / (result.results[i, :nobs]-(result.results[i, :ncoef] + 1 ) - 1)
-        result.results[i, :cp] = (result.results[i, :nobs] - max(result.results[i, :ncoef]) - 2) * (result.results[i, :rmse]/min(result.results[i, :rmse])) - (result.results[i, :nobs] - 2 * result.results[i, :ncoef])
-        result.results[i, :bic] = result.results[i, :nobs] * log(result.results[i, :rmse]) + ( result.results[i, :ncoef] - 1 ) * log(result.results[i, :nobs]) + result.results[i, :nobs] + result.results[i, :nobs] * log(2π)
-        result.results[i, :r2adj] = 1 - (1 - result.results[i, :r2]) * ((result.results[i, :nobs] - 1) / (result.results[i, :nobs] - result.results[i, :ncoef]))
-        # TODO:
-        # Calculate t_test value
-    end"""
-    result.post_proc = true
+    """tic()
+    Threads.@threads for i = 1:num_operations
+        for v in get_selected_cols(i)
+            varname = result.varnames[v]
+            result.results[i,Symbol(string(String(varname),"_t"))] = result.results[i,Symbol(string(String(varname),"_b"))] / result.results[i,Symbol(string(String(varname),"_bstd"))]
+        end
+    end
+    toc()"""
 end
 
 function Base.show(io::IO, result::GSRegResult)

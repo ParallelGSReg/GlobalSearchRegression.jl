@@ -1,6 +1,6 @@
 module GSReg
 
-using DataFrames
+using DataFrames, Missings
 using Base.Threads
 using CSV
 using Compat, Compat.LinearAlgebra
@@ -8,7 +8,8 @@ using Compat, Compat.LinearAlgebra
 export gsreg
 
 INTERCEPT_DEFAULT = true
-OUTSAMPLE_DEFAULT = -1
+INSAMPLE_MIN_SIZE = 30
+OUTSAMPLE_DEFAULT = 0
 SAMESAMPLE_DEFAULT = false
 THREADS_DEFAULT = nthreads()
 CRITERIA_DEFAULT = nothing
@@ -76,6 +77,10 @@ AVAILABLE_CRITERIA = Dict(
     ),
     :rmse => Dict(
         "verbose_title" => "RMSE",
+        "verbose_show" => true
+    ),
+    :rmseout => Dict(
+        "verbose_title" => "RMSE OUT",
         "verbose_show" => true
     ),
     :sse => Dict(
