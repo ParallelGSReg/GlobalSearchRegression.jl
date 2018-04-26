@@ -1,5 +1,6 @@
-function gsreg(depvar, expvars, data; intercept=nothing, outsample=nothing, samesample=nothing, threads=nothing, criteria=nothing)
-    result = GSRegResult(depvar, expvars, data, intercept, outsample, samesample, threads, criteria)
+function gsreg(depvar, expvars, data; intercept=nothing, outsample=nothing, samesample=nothing, threads=nothing,
+    criteria=nothing, ttest=nothing, fast=nothing)
+    result = GSRegResult(depvar, expvars, data, intercept, outsample, samesample, threads, criteria, ttest, fast)
     proc!(result)
     return result
 end
@@ -7,6 +8,7 @@ end
 function gsreg_single_result!(result, order)
     data_cols_num = size(result.data, 2)
     cols = get_selected_cols(order)
+
     if result.intercept
         append!(cols, data_cols_num)
     end
@@ -23,10 +25,12 @@ function gsreg_single_result!(result, order)
     er = depvar - expvars * b               # in-sample residuals
     sse = sum(er .^ 2)                      # residual sum of squares
     df_e = nobs - ncoef                     # degrees of freedom
-    se2 = sse / df_e                        # residual variance
     rmse = sqrt(sse / nobs)                 # root mean squared error
     r2 = 1 - var(er) / var(depvar)          # model R-squared
-    bstd = sqrt.(sum( (UpperTriangular(qrf[:R]) \ eye(ncoef)) .^ 2, 2) * se2 ) # std deviation of coefficients
+
+    if result.ttest == true
+        bstd = sqrt.(sum( (UpperTriangular(qrf[:R]) \ eye(ncoef)) .^ 2, 2) * (sse / df_e) ) # std deviation of coefficients
+    end
 
     if result.outsample > 0
         depvar_out = @view(result.data[end-result.outsample:end, 1])
@@ -40,15 +44,17 @@ function gsreg_single_result!(result, order)
     result.results[order, :index] = order
     cols = get_selected_cols(order)
     for (index, col) in enumerate(cols)
-        result.results[order, Symbol(string(varnames[col],"_b"))] = b[index]
-        result.results[order, Symbol(string(varnames[col],"_bstd"))] = bstd[index]
+        result.results[order, Symbol(string(varnames[col],"_b"))] = Float32(b[index])
+        if result.ttest == true
+            result.results[order, Symbol(string(varnames[col],"_bstd"))] = bstd[index]
+        end
     end
 
     result.results[order, :nobs] = nobs
     result.results[order, :ncoef] = ncoef
-    result.results[order, :sse] = sse
-    result.results[order, :rmse] = rmse
-    result.results[order, :r2] = r2
+    result.results[order, :sse] = (result.fast)?Float32(sse):sse
+    result.results[order, :rmse] = (result.fast)?Float32(rmse):rmse
+    result.results[order, :r2] = (result.fast)?Float32(r2):r2
 
 end
 
@@ -61,6 +67,8 @@ type GSRegResult
     samesample              # excluir observaciones que no tengan algunas de las variables
     threads                 # cantidad de threads a usar (paralelismo o no)
     criteria                # criterios de comparacion (r2adj, caic, aic, bic, cp, rmsein, rmseout)
+    ttest::Bool
+    fast::Bool
     results                 # aca va la posta
     proc                    # flag de que fue procesado
     post_proc               # flag que fue post procesado
@@ -74,8 +82,9 @@ type GSRegResult
         outsample::Int,
         samesample::Bool,
         threads::Int,
-        criteria)
-        new(depvar, expvars, data, intercept, outsample, samesample, threads, criteria)
+        criteria,
+        ttest)
+        new(depvar, expvars, data, intercept, outsample, samesample, threads, criteria, ttest,fast)
     end
 end
 
@@ -93,34 +102,22 @@ function proc!(result::GSRegResult)
 
     criteria = collect(keys(AVAILABLE_CRITERIA))
 
-    headers = vcat([:index ], [Symbol(string(v,n)) for v in result.expvars for n in ["_b","_bstd","_t"]], [:nobs, :ncoef, :r2], criteria)
-    result.results = DataFrame(
-        vec([Union{Float64,Missing,Int} for i in headers]),
-        vec(headers),
-        num_operations
-        )
+    sub_headers = (result.ttest) ? ["_b","_bstd","_t"] : ["_b"]
+
+    headers = vcat([:index ], [Symbol(string(v,n)) for v in result.expvars for n in sub_headers], [:nobs, :ncoef, :r2], criteria)
+    result.results = DataFrame(vec([Union{Float32,Missing,Int} for i in headers]), vec(headers), num_operations)
+
     result.results[:] = missing
 
-    #operation_matrix_header = [:nobs, :ncoef, :qrf, :b, :er, :sse, :df_e, :se2, :rmse, :r2, :bstd]
-    #operations_matrix = DataFrame(vec([Float64 for i in operation_matrix_header]), vec(headers), nthreads())
-    #operation_matrix_header = [:qrf, :b, :er, :bstd]
-    #result.operations_matrix = DataFrame(vec([Array for i in operation_matrix_header]), vec(headers), nworkers)
-    nworkers = nthreads()
-    operation_by_workers = div(num_operations, nworkers)
-    resto = mod(num_operations, nworkers)
 
-    Threads.@threads for i = 1:nworkers
-        for j = 1:operation_by_workers
-            #ccall(:jl_,Void,(Any,), "i: $(i) - j: $(j) w: $(Threads.threadid())")
-            gsreg_single_result!(result, (i-1) * operation_by_workers + j)
-        end
-        if i <= resto
-            gsreg_single_result!(result, nworkers * operation_by_workers + i)
-        end
+    Threads.@threads for i = 1:num_operations
+        gsreg_single_result!(result, i)
     end
 
-    for varname in result.expvars
-        result.results[Symbol(string(String(varname),"_t"))] = result.results[Symbol(string(String(varname),"_b"))] ./ result.results[Symbol(string(String(varname),"_bstd"))]
+    if result.ttest
+        for varname in result.expvars
+            result.results[Symbol(string(String(varname),"_t"))] = result.results[Symbol(string(String(varname),"_b"))] ./ result.results[Symbol(string(String(varname),"_bstd"))]
+        end
     end
 
     if :aic in result.criteria || :aicc in result.criteria
@@ -143,6 +140,8 @@ function proc!(result::GSRegResult)
         result.results[:r2adj] = 1 - (1 - result.results[:r2]) .* ((result.results[:nobs] - 1) ./ (result.results[:nobs] - result.results[:ncoef]))
     end
 
+    result.results[:F] = (result.results[:r2] ./ (result.results[:ncoef]-1)) ./ ((1-result.results[:r2]) ./ (result.results[:nobs] - result.results[:ncoef]))
+
     len_criteria = length(criteria)
     result.results[:order] = 0
     for criteria in result.criteria
@@ -150,7 +149,6 @@ function proc!(result::GSRegResult)
     end
 
     sort!(result.results, cols = [:order], rev = true);
-
 end
 
 function Base.show(io::IO, result::GSRegResult)
@@ -162,18 +160,28 @@ function Base.show(io::IO, result::GSRegResult)
     @printf("                                     Dependent variable: %s                   \n", result.depvar)
     @printf("                                     ─────────────────────────────────────────\n")
     @printf("                                                                              \n")
-    @printf(" Selected covariates                 Coef.        Std.         t-test         \n")
+    @printf(" Selected covariates                 Coef.")
+    if result.ttest
+        @printf("        Std.         t-test")
+    end
+    @printf("\n")
     @printf("──────────────────────────────────────────────────────────────────────────────\n")
-    for expvar in result.expvars
-    @printf(" %-30s      %-10d   %-10d   %-10d\n", expvar, 1, 1, 1)
+    for expvar in result.expvars[get_selected_cols(result.results[1,:index])-1]
+        @printf(" %-35s", expvar)
+        @printf(" %-10f", result.results[1,Symbol(expvar,"_b")])
+        if result.ttest
+            @printf("   %-10f", result.results[1,Symbol(expvar,"_bstd")])
+            @printf("   %-10f", result.results[1,Symbol(expvar,"_t")])
+        end
+        @printf("\n")
     end
     @printf("──────────────────────────────────────────────────────────────────────────────\n")
-    @printf(" Observations                        %-10d\n", result.nobs)
-    @printf(" Adjusted R²                         %-10d\n", 1) #result.results[:r2adj])
-    @printf(" F-statistic                         %-10d\n", 2)
+    @printf(" Observations                        %-10d\n", result.results[1,:nobs])
+    @printf(" Adjusted R²                         %-10f\n", result.results[1,:r2adj])
+    @printf(" F-statistic                         %-10d\n", result.results[1,:F])
     for criteria in result.criteria
         if AVAILABLE_CRITERIA[criteria]["verbose_show"]
-    @printf(" %-30s      %-10d\n", AVAILABLE_CRITERIA[criteria]["verbose_title"], 1)
+    @printf(" %-30s      %-10d\n", AVAILABLE_CRITERIA[criteria]["verbose_title"], result.results[1,criteria])
         end
     end
     @printf("──────────────────────────────────────────────────────────────────────────────\n")

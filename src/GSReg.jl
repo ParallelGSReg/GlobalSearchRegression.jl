@@ -4,6 +4,7 @@ using DataFrames, Missings
 using Base.Threads
 using CSV
 using Compat, Compat.LinearAlgebra
+using ProgressMeter
 
 export gsreg
 
@@ -11,6 +12,8 @@ INTERCEPT_DEFAULT = true
 INSAMPLE_MIN_SIZE = 30
 OUTSAMPLE_DEFAULT = 0
 SAMESAMPLE_DEFAULT = false
+TTEST_DEFAULT = false
+FAST_DEFAULT = false
 THREADS_DEFAULT = nthreads()
 CRITERIA_DEFAULT = nothing
 CRITERIA_DEFAULT_OUTSAMPLE = [ :rmseout ]

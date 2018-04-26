@@ -1,14 +1,14 @@
 function gsreg(equation::String; data::DataFrame=nothing, intercept::Bool=INTERCEPT_DEFAULT,
                outsample::Int=OUTSAMPLE_DEFAULT, samesample::Bool=SAMESAMPLE_DEFAULT, threads=THREADS_DEFAULT,
-               criteria=CRITERIA_DEFAULT, resultscsv::String=CSV_DEFAULT, csv::String=CSV_DEFAULT)
+               criteria=CRITERIA_DEFAULT, resultscsv::String=CSV_DEFAULT, csv::String=CSV_DEFAULT, ttest=TTEST_DEFAULT, fast=FAST_DEFAULT)
 
     return gsreg(equation, data, intercept=intercept, outsample=outsample, samesample=samesample, threads=threads,
-                 criteria=criteria, resultscsv=resultscsv, csv=csv)
+                 criteria=criteria, resultscsv=resultscsv, csv=csv, ttest=ttest, fast=fast)
 end
 
 function gsreg(equation::String, data::DataFrame; intercept::Bool=INTERCEPT_DEFAULT,
                outsample::Int=OUTSAMPLE_DEFAULT, samesample::Bool=SAMESAMPLE_DEFAULT, threads=THREADS_DEFAULT,
-               criteria=CRITERIA_DEFAULT, resultscsv::String=CSV_DEFAULT, csv::String=CSV_DEFAULT)
+               criteria=CRITERIA_DEFAULT, resultscsv::String=CSV_DEFAULT, csv::String=CSV_DEFAULT, ttest=TTEST_DEFAULT, fast=FAST_DEFAULT)
 
     if contains(equation, "~")
         equation = replace(equation, r"\s+|\s+$/g", "")
@@ -19,12 +19,12 @@ function gsreg(equation::String, data::DataFrame; intercept::Bool=INTERCEPT_DEFA
     end
 
     return gsreg(equation, data, intercept=intercept, outsample=outsample, samesample=samesample, threads=threads,
-                 criteria=criteria, resultscsv=resultscsv, csv=csv)
+                 criteria=criteria, resultscsv=resultscsv, csv=csv, ttest=ttest, fast=fast)
 end
 
 function gsreg(equation::Array{String}, data::DataFrame; intercept::Bool=INTERCEPT_DEFAULT,
     outsample::Int=OUTSAMPLE_DEFAULT, samesample::Bool=SAMESAMPLE_DEFAULT, threads=THREADS_DEFAULT,
-    criteria=CRITERIA_DEFAULT, resultscsv::String=CSV_DEFAULT, csv::String=CSV_DEFAULT)
+    criteria=CRITERIA_DEFAULT, resultscsv::String=CSV_DEFAULT, csv::String=CSV_DEFAULT, ttest=TTEST_DEFAULT, fast=FAST_DEFAULT)
 
     keys = names(data)
     n_equation = []
@@ -38,12 +38,18 @@ function gsreg(equation::Array{String}, data::DataFrame; intercept::Bool=INTERCE
     end
 
     return gsreg(map(Symbol, unique(n_equation)), data, intercept=intercept, outsample=outsample, samesample=samesample, threads=threads,
-                 criteria=criteria, resultscsv=resultscsv, csv=csv)
+                 criteria=criteria, resultscsv=resultscsv, csv=csv, ttest=ttest, fast=fast)
 end
 
 function gsreg(equation::Array{Symbol}, data::DataFrame; intercept::Bool=INTERCEPT_DEFAULT,
                outsample::Int=OUTSAMPLE_DEFAULT, samesample::Bool=SAMESAMPLE_DEFAULT, threads=THREADS_DEFAULT,
-               criteria=CRITERIA_DEFAULT, resultscsv::String=CSV_DEFAULT, csv::String=CSV_DEFAULT)
+               criteria=CRITERIA_DEFAULT, resultscsv::String=CSV_DEFAULT, csv::String=CSV_DEFAULT, ttest=TTEST_DEFAULT, fast=FAST_DEFAULT)
+
+    if fast
+        for c = eachcol(data)
+            data[c[1]] = map(Float32,c[2])
+        end
+    end
 
     if outsample != OUTSAMPLE_DEFAULT
         if outsample < 0
@@ -94,9 +100,11 @@ function gsreg(equation::Array{Symbol}, data::DataFrame; intercept::Bool=INTERCE
         error(SELECTED_VARIABLES_DOES_NOT_EXISTS)
     end
 
-    data = convert(Array{Float64}, data)
+
+    type_of_array = (fast)?Float32:Float64
+    data = convert(Array{type_of_array}, data)
     result = gsreg(equation[1], equation[2:end], data, intercept=intercept, outsample=outsample, samesample=samesample,
-                    threads=threads, criteria=criteria)
+                    threads=threads, criteria=criteria, ttest=ttest, fast=fast)
 
     if resultscsv != nothing
         export_csv(resultscsv, result)

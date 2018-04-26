@@ -39,28 +39,7 @@ function export_csv(output, result)
         criteria = vcat(criteria, [:rmseout])
     end
 
-    headers = vcat([:index ], [Symbol(string(v,n)) for v in result.expvars for n in ["_b","_t"]], [:nobs, :ncoef], criteria)
+    sub_headers = (result.ttest) ? ["_b","_t"] : ["_b"]
+    headers = vcat([:index ], [Symbol(string(v,n)) for v in result.expvars for n in sub_headers], [:nobs, :ncoef], criteria)
     CSV.write(output, result.results[headers])
 end
-
-# NOTE:
-# Frozen until we know what to do with this
-"""
-function get_available_criteria_by_sample(sample)
-    return get_available_criteria_by("sample", sample)
-end
-
-function get_available_criteria_by_index(index)
-    return get_available_criteria_by("index", index)
-end
-
-function get_available_criteria_by(by, value)
-    criterias = []
-    for k in keys(AVAILABLE_CRITERIA)
-        if value == AVAILABLE_CRITERIA[k][by]
-            push!(criterias, k)
-        end
-    end
-    return criterias
-end
-"""
