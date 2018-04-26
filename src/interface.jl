@@ -1,6 +1,7 @@
 function gsreg(equation::String; data::DataFrame=nothing, intercept::Bool=INTERCEPT_DEFAULT,
                outsample::Int=OUTSAMPLE_DEFAULT, samesample::Bool=SAMESAMPLE_DEFAULT, threads=THREADS_DEFAULT,
-               criteria=CRITERIA_DEFAULT, resultscsv::String=CSV_DEFAULT, csv::String=CSV_DEFAULT, ttest=TTEST_DEFAULT, fast=FAST_DEFAULT)
+               criteria=CRITERIA_DEFAULT, resultscsv::String=CSV_DEFAULT, csv::String=CSV_DEFAULT, ttest=TTEST_DEFAULT,
+                fast=FAST_DEFAULT)
 
     return gsreg(equation, data, intercept=intercept, outsample=outsample, samesample=samesample, threads=threads,
                  criteria=criteria, resultscsv=resultscsv, csv=csv, ttest=ttest, fast=fast)
@@ -8,7 +9,8 @@ end
 
 function gsreg(equation::String, data::DataFrame; intercept::Bool=INTERCEPT_DEFAULT,
                outsample::Int=OUTSAMPLE_DEFAULT, samesample::Bool=SAMESAMPLE_DEFAULT, threads=THREADS_DEFAULT,
-               criteria=CRITERIA_DEFAULT, resultscsv::String=CSV_DEFAULT, csv::String=CSV_DEFAULT, ttest=TTEST_DEFAULT, fast=FAST_DEFAULT)
+               criteria=CRITERIA_DEFAULT, resultscsv::String=CSV_DEFAULT, csv::String=CSV_DEFAULT, ttest=TTEST_DEFAULT,
+                fast=FAST_DEFAULT)
 
     if contains(equation, "~")
         equation = replace(equation, r"\s+|\s+$/g", "")
@@ -24,7 +26,8 @@ end
 
 function gsreg(equation::Array{String}, data::DataFrame; intercept::Bool=INTERCEPT_DEFAULT,
     outsample::Int=OUTSAMPLE_DEFAULT, samesample::Bool=SAMESAMPLE_DEFAULT, threads=THREADS_DEFAULT,
-    criteria=CRITERIA_DEFAULT, resultscsv::String=CSV_DEFAULT, csv::String=CSV_DEFAULT, ttest=TTEST_DEFAULT, fast=FAST_DEFAULT)
+    criteria=CRITERIA_DEFAULT, resultscsv::String=CSV_DEFAULT, csv::String=CSV_DEFAULT, ttest=TTEST_DEFAULT,
+     fast=FAST_DEFAULT)
 
     keys = names(data)
     n_equation = []
@@ -37,13 +40,14 @@ function gsreg(equation::Array{String}, data::DataFrame; intercept::Bool=INTERCE
         end
     end
 
-    return gsreg(map(Symbol, unique(n_equation)), data, intercept=intercept, outsample=outsample, samesample=samesample, threads=threads,
-                 criteria=criteria, resultscsv=resultscsv, csv=csv, ttest=ttest, fast=fast)
+    return gsreg(map(Symbol, unique(n_equation)), data, intercept=intercept, outsample=outsample, samesample=samesample,
+     threads=threads, criteria=criteria, resultscsv=resultscsv, csv=csv, ttest=ttest, fast=fast)
 end
 
 function gsreg(equation::Array{Symbol}, data::DataFrame; intercept::Bool=INTERCEPT_DEFAULT,
                outsample::Int=OUTSAMPLE_DEFAULT, samesample::Bool=SAMESAMPLE_DEFAULT, threads=THREADS_DEFAULT,
-               criteria=CRITERIA_DEFAULT, resultscsv::String=CSV_DEFAULT, csv::String=CSV_DEFAULT, ttest=TTEST_DEFAULT, fast=FAST_DEFAULT)
+               criteria=CRITERIA_DEFAULT, resultscsv::String=CSV_DEFAULT, csv::String=CSV_DEFAULT, ttest=TTEST_DEFAULT,
+                fast=FAST_DEFAULT)
 
     if fast
         for c = eachcol(data)
@@ -59,22 +63,6 @@ function gsreg(equation::Array{Symbol}, data::DataFrame; intercept::Bool=INTERCE
             error(OUTSAMPLE_HIGHER_VALUE)
         end
     end
-    """
-    println(typeof(criteria))
-
-    if typeof(criteria) == Array{String,1}
-        criteria = map(Symbol, unique(criteria))
-    end
-
-
-    # Array{Symbol,1}
-    # Array{String,1}
-    # Symbol
-    # String
-
-    return criteria
-    """
-
 
     if criteria == CRITERIA_DEFAULT
         if outsample != OUTSAMPLE_DEFAULT
