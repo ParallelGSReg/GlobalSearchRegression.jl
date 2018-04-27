@@ -15,7 +15,7 @@ TTEST_DEFAULT = false
 FAST_DEFAULT = false
 THREADS_DEFAULT = nthreads()
 CRITERIA_DEFAULT = nothing
-CRITERIA_DEFAULT_OUTSAMPLE = [ :rmseout ]
+CRITERIA_DEFAULT_OUTSAMPLE = [ :rmseout, :r2adj ]
 CRITERIA_DEFAULT_INSAMPLE = [ :r2adj ]
 CSV_DEFAULT = "gsreg.csv"
 
