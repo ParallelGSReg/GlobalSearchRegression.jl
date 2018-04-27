@@ -12,9 +12,6 @@ makedocs(
     format = :html,
     pages = Any[
         "Introduction" => "index.md",
-        "User Guide" => Any[
-            "Getting Started" => "man/getting_started.md",
-        ],
         "API" => Any[
             "Functions" => "lib/functions.md"
         ]
@@ -25,8 +22,7 @@ makedocs(
 # =======================================
 
 deploydocs(
-    # options
-    repo = "github.com/JuliaData/DataFrames.jl.git",
+    repo = "github.com/ParallelGSReg/GSReg.jl.git",
     target = "build",
     julia = "0.6",
     deps = nothing,
