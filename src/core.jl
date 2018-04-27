@@ -85,6 +85,9 @@ type GSRegResult
         criteria,
         ttest,
         fast)
+        if :r2adj ∉ criteria
+            push!(criteria, :r2adj)
+        end
         new(depvar, expvars, data, intercept, outsample, samesample, threads, criteria, ttest, fast)
     end
 end
@@ -151,7 +154,7 @@ function proc!(result::GSRegResult)
         result.results[:order] += AVAILABLE_CRITERIA[criteria]["index"] * (1 / len_criteria) * ( (result.results[criteria] - mean(result.results[criteria]) ) ./ std(result.results[criteria]) )
     end
 
-    sort!(result.results, cols = [:order], rev = true);
+    sort!(result.results, [:order], rev = true);
 end
 
 function Base.show(io::IO, result::GSRegResult)
