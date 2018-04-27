@@ -29,7 +29,7 @@ function gsreg_single_result!(result, order)
     r2 = 1 - var(er) / var(depvar)          # model R-squared
 
     if result.ttest == true
-        bstd = sqrt.(sum( (UpperTriangular(qrf[:R]) \ eye(ncoef)) .^ 2, 2) * (sse / df_e) ) # std deviation of coefficients
+        bstd = sqrt.(sum((UpperTriangular(qrf[:R]) \ eye(result.datatype, ncoef)) .^ 2, 2) * (sse / df_e) ) # std deviation of coefficients
     end
 
     if result.outsample > 0
@@ -44,17 +44,17 @@ function gsreg_single_result!(result, order)
     result.results[order, :index] = order
     cols = get_selected_cols(order)
     for (index, col) in enumerate(cols)
-        result.results[order, Symbol(string(varnames[col],"_b"))] = (result.fast)?Float32(b[index]):b[index]
+        result.results[order, Symbol(string(varnames[col],"_b"))] = result.datatype(b[index])
         if result.ttest == true
-            result.results[order, Symbol(string(varnames[col],"_bstd"))] = (result.fast)?Float32(bstd[index]):bstd[index]
+            result.results[order, Symbol(string(varnames[col],"_bstd"))] = result.datatype(bstd[index])
         end
     end
 
     result.results[order, :nobs] = nobs
     result.results[order, :ncoef] = ncoef
-    result.results[order, :sse] = (result.fast)?Float32(sse):sse
-    result.results[order, :rmse] = (result.fast)?Float32(rmse):rmse
-    result.results[order, :r2] = (result.fast)?Float32(r2):r2
+    result.results[order, :sse] = result.datatype(sse)
+    result.results[order, :rmse] = result.datatype(rmse)
+    result.results[order, :r2] = result.datatype(r2)
 
 end
 
@@ -69,6 +69,7 @@ type GSRegResult
     criteria                # criterios de comparacion (r2adj, caic, aic, bic, cp, rmsein, rmseout)
     ttest::Bool
     fast::Bool
+    datatype
     results                 # aca va la posta
     proc                    # flag de que fue procesado
     post_proc               # flag que fue post procesado
@@ -94,10 +95,10 @@ function proc!(result::GSRegResult)
     num_operations = 2 ^ expvars_num - 1
     result.varnames = [ result.depvar ; result.expvars ]
     result.nobs = size(result.data, 1)
+    result.datatype = (result.fast)?Float32:Float64
 
     if result.intercept
-        the_type_of = (result.fast)?Float32:Float64
-        result.data = Array{the_type_of}(hcat(result.data, ones(result.nobs)))
+        result.data = Array{result.datatype}(hcat(result.data, ones(result.nobs)))
         push!(result.expvars, :_cons)
         push!(result.varnames, :_cons)
     end
@@ -106,12 +107,10 @@ function proc!(result::GSRegResult)
 
     sub_headers = (result.ttest) ? ["_b","_bstd","_t"] : ["_b"]
 
-    type_of_this_array_of_things = (result.fast)?Float32:Float64
     headers = vcat([:index ], [Symbol(string(v,n)) for v in result.expvars for n in sub_headers], [:nobs, :ncoef, :r2], criteria)
-    result.results = DataFrame(vec([Union{type_of_this_array_of_things,Missing,Int} for i in headers]), vec(headers), num_operations)
+    result.results = DataFrame(vec([Union{result.datatype,Missing,Int} for i in headers]), vec(headers), num_operations)
 
     result.results[:] = missing
-
 
     Threads.@threads for i = 1:num_operations
         gsreg_single_result!(result, i)

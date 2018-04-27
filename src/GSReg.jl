@@ -4,7 +4,6 @@ using DataFrames, Missings
 using Base.Threads
 using CSV
 using Compat, Compat.LinearAlgebra
-using ProgressMeter
 
 export gsreg
 
