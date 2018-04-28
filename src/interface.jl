@@ -88,13 +88,14 @@ function gsreg(equation::Array{Symbol}, data::DataFrame; intercept::Bool=INTERCE
         error(NO_ENOUGH_OBSERVATIONS)
     end
 
-    if !in_vector(equation,names(data))
+    if !in_vector(equation, names(data))
         error(SELECTED_VARIABLES_DOES_NOT_EXISTS)
     end
 
+    datanames = names(data)
     data = convert(Array{type_of_array}, data)
     result = gsreg(equation[1], equation[2:end], data, intercept=intercept, outsample=outsample, samesample=samesample,
-                    threads=threads, criteria=criteria, ttest=ttest, method=method, summary=summary)
+                    threads=threads, criteria=criteria, ttest=ttest, method=method, summary=summary, datanames=datanames)
 
     if resultscsv != nothing
         export_csv(resultscsv, result)

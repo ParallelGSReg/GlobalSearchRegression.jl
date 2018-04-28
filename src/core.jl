@@ -1,6 +1,7 @@
 function gsreg(depvar, expvars, data; intercept=nothing, outsample=nothing, samesample=nothing, threads=nothing,
-    criteria=nothing, ttest=nothing, method=nothing, summary=nothing)
+    criteria=nothing, ttest=nothing, method=nothing, summary=nothing, datanames=nothing)
     result = GSRegResult(depvar, expvars, data, intercept, outsample, samesample, threads, criteria, ttest, method)
+    result.datanames = datanames
     proc!(result)
     if summary != nothing
         f = open(summary, "w")
@@ -11,9 +12,8 @@ function gsreg(depvar, expvars, data; intercept=nothing, outsample=nothing, same
 end
 
 function gsreg_single_result!(result, order)
-    data_cols_num = size(result.data, 2)
     cols = get_selected_cols(order)
-
+    data_cols_num = size(result.data, 2)
     if result.intercept
         append!(cols, data_cols_num)
     end
@@ -47,14 +47,12 @@ function gsreg_single_result!(result, order)
     end
 
     result.results[order, :index] = order
-    cols = get_selected_cols(order)
     for (index, col) in enumerate(cols)
-        result.results[order, Symbol(string(varnames[col],"_b"))] = (result.method == "fast")?Float32(b[index]):b[index]
+        result.results[order, Symbol(string(result.datanames[col],"_b"))] = (result.method == "fast")?Float32(b[index]):b[index]
         if result.ttest == true
-            result.results[order, Symbol(string(varnames[col],"_bstd"))] = (result.method == "fast")?Float32(bstd[index]):bstd[index]
+            result.results[order, Symbol(string(result.datanames[col],"_bstd"))] = (result.method == "fast")?Float32(bstd[index]):bstd[index]
         end
     end
-
     result.results[order, :nobs] = nobs
     result.results[order, :ncoef] = ncoef
     result.results[order, :sse] = (result.method == "fast")?Float32(sse):sse
@@ -78,6 +76,8 @@ type GSRegResult
     post_proc               # flag que fue post procesado
     varnames
     nobs
+    datanames
+    otro
     function GSRegResult(
         depvar::Symbol,
         expvars::Array{Symbol},
@@ -107,6 +107,7 @@ function proc!(result::GSRegResult)
         result.data = Array{the_type_of}(hcat(result.data, ones(result.nobs)))
         push!(result.expvars, :_cons)
         push!(result.varnames, :_cons)
+        push!(result.datanames, :_cons)
     end
 
     criteria = collect(keys(AVAILABLE_CRITERIA))
@@ -116,11 +117,10 @@ function proc!(result::GSRegResult)
     type_of_this_array_of_things = (result.method == "fast")?Float32:Float64
     headers = vcat([:index ], [Symbol(string(v,n)) for v in result.expvars for n in sub_headers], [:nobs, :ncoef, :r2], criteria)
     result.results = DataFrame(vec([Union{type_of_this_array_of_things,Missing,Int} for i in headers]), vec(headers), num_operations)
-
     result.results[:] = missing
 
 
-    Threads.@threads for i = 1:num_operations
+    for i = 1:num_operations
         gsreg_single_result!(result, i)
     end
 
@@ -180,8 +180,16 @@ function to_string(result::GSRegResult)
     end
     out *= @sprintf("\n")
     out *= @sprintf("──────────────────────────────────────────────────────────────────────────────\n")
-    for expvar in result.expvars[get_selected_cols(result.results[1,:index])-1]
+
+    cols = get_selected_cols(result.results[1,:index])
+    data_cols_num = size(result.data, 2)
+    if result.intercept
+        append!(cols, data_cols_num)
+    end
+    #for expvar in result.expvars[get_selected_cols(result.results[1,:index])-1]
+    for expvar in result.datanames[cols]
         out *= @sprintf(" %-35s", expvar)
+
         out *= @sprintf(" %-10f", result.results[1,Symbol(expvar,"_b")])
         if result.ttest
             out *= @sprintf("   %-10f", result.results[1,Symbol(expvar,"_bstd")])
