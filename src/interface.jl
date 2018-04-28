@@ -101,25 +101,3 @@ function gsreg(equation::Array{Symbol}, data::DataFrame; intercept::Bool=INTERCE
     end
     return result
 end
-
-
-"""
-equation = las variables que se van a seleccionar
-data = data array con todos los datos
-intercept = include intercept (old no constant)
-outsample = cantidad de observaciones a excluir
-samesample = excluir observaciones que no tengan algunas de las variables
-threads = cantidad de threads a usar (paralelismo o no)
-criteria = criterios de comparacion (r2adj, caic, aic, bic, cp, rmsein, rmseout)
-resultscsv = salida a un csv
-csv = salida a un csv
-
-TODO: Read about
-function (::Core.kwftype(typeof(circle)))(kw::Array, circle, center, radius)
-    options = Any[]
-    color = arg associated with :color, or black if not found
-    fill = arg associated with :fill, or true if not found
-    # push remaining elements of kw into options array
-    #circle#1(color, fill, options, circle, center, radius)
-end
-"""

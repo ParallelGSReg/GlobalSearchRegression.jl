@@ -1,4 +1,4 @@
-# GSReg
+# GSReg [![Build Status](https://travis-ci.org/ParallelGSReg/GSReg.jl.svg?branch=master)](https://travis-ci.org/ParallelGSReg/GSReg.jl)
 
 ## Syntax
 
