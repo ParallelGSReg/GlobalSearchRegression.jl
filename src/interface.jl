@@ -53,7 +53,7 @@ function gsreg(equation::Array{Symbol}, data::DataFrame; intercept::Bool=INTERCE
             data[c[1]] = map(Float32,c[2])
         end
         type_of_array = Float32
-    else if method == "precise"
+    elseif method == "precise"
         type_of_array = Float64
     else
         error(METHOD_INVALID)
