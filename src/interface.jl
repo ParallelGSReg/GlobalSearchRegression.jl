@@ -1,15 +1,15 @@
 function gsreg(equation::String; data::DataFrame=nothing, intercept::Bool=INTERCEPT_DEFAULT,
                outsample::Int=OUTSAMPLE_DEFAULT, samesample::Bool=SAMESAMPLE_DEFAULT, threads=THREADS_DEFAULT,
                criteria=CRITERIA_DEFAULT, resultscsv::String=CSV_DEFAULT, csv::String=CSV_DEFAULT, ttest=TTEST_DEFAULT,
-                method=METHOD_DEFAULT)
+                method=METHOD_DEFAULT, summary=nothing)
     return gsreg(equation, data, intercept=intercept, outsample=outsample, samesample=samesample, threads=threads,
-                 criteria=criteria, resultscsv=resultscsv, csv=csv, ttest=ttest, method=method)
+                 criteria=criteria, resultscsv=resultscsv, csv=csv, ttest=ttest, method=method, summary=summary)
 end
 
 function gsreg(equation::String, data::DataFrame;
     intercept::Bool=INTERCEPT_DEFAULT, outsample::Int=OUTSAMPLE_DEFAULT, samesample::Bool=SAMESAMPLE_DEFAULT,
     threads=THREADS_DEFAULT, criteria=CRITERIA_DEFAULT, resultscsv::String=CSV_DEFAULT, csv::String=CSV_DEFAULT,
-    ttest=TTEST_DEFAULT, method=METHOD_DEFAULT)
+    ttest=TTEST_DEFAULT, method=METHOD_DEFAULT, summary=nothing)
 
     if contains(equation, "~")
         equation = replace(equation, r"\s+|\s+$/g", "")
@@ -20,13 +20,13 @@ function gsreg(equation::String, data::DataFrame;
     end
 
     return gsreg(equation, data, intercept=intercept, outsample=outsample, samesample=samesample, threads=threads,
-                 criteria=criteria, resultscsv=resultscsv, csv=csv, ttest=ttest, method=method)
+                 criteria=criteria, resultscsv=resultscsv, csv=csv, ttest=ttest, method=method, summary=summary)
 end
 
 function gsreg(equation::Array{String}, data::DataFrame; intercept::Bool=INTERCEPT_DEFAULT,
     outsample::Int=OUTSAMPLE_DEFAULT, samesample::Bool=SAMESAMPLE_DEFAULT, threads=THREADS_DEFAULT,
     criteria=CRITERIA_DEFAULT, resultscsv::String=CSV_DEFAULT, csv::String=CSV_DEFAULT, ttest=TTEST_DEFAULT,
-     method=METHOD_DEFAULT)
+     method=METHOD_DEFAULT, summary=nothing)
 
     keys = names(data)
     n_equation = []
@@ -40,13 +40,13 @@ function gsreg(equation::Array{String}, data::DataFrame; intercept::Bool=INTERCE
     end
 
     return gsreg(map(Symbol, unique(n_equation)), data, intercept=intercept, outsample=outsample, samesample=samesample,
-     threads=threads, criteria=criteria, resultscsv=resultscsv, csv=csv, ttest=ttest, method=method)
+     threads=threads, criteria=criteria, resultscsv=resultscsv, csv=csv, ttest=ttest, method=method, summary=summary)
 end
 
 function gsreg(equation::Array{Symbol}, data::DataFrame; intercept::Bool=INTERCEPT_DEFAULT,
                outsample::Int=OUTSAMPLE_DEFAULT, samesample::Bool=SAMESAMPLE_DEFAULT, threads=THREADS_DEFAULT,
                criteria=CRITERIA_DEFAULT, resultscsv::String=CSV_DEFAULT, csv::String=CSV_DEFAULT, ttest=TTEST_DEFAULT,
-                method=METHOD_DEFAULT)
+                method=METHOD_DEFAULT, summary=nothing)
 
     if method == "fast"
         for c = eachcol(data)
@@ -94,7 +94,7 @@ function gsreg(equation::Array{Symbol}, data::DataFrame; intercept::Bool=INTERCE
 
     data = convert(Array{type_of_array}, data)
     result = gsreg(equation[1], equation[2:end], data, intercept=intercept, outsample=outsample, samesample=samesample,
-                    threads=threads, criteria=criteria, ttest=ttest, method=method)
+                    threads=threads, criteria=criteria, ttest=ttest, method=method, summary=summary)
 
     if resultscsv != nothing
         export_csv(resultscsv, result)

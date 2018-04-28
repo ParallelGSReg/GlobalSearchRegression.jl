@@ -7,17 +7,17 @@ using Compat, Compat.LinearAlgebra
 
 export gsreg
 
-INTERCEPT_DEFAULT = true
-INSAMPLE_MIN_SIZE = 20
-OUTSAMPLE_DEFAULT = 0
-SAMESAMPLE_DEFAULT = false
-TTEST_DEFAULT = false
-METHOD_DEFAULT = "fast"
-THREADS_DEFAULT = nthreads()
-CRITERIA_DEFAULT = nothing
-CRITERIA_DEFAULT_OUTSAMPLE = [ :rmseout ]
-CRITERIA_DEFAULT_INSAMPLE = [ ]
-CSV_DEFAULT = "gsreg.csv"
+const INTERCEPT_DEFAULT = true
+const INSAMPLE_MIN_SIZE = 20
+const OUTSAMPLE_DEFAULT = 0
+const SAMESAMPLE_DEFAULT = false
+const TTEST_DEFAULT = false
+const METHOD_DEFAULT = "fast"
+const THREADS_DEFAULT = nthreads()
+const CRITERIA_DEFAULT = nothing
+const CRITERIA_DEFAULT_OUTSAMPLE = [ :rmseout ]
+const CRITERIA_DEFAULT_INSAMPLE = [ ]
+const CSV_DEFAULT = "gsreg.csv"
 
 AVAILABLE_METHODS = ["precise","fast"]
 

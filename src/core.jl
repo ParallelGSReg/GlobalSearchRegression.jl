@@ -1,7 +1,12 @@
 function gsreg(depvar, expvars, data; intercept=nothing, outsample=nothing, samesample=nothing, threads=nothing,
-    criteria=nothing, ttest=nothing, method=nothing)
+    criteria=nothing, ttest=nothing, method=nothing, summary=nothing)
     result = GSRegResult(depvar, expvars, data, intercept, outsample, samesample, threads, criteria, ttest, method)
     proc!(result)
+    if summary != nothing
+        f = open(summary, "w")
+        write(f,to_string(result))
+        close(f)
+    end
     return result
 end
 
@@ -55,7 +60,6 @@ function gsreg_single_result!(result, order)
     result.results[order, :sse] = (result.method == "fast")?Float32(sse):sse
     result.results[order, :rmse] = (result.method == "fast")?Float32(rmse):rmse
     result.results[order, :r2] = (result.method == "fast")?Float32(r2):r2
-
 end
 
 type GSRegResult
@@ -157,41 +161,45 @@ function proc!(result::GSRegResult)
     sort!(result.results, [:order], rev = true);
 end
 
-function Base.show(io::IO, result::GSRegResult)
-    @printf("\n")
-    @printf("══════════════════════════════════════════════════════════════════════════════\n")
-    @printf("                              Best model results                              \n")
-    @printf("══════════════════════════════════════════════════════════════════════════════\n")
-    @printf("                                                                              \n")
-    @printf("                                     Dependent variable: %s                   \n", result.depvar)
-    @printf("                                     ─────────────────────────────────────────\n")
-    @printf("                                                                              \n")
-    @printf(" Selected covariates                 Coef.")
+function to_string(result::GSRegResult)
+    out = ""
+    out *= @sprintf("\n")
+    out *= @sprintf("══════════════════════════════════════════════════════════════════════════════\n")
+    out *= @sprintf("                              Best model results                              \n")
+    out *= @sprintf("══════════════════════════════════════════════════════════════════════════════\n")
+    out *= @sprintf("                                                                              \n")
+    out *= @sprintf("                                     Dependent variable: %s                   \n", result.depvar)
+    out *= @sprintf("                                     ─────────────────────────────────────────\n")
+    out *= @sprintf("                                                                              \n")
+    out *= @sprintf(" Selected covariates                 Coef.")
     if result.ttest
-        @printf("        Std.         t-test")
+        out *= @sprintf("        Std.         t-test")
     end
     if result.outsample > 0
-        @printf("        Rmseout")
+        out *= @sprintf("        Rmseout")
     end
-    @printf("\n")
-    @printf("──────────────────────────────────────────────────────────────────────────────\n")
+    out *= @sprintf("\n")
+    out *= @sprintf("──────────────────────────────────────────────────────────────────────────────\n")
     for expvar in result.expvars[get_selected_cols(result.results[1,:index])-1]
-        @printf(" %-35s", expvar)
-        @printf(" %-10f", result.results[1,Symbol(expvar,"_b")])
+        out *= @sprintf(" %-35s", expvar)
+        out *= @sprintf(" %-10f", result.results[1,Symbol(expvar,"_b")])
         if result.ttest
-            @printf("   %-10f", result.results[1,Symbol(expvar,"_bstd")])
-            @printf("   %-10f", result.results[1,Symbol(expvar,"_t")])
+            out *= @sprintf("   %-10f", result.results[1,Symbol(expvar,"_bstd")])
+            out *= @sprintf("   %-10f", result.results[1,Symbol(expvar,"_t")])
         end
-        @printf("\n")
+        out *= @sprintf("\n")
     end
-    @printf("──────────────────────────────────────────────────────────────────────────────\n")
-    @printf(" Observations                        %-10d\n", result.results[1,:nobs])
-    @printf(" Adjusted R²                         %-10f\n", result.results[1,:r2adj])
-    @printf(" F-statistic                         %-10f\n", result.results[1,:F])
+    out *= @sprintf("──────────────────────────────────────────────────────────────────────────────\n")
+    out *= @sprintf(" Observations                        %-10d\n", result.results[1,:nobs])
+    out *= @sprintf(" Adjusted R²                         %-10f\n", result.results[1,:r2adj])
+    out *= @sprintf(" F-statistic                         %-10f\n", result.results[1,:F])
     for criteria in result.criteria
         if AVAILABLE_CRITERIA[criteria]["verbose_show"]
-    @printf(" %-30s      %-10f\n", AVAILABLE_CRITERIA[criteria]["verbose_title"], result.results[1,criteria])
+    out *= @sprintf(" %-30s      %-10f\n", AVAILABLE_CRITERIA[criteria]["verbose_title"], result.results[1,criteria])
         end
     end
-    @printf("──────────────────────────────────────────────────────────────────────────────\n")
+    out *= @sprintf("──────────────────────────────────────────────────────────────────────────────\n")
+    return out
 end
+
+Base.show(io::IO, result::GSRegResult) = print(to_string(result))
