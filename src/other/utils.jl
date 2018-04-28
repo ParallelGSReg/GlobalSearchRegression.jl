@@ -40,6 +40,6 @@ function export_csv(output, result)
     end
 
     sub_headers = (result.ttest) ? ["_b","_t"] : ["_b"]
-    headers = vcat([:index ], [Symbol(string(v,n)) for v in result.expvars for n in sub_headers], [:nobs, :ncoef], criteria)
+    headers = vcat([:index ], [Symbol(string(v,n)) for v in result.expvars for n in sub_headers], [:nobs, :ncoef, :F], criteria)
     CSV.write(output, result.results[headers])
 end
