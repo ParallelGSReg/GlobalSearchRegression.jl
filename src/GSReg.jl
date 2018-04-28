@@ -12,12 +12,14 @@ INSAMPLE_MIN_SIZE = 20
 OUTSAMPLE_DEFAULT = 0
 SAMESAMPLE_DEFAULT = false
 TTEST_DEFAULT = false
-FAST_DEFAULT = false
+METHOD_DEFAULT = "fast"
 THREADS_DEFAULT = nthreads()
 CRITERIA_DEFAULT = nothing
 CRITERIA_DEFAULT_OUTSAMPLE = [ :rmseout ]
 CRITERIA_DEFAULT_INSAMPLE = [ ]
 CSV_DEFAULT = "gsreg.csv"
+
+AVAILABLE_METHODS = ["precise","fast"]
 
 # NOTE:
 # (adanmauri) Replaced below

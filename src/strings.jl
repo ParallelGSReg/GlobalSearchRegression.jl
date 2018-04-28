@@ -4,3 +4,4 @@ OUTSAMPLE_HIGHER_VALUE = "outsample parameter is too high to ensure enought obse
 CSV_DUPLICATED_PARAMETERS = "resultscsv and csv parameters are defined at the same time"
 NO_ENOUGH_OBSERVATIONS = "there is no enough observations"
 SELECTED_VARIABLES_DOES_NOT_EXISTS = "selected variables does not exists"
+METHOD_INVALID = "invalid method, must be ""fast"" (32b) or ""precise"""

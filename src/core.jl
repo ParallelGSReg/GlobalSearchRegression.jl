@@ -1,6 +1,6 @@
 function gsreg(depvar, expvars, data; intercept=nothing, outsample=nothing, samesample=nothing, threads=nothing,
-    criteria=nothing, ttest=nothing, fast=nothing)
-    result = GSRegResult(depvar, expvars, data, intercept, outsample, samesample, threads, criteria, ttest, fast)
+    criteria=nothing, ttest=nothing, method=nothing)
+    result = GSRegResult(depvar, expvars, data, intercept, outsample, samesample, threads, criteria, ttest, method)
     proc!(result)
     return result
 end
@@ -44,17 +44,17 @@ function gsreg_single_result!(result, order)
     result.results[order, :index] = order
     cols = get_selected_cols(order)
     for (index, col) in enumerate(cols)
-        result.results[order, Symbol(string(varnames[col],"_b"))] = (result.fast)?Float32(b[index]):b[index]
+        result.results[order, Symbol(string(varnames[col],"_b"))] = (result.method == "fast")?Float32(b[index]):b[index]
         if result.ttest == true
-            result.results[order, Symbol(string(varnames[col],"_bstd"))] = (result.fast)?Float32(bstd[index]):bstd[index]
+            result.results[order, Symbol(string(varnames[col],"_bstd"))] = (result.method == "fast")?Float32(bstd[index]):bstd[index]
         end
     end
 
     result.results[order, :nobs] = nobs
     result.results[order, :ncoef] = ncoef
-    result.results[order, :sse] = (result.fast)?Float32(sse):sse
-    result.results[order, :rmse] = (result.fast)?Float32(rmse):rmse
-    result.results[order, :r2] = (result.fast)?Float32(r2):r2
+    result.results[order, :sse] = (result.method == "fast")?Float32(sse):sse
+    result.results[order, :rmse] = (result.method == "fast")?Float32(rmse):rmse
+    result.results[order, :r2] = (result.method == "fast")?Float32(r2):r2
 
 end
 
@@ -68,7 +68,7 @@ type GSRegResult
     threads                 # cantidad de threads a usar (paralelismo o no)
     criteria                # criterios de comparacion (r2adj, caic, aic, bic, cp, rmsein, rmseout)
     ttest::Bool
-    fast::Bool
+    method::String
     results                 # aca va la posta
     proc                    # flag de que fue procesado
     post_proc               # flag que fue post procesado
@@ -84,11 +84,11 @@ type GSRegResult
         threads::Int,
         criteria,
         ttest,
-        fast)
+        method)
         if :r2adj ∉ criteria
             push!(criteria, :r2adj)
         end
-        new(depvar, expvars, data, intercept, outsample, samesample, threads, criteria, ttest, fast)
+        new(depvar, expvars, data, intercept, outsample, samesample, threads, criteria, ttest, method)
     end
 end
 
@@ -99,7 +99,7 @@ function proc!(result::GSRegResult)
     result.nobs = size(result.data, 1)
 
     if result.intercept
-        the_type_of = (result.fast)?Float32:Float64
+        the_type_of = (result.method == "fast")?Float32:Float64
         result.data = Array{the_type_of}(hcat(result.data, ones(result.nobs)))
         push!(result.expvars, :_cons)
         push!(result.varnames, :_cons)
@@ -109,7 +109,7 @@ function proc!(result::GSRegResult)
 
     sub_headers = (result.ttest) ? ["_b","_bstd","_t"] : ["_b"]
 
-    type_of_this_array_of_things = (result.fast)?Float32:Float64
+    type_of_this_array_of_things = (result.method == "fast")?Float32:Float64
     headers = vcat([:index ], [Symbol(string(v,n)) for v in result.expvars for n in sub_headers], [:nobs, :ncoef, :r2], criteria)
     result.results = DataFrame(vec([Union{type_of_this_array_of_things,Missing,Int} for i in headers]), vec(headers), num_operations)
 
@@ -154,7 +154,7 @@ function proc!(result::GSRegResult)
         result.results[:order] += AVAILABLE_CRITERIA[criteria]["index"] * (1 / len_criteria) * ( (result.results[criteria] - mean(result.results[criteria]) ) ./ std(result.results[criteria]) )
     end
 
-    sort!(result.results, cols = [:order], rev = true);
+    sort!(result.results, [:order], rev = true);
 end
 
 function Base.show(io::IO, result::GSRegResult)
