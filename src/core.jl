@@ -120,7 +120,7 @@ function proc!(result::GSRegResult)
     result.results[:] = missing
 
 
-    for i = 1:num_operations
+    Threads.@threads for i = 1:num_operations
         gsreg_single_result!(result, i)
     end
 
