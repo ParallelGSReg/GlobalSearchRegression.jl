@@ -120,7 +120,7 @@ function proc!(result::GSRegResult)
     result.results = DataFrame(vec([Union{type_of_this_array_of_things,Missing,Int} for i in headers]), vec(headers), num_operations)
     result.results[:] = missing
 
-    for i = 1:num_operations
+    Threads.@threads for i = 1:num_operations
         gsreg_single_result!(result, i)
     end
 
