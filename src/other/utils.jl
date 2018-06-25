@@ -1,6 +1,4 @@
-function get_selected_cols(i)
-    # NOTE:
-    # (adanmauri) Get cols entirely changed because we need start from index 2
+function get_selected_cols(i, datanames, varnames)
     cols = zeros(Int64, 0)
     binary = bin(i)
     k = 2
@@ -9,12 +7,13 @@ function get_selected_cols(i)
             append!(cols, k)
         end
         k = k + 1
+    end  
+    for (index, col) in enumerate(cols)
+        cols[index] = findfirst(datanames, varnames[col])
     end
     return cols
 end
 
-
-# returns an array of symbols with y as first item.
 function get_default_varnames(expvars_num::Integer)
     [ :y ; [ Symbol("x$i") for i = 1:expvars_num ] ]
 end
