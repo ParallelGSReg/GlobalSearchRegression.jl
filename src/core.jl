@@ -121,9 +121,20 @@ function proc!(result::GSRegResult)
     result.results = DataFrame(vec([Union{type_of_this_array_of_things,Missing,Int} for i in headers]), vec(headers), num_operations)
     result.results[:] = missing
 
-    Threads.@threads for i = 1:num_operations
-        gsreg_single_result!(result, i)
+    nth = Threads.nthreads()
+    ops_by_worker = div(num_operations, nth)
+    resto = num_operations - ops_by_worker * nth
+    Threads.@threads for i = 1:nth
+        for j = 1:ops_by_worker
+            gsreg_single_result!(result, ( i - 1 ) * ops_by_worker + j )
+        end
+        if( i == nth )
+            for k = 1:resto
+                gsreg_single_result!(result, i * ops_by_worker + k )
+            end
+        end
     end
+
 
     if result.ttest
         for varname in result.expvars

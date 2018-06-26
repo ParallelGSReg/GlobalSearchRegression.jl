@@ -1,6 +1,6 @@
 function gsreg(equation::String; data::DataFrame=nothing, intercept::Bool=INTERCEPT_DEFAULT,
                outsample::Int=OUTSAMPLE_DEFAULT, samesample::Bool=SAMESAMPLE_DEFAULT, threads=THREADS_DEFAULT,
-               criteria=CRITERIA_DEFAULT, resultscsv::String=CSV_DEFAULT, csv::String=CSV_DEFAULT, ttest=TTEST_DEFAULT,
+               criteria=CRITERIA_DEFAULT, resultscsv=CSV_DEFAULT, csv=CSV_DEFAULT, ttest=TTEST_DEFAULT,
                 method=METHOD_DEFAULT, summary=nothing)
     return gsreg(equation, data, intercept=intercept, outsample=outsample, samesample=samesample, threads=threads,
                  criteria=criteria, resultscsv=resultscsv, csv=csv, ttest=ttest, method=method, summary=summary)
@@ -8,7 +8,7 @@ end
 
 function gsreg(equation::String, data::DataFrame;
     intercept::Bool=INTERCEPT_DEFAULT, outsample::Int=OUTSAMPLE_DEFAULT, samesample::Bool=SAMESAMPLE_DEFAULT,
-    threads=THREADS_DEFAULT, criteria=CRITERIA_DEFAULT, resultscsv::String=CSV_DEFAULT, csv::String=CSV_DEFAULT,
+    threads=THREADS_DEFAULT, criteria=CRITERIA_DEFAULT, resultscsv=CSV_DEFAULT, csv=CSV_DEFAULT,
     ttest=TTEST_DEFAULT, method=METHOD_DEFAULT, summary=nothing)
 
     if contains(equation, "~")
@@ -25,7 +25,7 @@ end
 
 function gsreg(equation::Array{String}, data::DataFrame; intercept::Bool=INTERCEPT_DEFAULT,
     outsample::Int=OUTSAMPLE_DEFAULT, samesample::Bool=SAMESAMPLE_DEFAULT, threads=THREADS_DEFAULT,
-    criteria=CRITERIA_DEFAULT, resultscsv::String=CSV_DEFAULT, csv::String=CSV_DEFAULT, ttest=TTEST_DEFAULT,
+    criteria=CRITERIA_DEFAULT, resultscsv=CSV_DEFAULT, csv=CSV_DEFAULT, ttest=TTEST_DEFAULT,
      method=METHOD_DEFAULT, summary=nothing)
 
     keys = names(data)
@@ -45,7 +45,7 @@ end
 
 function gsreg(equation::Array{Symbol}, data::DataFrame; intercept::Bool=INTERCEPT_DEFAULT,
                outsample::Int=OUTSAMPLE_DEFAULT, samesample::Bool=SAMESAMPLE_DEFAULT, threads=THREADS_DEFAULT,
-               criteria=CRITERIA_DEFAULT, resultscsv::String=CSV_DEFAULT, csv::String=CSV_DEFAULT, ttest=TTEST_DEFAULT,
+               criteria=CRITERIA_DEFAULT, resultscsv=CSV_DEFAULT, csv=CSV_DEFAULT, ttest=TTEST_DEFAULT,
                 method=METHOD_DEFAULT, summary=nothing)
 
     if method == "fast"
