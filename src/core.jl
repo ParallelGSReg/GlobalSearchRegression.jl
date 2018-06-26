@@ -2,6 +2,7 @@ function gsreg(depvar, expvars, data; intercept=nothing, outsample=nothing, same
     criteria=nothing, ttest=nothing, method=nothing, summary=nothing, datanames=nothing)
     result = GSRegResult(depvar, expvars, data, intercept, outsample, samesample, threads, criteria, ttest, method)
     result.datanames = datanames
+
     proc!(result)
     if summary != nothing
         f = open(summary, "w")
@@ -12,7 +13,7 @@ function gsreg(depvar, expvars, data; intercept=nothing, outsample=nothing, same
 end
 
 function gsreg_single_result!(result, order)
-    cols = get_selected_cols(order, result.datanames, result.varnames)
+    cols = get_selected_cols(order)
 
     data_cols_num = size(result.data, 2)
     if result.intercept
@@ -100,7 +101,7 @@ end
 function proc!(result::GSRegResult)
     expvars_num = size(result.expvars, 1)
     num_operations = 2 ^ expvars_num - 1
-    result.varnames = [ result.depvar ; result.expvars ]
+    result.varnames = result.datanames
     result.nobs = size(result.data, 1)
 
     if result.intercept
@@ -181,13 +182,12 @@ function to_string(result::GSRegResult)
     out *= @sprintf("\n")
     out *= @sprintf("──────────────────────────────────────────────────────────────────────────────\n")
 
-    cols = get_selected_cols(result.results[1,:index], result.datanames, result.varnames)
+    cols = get_selected_cols(result.results[1,:index])
 
     data_cols_num = size(result.data, 2)
     if result.intercept
         append!(cols, data_cols_num)
     end
-    #for expvar in result.expvars[get_selected_cols(result.results[1,:index])-1]
     for expvar in result.datanames[cols]
         out *= @sprintf(" %-35s", expvar)
 

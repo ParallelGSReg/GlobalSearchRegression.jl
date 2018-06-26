@@ -1,4 +1,4 @@
-function get_selected_cols(i, datanames, varnames)
+function get_selected_cols(i)
     cols = zeros(Int64, 0)
     binary = bin(i)
     k = 2
@@ -8,9 +8,6 @@ function get_selected_cols(i, datanames, varnames)
         end
         k = k + 1
     end  
-    for (index, col) in enumerate(cols)
-        cols[index] = findfirst(datanames, varnames[col])
-    end
     return cols
 end
 
