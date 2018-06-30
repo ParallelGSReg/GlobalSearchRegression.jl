@@ -123,18 +123,18 @@ function proc!(result::GSRegResult)
 
     nth = Threads.nthreads()
     ops_by_worker = div(num_operations, nth)
-    resto = num_operations - ops_by_worker * nth
+    
+    remainder = num_operations - ops_by_worker * nth
     Threads.@threads for i = 1:nth
         for j = 1:ops_by_worker
-            gsreg_single_result!(result, ( i - 1 ) * ops_by_worker + j )
+            gsreg_single_result!(result, i + nth * ( j - 1 ) )
         end
         if( i == nth )
-            for k = 1:resto
+            for k = 1:remainder
                 gsreg_single_result!(result, i * ops_by_worker + k )
             end
         end
     end
-
 
     if result.ttest
         for varname in result.expvars
