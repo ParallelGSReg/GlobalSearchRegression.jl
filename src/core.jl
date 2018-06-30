@@ -62,6 +62,72 @@ function gsreg_single_result!(result, order)
     result.results[order, :r2] = (result.method == "fast")?Float32(r2):r2
 end
 
+function gsreg_single_proc_result!(data, results, order)
+    cols = get_selected_cols(order)
+
+    data_cols_num = size(data, 2)
+
+    outsample = 4
+    ttest = true
+    method = "fast"
+    intercept = true
+
+    if intercept
+        append!(cols, data_cols_num)
+    end
+
+    mult_col = (ttest == true)?3:1
+    depvar = @view(data[1:end-outsample, 1])
+    expvars = @view(data[1:end-outsample, cols])
+
+    nobs = size(depvar, 1)
+    ncoef = size(expvars, 2)
+    qrf = qrfact(expvars)
+    b = qrf \ depvar                        # estimate
+    er = depvar - expvars * b               # in-sample residuals
+    sse = sum(er .^ 2)                      # residual sum of squares
+    df_e = nobs - ncoef                     # degrees of freedom
+    rmse = sqrt(sse / nobs)                 # root mean squared error
+    r2 = 1 - var(er) / var(depvar)          # model R-squared
+
+    if ttest == true
+        bstd = sqrt.(sum( (UpperTriangular(qrf[:R]) \ eye(ncoef)) .^ 2, 2) * (sse / df_e) ) # std deviation of coefficients
+    end
+
+    if outsample > 0
+        depvar_out = @view(data[end-outsample:end, 1])
+        expvars_out = @view(data[end-outsample:end, cols])
+        erout = depvar_out - expvars_out * b          # out-of-sample residuals
+        sseout = sum(erout .^ 2)                      # residual sum of squares
+        rmseout = sqrt(sseout / outsample)            # root mean squared error
+        results[order, 6+mult_col*(data_cols_num-1)] = rmseout
+    end
+
+    results[order, 1] = order
+    for (index, col) in enumerate(cols)       
+        displacement = mult_col*(index-1)
+        results[order, 1+displacement] = (method == "fast")?Float32(b[index]):b[index]
+        if ttest == true
+            results[order, 2+displacement] = (method == "fast")?Float32(bstd[index]):bstd[index]
+        end
+    end
+
+    displacement = mult_col*(data_cols_num-1)
+    results[order, 1+displacement] = nobs
+    results[order, 2+displacement] = ncoef
+    results[order, 3+displacement] = (method == "fast")?Float32(sse):sse
+    results[order, 4+displacement] = (method == "fast")?Float32(rmse):rmse
+    results[order, 5+displacement] = (method == "fast")?Float32(r2):r2
+end
+
+function gsreg_proc_result!(data, results, ops_by_worker, i)
+    tic()
+    for j = 1:ops_by_worker
+        gsreg_single_proc_result!(data, results, j)
+    end
+    toc()
+end
+
 type GSRegResult
     depvar::Symbol
     expvars::Array{Symbol}  # los nombres de las variables que se van a combinar
@@ -79,7 +145,6 @@ type GSRegResult
     varnames
     nobs
     datanames
-    otro
     function GSRegResult(
         depvar::Symbol,
         expvars::Array{Symbol},
@@ -121,10 +186,30 @@ function proc!(result::GSRegResult)
     result.results = DataFrame(vec([Union{type_of_this_array_of_things,Missing,Int} for i in headers]), vec(headers), num_operations)
     result.results[:] = missing
 
+    pdata = convert(SharedArray, result.data)
+    presults = SharedArray{type_of_this_array_of_things}(num_operations, size(headers)[1])
+
+    num_procs = nprocs()-1
+    ops_by_worker = div(num_operations, num_procs)
+    num_jobs = (num_procs > num_operations)?num_operations:num_procs
+    jobs = Array{Future}(undef, num_jobs)
+
+    for i = 1:num_jobs
+        jobs[i] = @spawnat i+1 gsreg_proc_result!(pdata, presults, i, ops_by_worker)
+    end
+    
+    for i = 1:num_jobs
+        fetch(jobs[i])
+    end
+
+    println(presults)
+    println("PASO?")
+
     nth = Threads.nthreads()
     ops_by_worker = div(num_operations, nth)
     
     remainder = num_operations - ops_by_worker * nth
+
     Threads.@threads for i = 1:nth
         for j = 1:ops_by_worker
             gsreg_single_result!(result, i + nth * ( j - 1 ) )
