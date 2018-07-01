@@ -3,7 +3,7 @@ function get_selected_cols(i)
     binary = bin(i)
     k = 2
     for i = 1:length(binary)
-        if binary[length(binary)-i+1] == '1'
+        if binary[length(binary) - i + 1] == '1'
             append!(cols, k)
         end
         k = k + 1
@@ -35,7 +35,22 @@ function export_csv(output, result)
         criteria = vcat(criteria, [:rmseout])
     end
 
-    sub_headers = (result.ttest) ? ["_b","_t"] : ["_b"]
+    sub_headers = (result.ttest) ? ["_b", "_t"] : ["_b"]
     headers = vcat([:index ], [Symbol(string(v,n)) for v in result.expvars for n in sub_headers], [:nobs, :ncoef, :F], criteria)
-    CSV.write(output, result.results[headers])
+    #CSV.write(output, result.results[headers])
+
+    head = ""
+
+    l = length(headers)
+    for i = 1:l
+        head = string(head,String(headers[i]))
+        if ( i != l )
+            head = string(head,",")
+        end
+    end
+
+    file = open(string("asd",output), "w")
+    write(file, head)
+    writecsv(file, Array(result.results[headers]))
+    close(file)
 end

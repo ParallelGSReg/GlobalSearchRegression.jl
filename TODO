@@ -1,0 +1,5 @@
+- condicionar el calculo de la salida basados en la memoria disponible (calcular)
+- compilacion
+- autocorrelacion, normalidad, heterosedasticidad
+- la salida tiene infinitos y NaN
+- imprimir salda en pantalla correctamente

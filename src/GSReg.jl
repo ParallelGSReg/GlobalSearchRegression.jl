@@ -1,4 +1,4 @@
-@everywhere module GSReg
+module GSReg
 
 using DataFrames, Missings
 using Base.Threads

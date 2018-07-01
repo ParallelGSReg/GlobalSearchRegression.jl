@@ -62,15 +62,10 @@ function gsreg_single_result!(result, order)
     result.results[order, :r2] = (result.method == "fast")?Float32(r2):r2
 end
 
-function gsreg_single_proc_result!(data, results, order)
+function gsreg_single_proc_result!(data, results, order, outsample, ttest, method, intercept)
     cols = get_selected_cols(order)
 
     data_cols_num = size(data, 2)
-
-    outsample = 4
-    ttest = true
-    method = "fast"
-    intercept = true
 
     if intercept
         append!(cols, data_cols_num)
@@ -104,7 +99,7 @@ function gsreg_single_proc_result!(data, results, order)
     end
 
     results[order, 1] = order
-    for (index, col) in enumerate(cols)       
+    for (index, col) in enumerate(cols)
         displacement = mult_col*(index-1)
         results[order, 1+displacement] = (method == "fast")?Float32(b[index]):b[index]
         if ttest == true
@@ -120,12 +115,11 @@ function gsreg_single_proc_result!(data, results, order)
     results[order, 5+displacement] = (method == "fast")?Float32(r2):r2
 end
 
-function gsreg_proc_result!(data, results, ops_by_worker, i)
-    tic()
-    for j = 1:ops_by_worker
-        gsreg_single_proc_result!(data, results, j)
+function gsreg_proc_result!(data, results, num_procs, ops_by_worker, i, outsample, ttest, method, intercept)
+    @time for j = 1:ops_by_worker
+        order = (j-1) * num_procs + i
+        gsreg_single_proc_result!(data, results, order, outsample, ttest, method, intercept)
     end
-    toc()
 end
 
 type GSRegResult
@@ -182,44 +176,33 @@ function proc!(result::GSRegResult)
     sub_headers = (result.ttest) ? ["_b","_bstd","_t"] : ["_b"]
 
     type_of_this_array_of_things = (result.method == "fast")?Float32:Float64
-    headers = vcat([:index ], [Symbol(string(v,n)) for v in result.expvars for n in sub_headers], [:nobs, :ncoef, :r2], criteria)
-    result.results = DataFrame(vec([Union{type_of_this_array_of_things,Missing,Int} for i in headers]), vec(headers), num_operations)
-    result.results[:] = missing
+    headers = vcat([:index], [Symbol(string(v,n)) for v in result.expvars for n in sub_headers], [:nobs, :ncoef, :r2, :F, :order], criteria)
 
     pdata = convert(SharedArray, result.data)
-    presults = SharedArray{type_of_this_array_of_things}(num_operations, size(headers)[1])
+    presults = SharedArray{type_of_this_array_of_things}(num_operations, size(headers,1))
 
-    num_procs = nprocs()-1
+    num_procs = (nprocs()==1)? 1 : nprocs()-1 #exclude REPL worker if -p exists
     ops_by_worker = div(num_operations, num_procs)
     num_jobs = (num_procs > num_operations)?num_operations:num_procs
-    jobs = Array{Future}(undef, num_jobs)
+    remainder = num_operations - ops_by_worker * num_jobs
+
+    jobs = []
 
     for i = 1:num_jobs
-        jobs[i] = @spawnat i+1 gsreg_proc_result!(pdata, presults, i, ops_by_worker)
-    end
-    
-    for i = 1:num_jobs
-        fetch(jobs[i])
+        push!(jobs, @spawnat (num_procs==1)?1:i+1 gsreg_proc_result!(pdata, presults, num_jobs, ops_by_worker, i, result.outsample, result.ttest, result.method, result.intercept))
     end
 
-    println(presults)
-    println("PASO?")
+    for job in jobs
+        fetch(job)
+    end
 
-    nth = Threads.nthreads()
-    ops_by_worker = div(num_operations, nth)
-    
-    remainder = num_operations - ops_by_worker * nth
-
-    Threads.@threads for i = 1:nth
-        for j = 1:ops_by_worker
-            gsreg_single_result!(result, i + nth * ( j - 1 ) )
-        end
-        if( i == nth )
-            for k = 1:remainder
-                gsreg_single_result!(result, i * ops_by_worker + k )
-            end
+    if( remainder > 0 )
+        for j = 1:remainder
+            gsreg_single_proc_result!(pdata, presults, j + ops_by_worker * num_jobs, result.outsample, result.ttest, result.method, result.intercept)
         end
     end
+
+    result.results = DataFrame(presults,headers)
 
     if result.ttest
         for varname in result.expvars
