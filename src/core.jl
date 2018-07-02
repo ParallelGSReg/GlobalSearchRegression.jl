@@ -6,72 +6,21 @@ function gsreg(depvar, expvars, data; intercept=nothing, outsample=nothing, same
     proc!(result)
     if summary != nothing
         f = open(summary, "w")
-        write(f,to_string(result))
+        write(f, to_string(result))
         close(f)
     end
     return result
 end
 
-function gsreg_single_result!(result, order)
+
+function gsreg_single_proc_result!(data, results, order, outsample, ttest, method, intercept, varnames, criteria)
     cols = get_selected_cols(order)
-
-    data_cols_num = size(result.data, 2)
-    if result.intercept
-        append!(cols, data_cols_num)
-    end
-
-    depvar = @view(result.data[1:end-result.outsample, 1])
-    expvars = @view(result.data[1:end-result.outsample, cols])
-
-    varnames = result.varnames
-
-    nobs = size(depvar, 1)
-    ncoef = size(expvars, 2)
-    qrf = qrfact(expvars)
-    b = qrf \ depvar                        # estimate
-    er = depvar - expvars * b               # in-sample residuals
-    sse = sum(er .^ 2)                      # residual sum of squares
-    df_e = nobs - ncoef                     # degrees of freedom
-    rmse = sqrt(sse / nobs)                 # root mean squared error
-    r2 = 1 - var(er) / var(depvar)          # model R-squared
-
-    if result.ttest == true
-        bstd = sqrt.(sum( (UpperTriangular(qrf[:R]) \ eye(ncoef)) .^ 2, 2) * (sse / df_e) ) # std deviation of coefficients
-    end
-
-    if result.outsample > 0
-        depvar_out = @view(result.data[end-result.outsample:end, 1])
-        expvars_out = @view(result.data[end-result.outsample:end, cols])
-        erout = depvar_out - expvars_out * b          # out-of-sample residuals
-        sseout = sum(erout .^ 2)                      # residual sum of squares
-        rmseout = sqrt(sseout / result.outsample)        # root mean squared error
-        result.results[order, :rmseout] = rmseout
-    end
-
-    result.results[order, :index] = order
-    for (index, col) in enumerate(cols)
-        result.results[order, Symbol(string(result.datanames[col],"_b"))] = (result.method == "fast")?Float32(b[index]):b[index]
-        if result.ttest == true
-            result.results[order, Symbol(string(result.datanames[col],"_bstd"))] = (result.method == "fast")?Float32(bstd[index]):bstd[index]
-        end
-    end
-    result.results[order, :nobs] = nobs
-    result.results[order, :ncoef] = ncoef
-    result.results[order, :sse] = (result.method == "fast")?Float32(sse):sse
-    result.results[order, :rmse] = (result.method == "fast")?Float32(rmse):rmse
-    result.results[order, :r2] = (result.method == "fast")?Float32(r2):r2
-end
-
-function gsreg_single_proc_result!(data, results, order, outsample, ttest, method, intercept)
-    cols = get_selected_cols(order)
-
     data_cols_num = size(data, 2)
-
     if intercept
         append!(cols, data_cols_num)
-    end
+    end 
 
-    mult_col = (ttest == true)?3:1
+    # Q: @view or not?
     depvar = @view(data[1:end-outsample, 1])
     expvars = @view(data[1:end-outsample, cols])
 
@@ -95,30 +44,34 @@ function gsreg_single_proc_result!(data, results, order, outsample, ttest, metho
         erout = depvar_out - expvars_out * b          # out-of-sample residuals
         sseout = sum(erout .^ 2)                      # residual sum of squares
         rmseout = sqrt(sseout / outsample)            # root mean squared error
-        results[order, 6+mult_col*(data_cols_num-1)] = rmseout
+        results[order, get_data_position(:rmseout, varnames, intercept, ttest, criteria)] = rmseout
     end
 
     results[order, 1] = order
+
     for (index, col) in enumerate(cols)
-        displacement = mult_col*(index-1)
-        results[order, 1+displacement] = (method == "fast")?Float32(b[index]):b[index]
+        results[order, get_data_position(Symbol(string(varnames[col-1], "_b")), varnames, intercept, ttest, criteria)] = (method == "fast")?Float32(b[index]):b[index]
         if ttest == true
-            results[order, 2+displacement] = (method == "fast")?Float32(bstd[index]):bstd[index]
+            results[order, get_data_position(Symbol(string(varnames[col-1], "_bstd")), varnames, intercept, ttest, criteria)] = (method == "fast")?Float32(bstd[index]):bstd[index]
         end
     end
 
-    displacement = mult_col*(data_cols_num-1)
-    results[order, 1+displacement] = nobs
-    results[order, 2+displacement] = ncoef
-    results[order, 3+displacement] = (method == "fast")?Float32(sse):sse
-    results[order, 4+displacement] = (method == "fast")?Float32(rmse):rmse
-    results[order, 5+displacement] = (method == "fast")?Float32(r2):r2
+    nobs_pos = get_data_position(:nobs, varnames, intercept, ttest, criteria)
+    ncoef_pos = get_data_position(:ncoef, varnames, intercept, ttest, criteria)
+    sse_pos = get_data_position(:sse, varnames, intercept, ttest, criteria)
+    rmse_pos = get_data_position(:rmse, varnames, intercept, ttest, criteria)
+    r2_pos = get_data_position(:r2, varnames, intercept, ttest, criteria)
+    results[order, nobs_pos] = nobs
+    results[order, ncoef_pos] = ncoef
+    results[order, sse_pos] = (method == "fast")?Float32(sse):sse
+    results[order, r2_pos] = (method == "fast")?Float32(r2):r2
+    results[order, rmse_pos] = (method == "fast")?Float32(rmse):rmse
 end
 
-function gsreg_proc_result!(data, results, num_procs, ops_by_worker, i, outsample, ttest, method, intercept)
+function gsreg_proc_result!(data, results, num_procs, ops_by_worker, i, outsample, ttest, method, intercept, varnames, criteria)
     @time for j = 1:ops_by_worker
         order = (j-1) * num_procs + i
-        gsreg_single_proc_result!(data, results, order, outsample, ttest, method, intercept)
+        gsreg_single_proc_result!(data, results, order, outsample, ttest, method, intercept, varnames, criteria)
     end
 end
 
@@ -176,11 +129,13 @@ function proc!(result::GSRegResult)
     sub_headers = (result.ttest) ? ["_b","_bstd","_t"] : ["_b"]
 
     type_of_this_array_of_things = (result.method == "fast")?Float32:Float64
-    headers = vcat([:index], [Symbol(string(v,n)) for v in result.expvars for n in sub_headers], [:nobs, :ncoef, :r2, :F, :order], criteria)
+    headers = vcat([:index], [Symbol(string(v,n)) for v in result.expvars for n in sub_headers], [:nobs, :ncoef, :sse, :r2, :F, :rmse, :order], result.criteria)
 
     pdata = convert(SharedArray, result.data)
-    presults = SharedArray{type_of_this_array_of_things}(num_operations, size(headers,1))
-
+    presults = SharedArray{type_of_this_array_of_things}(num_operations, size(headers, 1))
+    # Q (how much this instruction takes)
+    # @time fill!(presults, NaN)
+    
     num_procs = (nprocs()==1)? 1 : nprocs()-1 #exclude REPL worker if -p exists
     ops_by_worker = div(num_operations, num_procs)
     num_jobs = (num_procs > num_operations)?num_operations:num_procs
@@ -189,7 +144,7 @@ function proc!(result::GSRegResult)
     jobs = []
 
     for i = 1:num_jobs
-        push!(jobs, @spawnat (num_procs==1)?1:i+1 gsreg_proc_result!(pdata, presults, num_jobs, ops_by_worker, i, result.outsample, result.ttest, result.method, result.intercept))
+        push!(jobs, @spawnat (num_procs==1)?1:i+1 gsreg_proc_result!(pdata, presults, num_jobs, ops_by_worker, i, result.outsample, result.ttest, result.method, result.intercept, result.expvars, result.criteria))
     end
 
     for job in jobs
@@ -198,50 +153,80 @@ function proc!(result::GSRegResult)
 
     if( remainder > 0 )
         for j = 1:remainder
-            gsreg_single_proc_result!(pdata, presults, j + ops_by_worker * num_jobs, result.outsample, result.ttest, result.method, result.intercept)
+            gsreg_single_proc_result!(pdata, presults, j + ops_by_worker * num_jobs, result.outsample, result.ttest, result.method, result.intercept, result.expvars, result.criteria)
         end
     end
 
-    result.results = DataFrame(presults,headers)
+    result.results = Array(presults)
+    presult = nothing
+    pdata = nothing
 
     if result.ttest
         for varname in result.expvars
-            result.results[Symbol(string(String(varname),"_t"))] = result.results[Symbol(string(String(varname),"_b"))] ./ result.results[Symbol(string(String(varname),"_bstd"))]
+            pos_b = get_data_position(Symbol(string(varname, "_b")), result.expvars, result.intercept, result.ttest, result.criteria)
+            pos_bstd = pos_b + 1
+            pos_t = pos_bstd + 1
+            presults[pos_t] = presults[pos_b] ./ presults[pos_bstd]
         end
     end
-
+    
+    ncoef_pos = get_data_position(:ncoef, result.expvars, result.intercept, result.ttest, result.criteria)
+    nobs_pos = get_data_position(:nobs, result.expvars, result.intercept, result.ttest, result.criteria)
+    sse_pos = get_data_position(:sse, result.expvars, result.intercept, result.ttest, result.criteria)
+    rmse_pos = get_data_position(:rmse, result.expvars, result.intercept, result.ttest, result.criteria)
+    r2_pos = get_data_position(:r2, result.expvars, result.intercept, result.ttest, result.criteria)
+    F_pos = get_data_position(:F, result.expvars, result.intercept, result.ttest, result.criteria)
+    order_pos = get_data_position(:order, result.expvars, result.intercept, result.ttest, result.criteria)
+    
     if :aic in result.criteria || :aicc in result.criteria
-        result.results[:aic] = 2 * result.results[:ncoef] + result.results[:nobs] .* log.(result.results[:sse] ./ result.results[:nobs])
+        aic_pos = get_data_position(:aic, result.expvars, result.intercept, result.ttest, result.criteria)
+        presults[:,aic_pos] = 2 * presults[:,ncoef_pos] + presults[:,nobs_pos] .* log.(presults[:,sse_pos] ./ presults[:,nobs_pos])
     end
 
     if :aicc in result.criteria
-        result.results[:aicc] = result.results[:aic] + (2(result.results[:ncoef] + 1) .* (result.results[:ncoef]+2)) ./ (result.results[:nobs] - (result.results[:ncoef] + 1 ) - 1)
+        aicc_pos = get_data_position(:aicc, result.expvars, result.intercept, result.ttest, result.criteria)
+        presults[:,aicc_pos] = presults[:,aic_pos] + (2(presults[:,ncoef_pos] + 1) .* (presults[:,ncoef_pos]+2)) ./ (presults[:,nobs_pos] - (presults[:,ncoef_pos] + 1 ) - 1)
     end
 
     if :cp in result.criteria
-        result.results[:cp] = (result.results[:nobs] - maximum(result.results[:ncoef]) - 2) .* (result.results[:rmse] ./ minimum(result.results[:rmse])) - (result.results[:nobs] - 2 .* result.results[:ncoef])
+        cp_pos = get_data_position(:cp, result.expvars, result.intercept, result.ttest, result.criteria)
+        presults[:,cp_pos] = (presults[:,nobs_pos] - maximum(presults[:,ncoef_pos]) - 2) .* (presults[:,rmse_pos] ./ minimum(presults[:,rmse_pos])) - (presults[:,nobs_pos] - 2 .* presults[:,ncoef_pos])
     end
 
     if :bic in result.criteria
-        result.results[:bic] = result.results[:nobs] .* log.(result.results[:rmse]) + ( result.results[:ncoef] - 1 ) .* log.(result.results[:nobs]) + result.results[:nobs] + result.results[:nobs] .* log(2π)
+        bic_pos = get_data_position(:bic, result.expvars, result.intercept, result.ttest, result.criteria)
+        presults[:,bic_pos] = presults[:,nobs_pos] .* log.(presults[:,rmse_pos]) + ( presults[:,ncoef_pos] - 1 ) .* log.(presults[:,nobs_pos]) + presults[:,nobs_pos] + presults[:,nobs_pos] .* log(2π)
     end
 
     if :r2adj in result.criteria
-        result.results[:r2adj] = 1 - (1 - result.results[:r2]) .* ((result.results[:nobs] - 1) ./ (result.results[:nobs] - result.results[:ncoef]))
+        r2adj_pos = get_data_position(:r2adj, result.expvars, result.intercept, result.ttest, result.criteria)
+        presults[:,r2adj_pos] = 1 - (1 - presults[:,r2_pos]) .* ((presults[:,nobs_pos] - 1) ./ (presults[:,nobs_pos] - presults[:,ncoef_pos]))
     end
+        
+    presults[:,F_pos] = (presults[:,r2_pos] ./ (presults[:,ncoef_pos]-1)) ./ ((1-presults[:,r2_pos]) ./ (presults[:,nobs_pos] - presults[:,ncoef_pos]))
 
-    result.results[:F] = (result.results[:r2] ./ (result.results[:ncoef]-1)) ./ ((1-result.results[:r2]) ./ (result.results[:nobs] - result.results[:ncoef]))
-
-    len_criteria = length(criteria)
-    result.results[:order] = 0
+    len_criteria = length(result.criteria)
+    #result.results[:,order_pos] = 0
     for criteria in result.criteria
-        result.results[:order] += AVAILABLE_CRITERIA[criteria]["index"] * (1 / len_criteria) * ( (result.results[criteria] - mean(result.results[criteria]) ) ./ std(result.results[criteria]) )
+        criteria_pos = get_data_position(criteria, result.expvars, result.intercept, result.ttest, result.criteria)        
+        presults[:,order_pos] += AVAILABLE_CRITERIA[criteria]["index"] * (1 / len_criteria) * ( (presults[:,criteria_pos] - mean(presults[:,criteria_pos]) ) ./ std(presults[:,criteria_pos]) )
     end
-
-    sort!(result.results, [:order], rev = true);
+    
+    result.results = sortrows(result.results; lt=(x,y)->isless(x[order_pos],y[order_pos]), rev=true)
 end
 
 function to_string(result::GSRegResult)
+    index_pos = get_data_position(:index, result.datanames, result.intercept, result.ttest, result.criteria)
+    ncoef_pos = get_data_position(:ncoef, result.datanames, result.intercept, result.ttest, result.criteria)
+    nobs_pos = get_data_position(:nobs, result.datanames, result.intercept, result.ttest, result.criteria)
+    sse_pos = get_data_position(:sse, result.datanames, result.intercept, result.ttest, result.criteria)
+    rmse_pos = get_data_position(:rmse, result.datanames, result.intercept, result.ttest, result.criteria)
+    r2_pos = get_data_position(:r2, result.datanames, result.intercept, result.ttest, result.criteria)
+    r2adj_pos = get_data_position(:r2adj, result.datanames, result.intercept, result.ttest, result.criteria)
+    F_pos = get_data_position(:F, result.datanames, result.intercept, result.ttest, result.criteria)
+    order_pos = get_data_position(:order, result.datanames, result.intercept, result.ttest, result.criteria)
+
+
     out = ""
     out *= @sprintf("\n")
     out *= @sprintf("══════════════════════════════════════════════════════════════════════════════\n")
@@ -261,29 +246,33 @@ function to_string(result::GSRegResult)
     out *= @sprintf("\n")
     out *= @sprintf("──────────────────────────────────────────────────────────────────────────────\n")
 
-    cols = get_selected_cols(result.results[1,:index])
+    cols = get_selected_cols(Int64(result.results[1, index_pos]))
 
     data_cols_num = size(result.data, 2)
     if result.intercept
         append!(cols, data_cols_num)
     end
-    for expvar in result.datanames[cols]
-        out *= @sprintf(" %-35s", expvar)
 
-        out *= @sprintf(" %-10f", result.results[1,Symbol(expvar,"_b")])
+    for varname in result.datanames[cols]
+        pos_b = get_data_position(Symbol(string(varname, "_b")), result.datanames, result.intercept, result.ttest, result.criteria)
+        out *= @sprintf(" %-35s", varname)
+        out *= @sprintf(" %-10f", result.results[1, pos_b])
         if result.ttest
-            out *= @sprintf("   %-10f", result.results[1,Symbol(expvar,"_bstd")])
-            out *= @sprintf("   %-10f", result.results[1,Symbol(expvar,"_t")])
+            pos_bstd = pos_b + 1
+            pos_t = pos_bstd + 1
+            out *= @sprintf("   %-10f", result.results[1,pos_bstd])
+            out *= @sprintf("   %-10f", result.results[1,pos_t])
         end
         out *= @sprintf("\n")
     end
     out *= @sprintf("──────────────────────────────────────────────────────────────────────────────\n")
-    out *= @sprintf(" Observations                        %-10d\n", result.results[1,:nobs])
-    out *= @sprintf(" Adjusted R²                         %-10f\n", result.results[1,:r2adj])
-    out *= @sprintf(" F-statistic                         %-10f\n", result.results[1,:F])
+    out *= @sprintf(" Observations                        %-10d\n", result.results[1,nobs_pos])
+    out *= @sprintf(" Adjusted R²                         %-10f\n", result.results[1,r2adj_pos])
+    out *= @sprintf(" F-statistic                         %-10f\n", result.results[1,F_pos])
     for criteria in result.criteria
         if AVAILABLE_CRITERIA[criteria]["verbose_show"]
-    out *= @sprintf(" %-30s      %-10f\n", AVAILABLE_CRITERIA[criteria]["verbose_title"], result.results[1,criteria])
+    criteria_pos = get_data_position(criteria, result.datanames, result.intercept, result.ttest, result.criteria)        
+    out *= @sprintf(" %-30s      %-10f\n", AVAILABLE_CRITERIA[criteria]["verbose_title"], result.results[1,criteria_pos])
         end
     end
     out *= @sprintf("──────────────────────────────────────────────────────────────────────────────\n")
