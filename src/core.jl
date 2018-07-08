@@ -7,6 +7,7 @@ function gsreg(
         samesample=nothing,
         criteria=nothing,
         ttest=nothing,
+        vectoroperation=true,
         summary=nothing,
         datanames=nothing,
         datatype=nothing
@@ -20,11 +21,11 @@ function gsreg(
         samesample,
         criteria,
         ttest,
+        vectoroperation,
         datanames,
         datatype
     )
     proc!(result)
-    return result
     if summary != nothing
         f = open(summary, "w")
         write(f, to_string(result))
@@ -33,7 +34,7 @@ function gsreg(
     return result
 end
 
-function gsreg_single_proc_result!(data, results, intercept, outsample, criteria, ttest, datanames, datatype, header, order)
+function gsreg_single_proc_result!(data, results, intercept, outsample, criteria, ttest, vectoroperation, datanames, datatype, header, order)
     cols = get_selected_cols(order)
     data_cols_num = size(data, 2)
     if intercept
@@ -81,12 +82,45 @@ function gsreg_single_proc_result!(data, results, intercept, outsample, criteria
     results[order, header[:r2]] = datatype(r2)
     results[order, header[:rmse]] = datatype(rmse)
     results[order, header[:order]] = 0
+
+    if vectoroperation == false
+        if ttest
+            for (index, col) in enumerate(cols)
+                pos_b = header[Symbol(string(datanames[col], "_b"))]
+                pos_bstd = header[Symbol(string(datanames[col], "_bstd"))]
+                pos_t = header[Symbol(string(datanames[col], "_t"))]
+                results[order, pos_t] = results[order,pos_b] / results[order,pos_bstd]
+            end
+        end
+
+        if :aic in criteria || :aicc in criteria
+            results[order,header[:aic]] = 2 * results[order,header[:ncoef]] + results[order,header[:nobs]] * log(results[order,header[:sse]] / results[order,header[:nobs]])
+        end
+
+        if :aicc in criteria
+            results[order,header[:aicc]] = results[order,header[:aic]] + (2(results[order,header[:ncoef]] + 1) * (results[order,header[:ncoef]]+2)) / (results[order,header[:nobs]] - (results[order,header[:ncoef]] + 1 ) - 1)
+        end
+
+        if :cp in criteria
+            results[order,header[:cp]] = (results[order,header[:nobs]] - maximum(results[order,header[:ncoef]]) - 2) * (results[order,header[:rmse]] / minimum(results[order,header[:rmse]])) - (results[order,header[:nobs]] - 2 * results[order,header[:ncoef]])
+        end
+
+        if :bic in criteria
+            results[order,header[:bic]] = results[order,header[:nobs]] * log.(results[order,header[:rmse]]) + ( results[order,header[:ncoef]] - 1 ) * log.(results[order,header[:nobs]]) + results[order,header[:nobs]] + results[order,header[:nobs]] * log(2π)
+        end
+
+        if :r2adj in criteria
+            results[order,header[:r2adj]] = 1 - (1 - results[order,header[:r2]]) * ((results[order,header[:nobs]] - 1) / (results[order,header[:nobs]] - results[order,header[:ncoef]]))
+        end
+            
+        results[order,header[:F]] = (results[order,header[:r2]] / (results[order,header[:ncoef]]-1)) / ((1-results[order,header[:r2]]) / (results[order,header[:nobs]] - results[order,header[:ncoef]]))
+    end
 end
 
-function gsreg_proc_result!(data, results, intercept, outsample, criteria, ttest, datanames, datatype, header, num_job, num_jobs, ops_by_worker)
+function gsreg_proc_result!(data, results, intercept, outsample, criteria, ttest, vectoroperation, datanames, datatype, header, num_job, num_jobs, ops_by_worker)
     @time for j = 1:ops_by_worker
         order = (j-1) * num_jobs + num_job
-        gsreg_single_proc_result!(data, results, intercept, outsample, criteria, ttest, datanames, datatype, header, order)
+        gsreg_single_proc_result!(data, results, intercept, outsample, criteria, ttest, vectoroperation, datanames, datatype, header, order)
     end
 end
 
@@ -102,7 +136,7 @@ function proc!(result::GSRegResult)
 
     if nprocs() == nworkers()
         for order = 1:num_operations
-            gsreg_single_proc_result!(pdata, presults, result.intercept, result.outsample, result.criteria, result.ttest, result.datanames, result.datatype, result.header, order)
+            gsreg_single_proc_result!(pdata, presults, result.intercept, result.outsample, result.criteria, result.ttest, result.vectoroperation, result.datanames, result.datatype, result.header, order)
         end
     else
         num_workers = nworkers()
@@ -111,7 +145,7 @@ function proc!(result::GSRegResult)
         remainder = num_operations - ops_by_worker * num_jobs
         jobs = []
         for num_job = 1:num_jobs
-            push!(jobs, @spawnat num_job+1 gsreg_proc_result!(pdata, presults, result.intercept, result.outsample, result.criteria, result.ttest, result.datanames, result.datatype, result.header, num_job, num_jobs, ops_by_worker))
+            push!(jobs, @spawnat num_job+1 gsreg_proc_result!(pdata, presults, result.intercept, result.outsample, result.criteria, result.ttest, result.vectoroperation, result.datanames, result.datatype, result.header, num_job, num_jobs, ops_by_worker))
         end
 
         for job in jobs
@@ -121,7 +155,7 @@ function proc!(result::GSRegResult)
         if( remainder > 0 )
             for j = 1:remainder
                 order = j + ops_by_worker * num_jobs
-                gsreg_single_proc_result!(pdata, presults, result.intercept, result.outsample, result.criteria, result.ttest, result.datanames, result.datatype, result.header, order)
+                gsreg_single_proc_result!(pdata, presults, result.intercept, result.outsample, result.criteria, result.ttest, result.vectoroperation, result.datanames, result.datatype, result.header, order)
             end
         end
     end
@@ -130,51 +164,44 @@ function proc!(result::GSRegResult)
     presult = nothing
     pdata = nothing
 
-    if result.ttest
-        for expvar in result.expvars
-            pos_b = result.header[Symbol(string(expvar, "_b"))]
-            pos_bstd = result.header[Symbol(string(expvar, "_bstd"))]
-            pos_t = result.header[Symbol(string(expvar, "_t"))]
-            presults[:,pos_t] = presults[:,pos_b] ./ presults[:,pos_bstd]
+    if result.vectoroperation
+        if result.ttest
+            for expvar in result.expvars
+                pos_b = result.header[Symbol(string(expvar, "_b"))]
+                pos_bstd = result.header[Symbol(string(expvar, "_bstd"))]
+                pos_t = result.header[Symbol(string(expvar, "_t"))]
+                presults[:,pos_t] = presults[:,pos_b] ./ presults[:,pos_bstd]
+            end
         end
-    end
 
-    if :aic in result.criteria || :aicc in result.criteria
-        aic_pos = get_data_position(:aic, result.expvars, result.intercept, result.ttest, result.criteria)
-        presults[:,result.header[:aic]] = 2 * presults[:,result.header[:ncoef]] + presults[:,result.header[:nobs]] .* log.(presults[:,result.header[:sse]] ./ presults[:,result.header[:nobs]])
-    end
+        if :aic in result.criteria || :aicc in result.criteria
+            presults[:,result.header[:aic]] = 2 * presults[:,result.header[:ncoef]] + presults[:,result.header[:nobs]] .* log.(presults[:,result.header[:sse]] ./ presults[:,result.header[:nobs]])
+        end
 
-    if :aicc in result.criteria
-        presults[:,result.header[:aicc]] = presults[:,result.header[:aic]] + (2(presults[:,result.header[:ncoef]] + 1) .* (presults[:,result.header[:ncoef]]+2)) ./ (presults[:,result.header[:nobs]] - (presults[:,result.header[:ncoef]] + 1 ) - 1)
-    end
+        if :aicc in result.criteria
+            presults[:,result.header[:aicc]] = presults[:,result.header[:aic]] + (2(presults[:,result.header[:ncoef]] + 1) .* (presults[:,result.header[:ncoef]]+2)) ./ (presults[:,result.header[:nobs]] - (presults[:,result.header[:ncoef]] + 1 ) - 1)
+        end
 
-    if :cp in result.criteria
-        presults[:,result.header[:cp]] = (presults[:,result.header[:nobs]] - maximum(presults[:,result.header[:ncoef]]) - 2) .* (presults[:,result.header[:rmse]] ./ minimum(presults[:,result.header[:rmse]])) - (presults[:,result.header[:nobs]] - 2 .* presults[:,result.header[:ncoef]])
-    end
+        if :cp in result.criteria
+            presults[:,result.header[:cp]] = (presults[:,result.header[:nobs]] - maximum(presults[:,result.header[:ncoef]]) - 2) .* (presults[:,result.header[:rmse]] ./ minimum(presults[:,result.header[:rmse]])) - (presults[:,result.header[:nobs]] - 2 .* presults[:,result.header[:ncoef]])
+        end
 
-    if :bic in result.criteria
-        presults[:,result.header[:bic]] = presults[:,result.header[:nobs]] .* log.(presults[:,result.header[:rmse]]) + ( presults[:,result.header[:ncoef]] - 1 ) .* log.(presults[:,result.header[:nobs]]) + presults[:,result.header[:nobs]] + presults[:,result.header[:nobs]] .* log(2π)
-    end
+        if :bic in result.criteria
+            presults[:,result.header[:bic]] = presults[:,result.header[:nobs]] .* log.(presults[:,result.header[:rmse]]) + ( presults[:,result.header[:ncoef]] - 1 ) .* log.(presults[:,result.header[:nobs]]) + presults[:,result.header[:nobs]] + presults[:,result.header[:nobs]] .* log(2π)
+        end
 
-    if :r2adj in result.criteria
-        presults[:,result.header[:r2adj]] = 1 - (1 - presults[:,result.header[:r2]]) .* ((presults[:,result.header[:nobs]] - 1) ./ (presults[:,result.header[:nobs]] - presults[:,result.header[:ncoef]]))
+        if :r2adj in result.criteria
+            presults[:,result.header[:r2adj]] = 1 - (1 - presults[:,result.header[:r2]]) .* ((presults[:,result.header[:nobs]] - 1) ./ (presults[:,result.header[:nobs]] - presults[:,result.header[:ncoef]]))
+        end
+            
+        presults[:,result.header[:F]] = (presults[:,result.header[:r2]] ./ (presults[:,result.header[:ncoef]]-1)) ./ ((1-presults[:,result.header[:r2]]) ./ (presults[:,result.header[:nobs]] - presults[:,result.header[:ncoef]]))
     end
-        
-    presults[:,result.header[:F]] = (presults[:,result.header[:r2]] ./ (presults[:,result.header[:ncoef]]-1)) ./ ((1-presults[:,result.header[:r2]]) ./ (presults[:,result.header[:nobs]] - presults[:,result.header[:ncoef]]))
-
+    
     len_criteria = length(result.criteria)
     for criteria in result.criteria
-        println("======")
-        println(criteria)
-        println(presults[1,result.header[:order]])
-        println(AVAILABLE_CRITERIA[criteria]["index"])
-        println(1 / len_criteria)
-        println(presults[1,result.header[criteria]])
-        println(mean(presults[:,result.header[criteria]]))
-        println(std(presults[:,result.header[criteria]]))
         presults[:,result.header[:order]] += AVAILABLE_CRITERIA[criteria]["index"] * (1 / len_criteria) * ( (presults[:,result.header[criteria]] - mean(presults[:,result.header[criteria]]) ) ./ std(presults[:,result.header[criteria]]) )
     end
-    println(presults[1,result.header[:order]])
+    
     result.results = sortrows(result.results; lt=(x,y)->isless(x[result.header[:order]],y[result.header[:order]]), rev=true)
 end
 

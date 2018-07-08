@@ -7,6 +7,7 @@ function gsreg(
         criteria=CRITERIA_DEFAULT,
         ttest=TTEST_DEFAULT,
         method=METHOD_DEFAULT,
+        vectoroperation=true,
         summary=nothing,
         csv=CSV_DEFAULT,
         resultscsv=CSV_DEFAULT
@@ -20,6 +21,7 @@ function gsreg(
             criteria=criteria,
             ttest=ttest,
             method=method,
+            vectoroperation=vectoroperation,
             summary=summary,
             resultscsv=resultscsv,
             csv=csv
@@ -35,6 +37,7 @@ function gsreg(
         criteria=CRITERIA_DEFAULT,
         ttest=TTEST_DEFAULT,
         method=METHOD_DEFAULT,
+        vectoroperation=true,
         summary=nothing,
         resultscsv=CSV_DEFAULT,
         csv=CSV_DEFAULT
@@ -57,6 +60,7 @@ function gsreg(
         criteria=criteria,
         ttest=ttest,
         method=method,
+        vectoroperation=vectoroperation,
         summary=summary,
         resultscsv=resultscsv,
         csv=csv
@@ -72,6 +76,7 @@ function gsreg(
         criteria=CRITERIA_DEFAULT,
         ttest=TTEST_DEFAULT,
         method=METHOD_DEFAULT,
+        vectoroperation=true,
         summary=nothing,
         resultscsv=CSV_DEFAULT,
         csv=CSV_DEFAULT
@@ -97,6 +102,7 @@ function gsreg(
         criteria=criteria,
         ttest=ttest,
         method=method,
+        vectoroperation=vectoroperation,
         summary=summary,
         resultscsv=resultscsv,
         csv=csv
@@ -112,6 +118,7 @@ function gsreg(
         criteria=CRITERIA_DEFAULT,
         ttest=TTEST_DEFAULT,
         method=METHOD_DEFAULT,
+        vectoroperation=true,
         summary=nothing,
         resultscsv=CSV_DEFAULT,
         csv=CSV_DEFAULT
@@ -172,6 +179,7 @@ function gsreg(
         samesample=samesample,
         criteria=criteria,
         ttest=ttest,
+        vectoroperation=vectoroperation,
         summary=summary,
         datanames=datanames,
         datatype=datatype

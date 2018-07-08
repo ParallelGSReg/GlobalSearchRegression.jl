@@ -110,7 +110,7 @@ function export_csv(output, result)
 
     file = open(string("asd",output), "w")
     write(file, head)
-    writecsv(file, "\n")
-    writecsv(file, result.results)#Array(result.results[headers]))
+    #writecsv(file, "\n")
+    writecsv(file, result.results)
     close(file)
 end

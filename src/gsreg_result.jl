@@ -7,11 +7,13 @@ type GSRegResult
     samesample              # Each combination uses the same sample
     criteria                # Ordering criteria (r2adj, caic, aic, bic, cp, rmsein, rmseout)
     ttest::Bool             # Calculate or not the ttest
+    vectoroperation         # Calculate using vector operations
     results                 # Results array
-    nobs                    # Number of observations
     datanames               # Original CSV header names
     datatype                # Float32 or Float64 precision
-    header
+    nobs                    # Number of observations
+    header                  # Header Symbos and positions
+
     function GSRegResult(
             depvar::Symbol,
             expvars::Array{Symbol},
@@ -21,6 +23,7 @@ type GSRegResult
             samesample::Bool,
             criteria,
             ttest,
+            vectoroperation,
             datanames,
             datatype
         )
@@ -36,6 +39,6 @@ type GSRegResult
         end
 
         header = get_result_header(expvars, intercept, ttest, criteria)
-        new(depvar, expvars, data, intercept, outsample, samesample, criteria, ttest, nothing, nobs, datanames, datatype, header)
+        new(depvar, expvars, data, intercept, outsample, samesample, criteria, ttest, vectoroperation, nothing, datanames, datatype, nobs, header)
     end
 end
