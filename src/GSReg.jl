@@ -1,8 +1,8 @@
+__precompile__()
+# Can we remove the everywhere (?)
 @everywhere module GSReg
 
-using DataFrames, Missings
-using Base.Threads
-using CSV
+using DataFrames
 using Compat, Compat.LinearAlgebra
 
 export gsreg
@@ -13,15 +13,18 @@ const OUTSAMPLE_DEFAULT = 0
 const SAMESAMPLE_DEFAULT = false
 const TTEST_DEFAULT = false
 const METHOD_DEFAULT = "fast"
-const THREADS_DEFAULT = nthreads()
 const CRITERIA_DEFAULT = nothing
-const CRITERIA_DEFAULT_OUTSAMPLE = [ :rmseout ]
+const CRITERIA_DEFAULT_OUTSAMPLE = [:rmseout]
 const CRITERIA_DEFAULT_INSAMPLE = [ ]
 const CSV_DEFAULT = "gsreg.csv"
 
-AVAILABLE_METHODS = ["precise","fast"]
+const AVAILABLE_METHODS = ["precise", "fast"]
+const AVAILABLE_VARIABLES = [:b, :bstd, :t_test]
 
-AVAILABLE_VARIABLES = [ :b, :bstd, :t_test ]
+const INDEX = :index
+const EQUATION_GENERAL_INFORMATION = [:nobs, :ncoef, :sse, :r2, :F, :rmse]
+const ORDER = :order
+
 AVAILABLE_CRITERIA = Dict(
     :r2adj => Dict(
         "verbose_title" => "Adjusted R²",
@@ -65,10 +68,10 @@ AVAILABLE_CRITERIA = Dict(
     )
 )
 
-
 include("strings.jl")
-include("other/utils.jl")
+include("utils.jl")
 include("interface.jl")
+include("gsreg_result.jl")
 include("core.jl")
 
 end # module GSReg
