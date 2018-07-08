@@ -202,7 +202,7 @@ function proc!(result::GSRegResult)
         presults[:,result.header[:order]] += AVAILABLE_CRITERIA[criteria]["index"] * (1 / len_criteria) * ( (presults[:,result.header[criteria]] - mean(presults[:,result.header[criteria]]) ) ./ std(presults[:,result.header[criteria]]) )
     end
     
-    result.results = sortrows(result.results; lt=(x,y)->isless(x[result.header[:order]],y[result.header[:order]]), rev=true)
+    result.results = sortrows(result.results; lt=(x,y)->isless(x[result.header[:order]],y[result.header[:order]]), rev=true, alg=MergeSort)
 end
 
 
