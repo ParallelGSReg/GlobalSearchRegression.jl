@@ -1,3 +1,15 @@
+
+"""
+Returns the position of the header value based on this structure.
+    - Index
+    - Covariates
+        * b
+        * bstd
+        * T-test
+    - Equation general information merged with criteria user-defined options.
+    - Order from user combined criteria
+    - Weight
+"""
 function get_data_position(name, expvars, intercept, ttest, criteria)
     data_cols_num = length(expvars)
     mult_col = (ttest == true)?3:1    
@@ -7,22 +19,26 @@ function get_data_position(name, expvars, intercept, ttest, criteria)
         return 1
     end
     displacement = 1
-    displacement = displacement + mult_col * (data_cols_num) + 1
+    displacement += mult_col * (data_cols_num) + 1
 
     # EQUATION_GENERAL_INFORMATION
     equation_general_information_and_criteria = unique([ EQUATION_GENERAL_INFORMATION; criteria ])
     if name in equation_general_information_and_criteria
         return displacement + findfirst(equation_general_information_and_criteria, name)-1
     end
-    displacement = displacement + length(equation_general_information_and_criteria)
+    displacement += length(equation_general_information_and_criteria)
 
-    # ORDER
     if name == ORDER
+        return displacement
+    end
+    displacement += 1
+
+    if name == WEIGHT
         return displacement
     end
     displacement = 1
 
-    # EXPVAR
+    # Covariates
     string_name = string(name)
     base_name = Symbol(replace(replace(replace(string_name, "_bstd", ""), "_t", ""), "_b", ""))
     if base_name in expvars
@@ -40,6 +56,9 @@ function get_data_position(name, expvars, intercept, ttest, criteria)
     
 end
 
+"""
+Constructs the header for results based in get_data_position orders.
+"""
 function get_result_header(expvars, intercept, ttest, criteria)
     header = Dict{Symbol,Int64}()
     header[:index] = get_data_position(:index, expvars, intercept, ttest, criteria)
@@ -56,6 +75,7 @@ function get_result_header(expvars, intercept, ttest, criteria)
     end
 
     header[:order] = get_data_position(:order, expvars, intercept, ttest, criteria)
+    header[:weight] = get_data_position(:weight, expvars, intercept, ttest, criteria)
     return header
 end
 
@@ -68,6 +88,9 @@ function in_vector(sub_vector, vector)
     return true
 end
 
+"""
+Returns selected appropiate covariates for each iteration
+"""
 function get_selected_cols(i)
     cols = zeros(Int64, 0)
     binary = bin(i)
@@ -81,10 +104,9 @@ function get_selected_cols(i)
     return cols
 end
 
-function get_default_varnames(expvars_num::Integer)
-    [ :y ; [ Symbol("x$i") for i = 1:expvars_num ] ]
-end
-
+"""
+Exports main results with headers
+"""
 function export_csv(output, result)
     file = open(output, "w")
 

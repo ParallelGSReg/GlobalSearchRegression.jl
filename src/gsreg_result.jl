@@ -8,6 +8,7 @@ type GSRegResult
     criteria                # Ordering criteria (r2adj, caic, aic, bic, cp, rmsein, rmseout)
     ttest::Bool             # Calculate or not the ttest
     vectoroperation         # Calculate using vector operations
+    modelavg                # Generate model averaging report
     results                 # Results array
     datanames               # Original CSV header names
     datatype                # Float32 or Float64 precision
@@ -15,6 +16,7 @@ type GSRegResult
     header                  # Header Symbos and positions
     orderresults            # Order or not the results
     bestresult              # Best result
+    average                 # Model averaging
 
     function GSRegResult(
             depvar::Symbol,
@@ -26,6 +28,7 @@ type GSRegResult
             criteria,
             ttest,
             vectoroperation,
+            modelavg,
             datanames,
             datatype,
             orderresults
@@ -33,6 +36,7 @@ type GSRegResult
         if :r2adj ∉ criteria
             push!(criteria, :r2adj)
         end
+
         nobs = size(data, 1)
 
         if intercept
@@ -42,6 +46,6 @@ type GSRegResult
         end
 
         header = get_result_header(expvars, intercept, ttest, criteria)
-        new(depvar, expvars, data, intercept, outsample, samesample, criteria, ttest, vectoroperation, nothing, datanames, datatype, nobs, header, orderresults)
+        new(depvar, expvars, data, intercept, outsample, samesample, criteria, ttest, vectoroperation, modelavg, nothing, datanames, datatype, nobs, header, orderresults)
     end
 end

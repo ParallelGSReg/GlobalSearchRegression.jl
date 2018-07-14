@@ -18,6 +18,8 @@ const CRITERIA_DEFAULT_OUTSAMPLE = [:rmseout]
 const CRITERIA_DEFAULT_INSAMPLE = [ ]
 const CSV_DEFAULT = "gsreg.csv"
 const ORDER_RESULTS_DEFAULT = false
+const VECTOR_OPERATION_DEFAULT = false
+const MODEL_AVG_DEFAULT = false
 
 const AVAILABLE_METHODS = ["precise", "fast"]
 const AVAILABLE_VARIABLES = [:b, :bstd, :t_test]
@@ -25,6 +27,7 @@ const AVAILABLE_VARIABLES = [:b, :bstd, :t_test]
 const INDEX = :index
 const EQUATION_GENERAL_INFORMATION = [:nobs, :ncoef, :sse, :r2, :F, :rmse]
 const ORDER = :order
+const WEIGHT = :weight
 
 AVAILABLE_CRITERIA = Dict(
     :r2adj => Dict(

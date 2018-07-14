@@ -7,7 +7,8 @@ function gsreg(
         criteria=CRITERIA_DEFAULT,
         ttest=TTEST_DEFAULT,
         method=METHOD_DEFAULT,
-        vectoroperation=true,
+        vectoroperation=VECTOR_OPERATION_DEFAULT,
+        modelavg=MODEL_AVG_DEFAULT,
         summary=nothing,
         csv=CSV_DEFAULT,
         resultscsv=CSV_DEFAULT,
@@ -23,6 +24,7 @@ function gsreg(
             ttest=ttest,
             method=method,
             vectoroperation=vectoroperation,
+            modelavg=modelavg,
             summary=summary,
             resultscsv=resultscsv,
             csv=csv,
@@ -39,7 +41,8 @@ function gsreg(
         criteria=CRITERIA_DEFAULT,
         ttest=TTEST_DEFAULT,
         method=METHOD_DEFAULT,
-        vectoroperation=true,
+        vectoroperation=VECTOR_OPERATION_DEFAULT,
+        modelavg=MODEL_AVG_DEFAULT,
         summary=nothing,
         resultscsv=CSV_DEFAULT,
         csv=CSV_DEFAULT,
@@ -64,6 +67,7 @@ function gsreg(
         ttest=ttest,
         method=method,
         vectoroperation=vectoroperation,
+        modelavg=modelavg,
         summary=summary,
         resultscsv=resultscsv,
         csv=csv,
@@ -80,7 +84,8 @@ function gsreg(
         criteria=CRITERIA_DEFAULT,
         ttest=TTEST_DEFAULT,
         method=METHOD_DEFAULT,
-        vectoroperation=true,
+        vectoroperation=VECTOR_OPERATION_DEFAULT,
+        modelavg=MODEL_AVG_DEFAULT,
         summary=nothing,
         resultscsv=CSV_DEFAULT,
         csv=CSV_DEFAULT,
@@ -108,6 +113,7 @@ function gsreg(
         ttest=ttest,
         method=method,
         vectoroperation=vectoroperation,
+        modelavg=modelavg,
         summary=summary,
         resultscsv=resultscsv,
         csv=csv,
@@ -124,7 +130,8 @@ function gsreg(
         criteria=CRITERIA_DEFAULT,
         ttest=TTEST_DEFAULT,
         method=METHOD_DEFAULT,
-        vectoroperation=true,
+        vectoroperation=VECTOR_OPERATION_DEFAULT,
+        modelavg=modelavg,
         summary=nothing,
         resultscsv=CSV_DEFAULT,
         csv=CSV_DEFAULT,
@@ -148,6 +155,10 @@ function gsreg(
         elseif size(data, 1) - outsample < INSAMPLE_MIN_SIZE + size(data, 2) - 1
             error(OUTSAMPLE_HIGHER_VALUE)
         end
+    end
+
+    if outsample == false && :rmseout in criteria
+        error(OUTSAMPLE_MISMATCH)
     end
 
     if criteria == CRITERIA_DEFAULT
@@ -187,6 +198,7 @@ function gsreg(
         criteria=criteria,
         ttest=ttest,
         vectoroperation=vectoroperation,
+        modelavg=modelavg,
         summary=summary,
         datanames=datanames,
         datatype=datatype,

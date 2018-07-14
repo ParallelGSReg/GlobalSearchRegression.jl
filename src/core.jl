@@ -7,7 +7,8 @@ function gsreg(
         samesample=nothing,
         criteria=nothing,
         ttest=nothing,
-        vectoroperation=true,
+        vectoroperation=nothing,
+        modelavg=nothing,
         summary=nothing,
         datanames=nothing,
         datatype=nothing,
@@ -23,6 +24,7 @@ function gsreg(
         criteria,
         ttest,
         vectoroperation,
+        modelavg,
         datanames,
         datatype,
         orderresults
@@ -103,10 +105,6 @@ function gsreg_single_proc_result!(data, results, intercept, outsample, criteria
             results[order,header[:aicc]] = results[order,header[:aic]] + (2(results[order,header[:ncoef]] + 1) * (results[order,header[:ncoef]]+2)) / (results[order,header[:nobs]] - (results[order,header[:ncoef]] + 1 ) - 1)
         end
 
-        if :cp in criteria
-            results[order,header[:cp]] = (results[order,header[:nobs]] - maximum(results[order,header[:ncoef]]) - 2) * (results[order,header[:rmse]] / minimum(results[order,header[:rmse]])) - (results[order,header[:nobs]] - 2 * results[order,header[:ncoef]])
-        end
-
         if :bic in criteria
             results[order,header[:bic]] = results[order,header[:nobs]] * log.(results[order,header[:rmse]]) + ( results[order,header[:ncoef]] - 1 ) * log.(results[order,header[:nobs]]) + results[order,header[:nobs]] + results[order,header[:nobs]] * log(2π)
         end
@@ -184,10 +182,6 @@ function proc!(result::GSRegResult)
             result.results[:,result.header[:aicc]] = result.results[:,result.header[:aic]] + (2(result.results[:,result.header[:ncoef]] + 1) .* (result.results[:,result.header[:ncoef]]+2)) ./ (result.results[:,result.header[:nobs]] - (result.results[:,result.header[:ncoef]] + 1 ) - 1)
         end
 
-        if :cp in result.criteria
-            result.results[:,result.header[:cp]] = (result.results[:,result.header[:nobs]] - maximum(result.results[:,result.header[:ncoef]]) - 2) .* (result.results[:,result.header[:rmse]] ./ minimum(result.results[:,result.header[:rmse]])) - (result.results[:,result.header[:nobs]] - 2 .* result.results[:,result.header[:ncoef]])
-        end
-
         if :bic in result.criteria
             result.results[:,result.header[:bic]] = result.results[:,result.header[:nobs]] .* log.(result.results[:,result.header[:rmse]]) + ( result.results[:,result.header[:ncoef]] - 1 ) .* log.(result.results[:,result.header[:nobs]]) + result.results[:,result.header[:nobs]] + result.results[:,result.header[:nobs]] .* log(2π)
         end
@@ -198,23 +192,62 @@ function proc!(result::GSRegResult)
             
         result.results[:,result.header[:F]] = (result.results[:,result.header[:r2]] ./ (result.results[:,result.header[:ncoef]]-1)) ./ ((1-result.results[:,result.header[:r2]]) ./ (result.results[:,result.header[:nobs]] - result.results[:,result.header[:ncoef]]))
     end
-    
+
+    # CP must be computed with vector operations
+    if :cp in result.criteria
+        result.results[:,result.header[:cp]] = (result.results[:,result.header[:nobs]] - maximum(result.results[:,result.header[:ncoef]]) - 2) .* (result.results[:,result.header[:rmse]] ./ minimum(result.results[:,result.header[:rmse]])) - (result.results[:,result.header[:nobs]] - 2 .* result.results[:,result.header[:ncoef]])
+    end
+
     len_criteria = length(result.criteria)
     for criteria in result.criteria
         result.results[:,result.header[:order]] += AVAILABLE_CRITERIA[criteria]["index"] * (1 / len_criteria) * ( (result.results[:,result.header[criteria]] - mean(result.results[:,result.header[criteria]]) ) ./ std(result.results[:,result.header[criteria]]) )
+    end
+
+    if result.modelavg
+        # usar order para weight
+        delta = maximum(result.results[:,result.header[:order]]) - result.results[:,result.header[:order]]
+        w1 = exp.(-delta/2)
+        result.results[:,result.header[:weight]] = w1./sum(w1)
+
+        result.average = Array{Float64}(1, length(keys(result.header)))
+
+        for expvar in result.expvars
+            obs = result.results[:,result.header[Symbol(string(expvar, "_b"))]]
+            if result.ttest
+                obs = hcat(obs, result.results[:,result.header[Symbol(string(expvar, "_bstd"))]])
+            end
+            obs = hcat(obs, result.results[:,result.header[:weight]])
+
+            #filter NaN values from selection
+            obs = obs[find(x -> !isnan(obs[x,1]), 1:size(obs,1)),:]
+
+            #weight resizing
+            obs[:, (result.ttest)?3:2] /= sum(obs[:,(result.ttest)?3:2])
+
+            result.average[result.header[Symbol(string(expvar, "_b"))]] = sum(obs[:, 1] .* obs[:, (result.ttest)?3:2])
+            if result.ttest
+                result.average[result.header[Symbol(string(expvar, "_bstd"))]] = sum(obs[:, 2] .* obs[:, 3])
+            end
+        end
+
+        for criteria in [:nobs, :r2adj, :F, :order]
+            result.average[result.header[criteria]] = sum(result.results[:, result.header[criteria]] .* result.results[:, result.header[:weight]])
+        end
     end
 
     if result.orderresults
         result.results = sortrows(result.results; lt=(x,y)->isless(x[result.header[:order]],y[result.header[:order]]), rev=true, alg=MergeSort)
         result.bestresult = result.results[1,:]
     else
-        max_order = num_operations
-        for r in result.results
-            if r[:order] == max_order
-                result.bestresult = r
-                break
+        max_order = result.results[1,result.header[:order]]
+        best_result_index = 1
+        for i = 1:num_operations
+            if result.results[i,result.header[:order]] > max_order
+                max_order = result.results[i,result.header[:order]]
+                best_result_index = i
             end
         end
+        result.bestresult = result.results[best_result_index,:]
     end
 end
 
@@ -233,9 +266,6 @@ function to_string(result::GSRegResult)
     if result.ttest
         out *= @sprintf("        Std.         t-test")
     end
-    if result.outsample > 0
-        out *= @sprintf("        Rmseout")
-    end
     out *= @sprintf("\n")
     out *= @sprintf("──────────────────────────────────────────────────────────────────────────────\n")
 
@@ -245,7 +275,7 @@ function to_string(result::GSRegResult)
     if result.intercept
         append!(cols, data_cols_num)
     end
-    
+
     for pos in cols
         varname = result.datanames[pos]
         out *= @sprintf(" %-35s", varname)
@@ -266,8 +296,43 @@ function to_string(result::GSRegResult)
     out *= @sprintf(" %-30s      %-10f\n", AVAILABLE_CRITERIA[criteria]["verbose_title"], result.bestresult[result.header[criteria]])
         end
     end
+
+    if !result.modelavg
     out *= @sprintf("──────────────────────────────────────────────────────────────────────────────\n")
-    
+    end
+
+    if result.modelavg
+    out *= @sprintf("══════════════════════════════════════════════════════════════════════════════\n")
+    out *= @sprintf("                            Model averaging results                           \n")
+    out *= @sprintf("══════════════════════════════════════════════════════════════════════════════\n")
+    out *= @sprintf("                                                                              \n")
+    out *= @sprintf("                                     Dependent variable: %s                   \n", result.depvar)
+    out *= @sprintf("                                     ─────────────────────────────────────────\n")
+    out *= @sprintf("                                                                              \n")
+    out *= @sprintf(" Covariates                          Coef.")
+    if result.ttest
+        out *= @sprintf("        Std.         t-test")
+    end
+    out *= @sprintf("\n")
+    out *= @sprintf("──────────────────────────────────────────────────────────────────────────────\n")
+    end
+
+    for varname in result.expvars
+        out *= @sprintf(" %-35s", varname)
+        out *= @sprintf(" %-10f", result.average[result.header[Symbol(string(varname, "_b"))]])
+        if result.ttest
+            out *= @sprintf("   %-10f", result.average[result.header[Symbol(string(varname, "_bstd"))]])
+            out *= @sprintf("   %-10f", result.average[result.header[Symbol(string(varname, "_b"))]] / result.average[result.header[Symbol(string(varname, "_bstd"))]])
+        end
+        out *= @sprintf("\n")
+    end
+    out *= @sprintf("\n")
+    out *= @sprintf("──────────────────────────────────────────────────────────────────────────────\n")
+    out *= @sprintf(" Observations                        %-10f\n", result.average[result.header[:nobs]])
+    out *= @sprintf(" Adjusted R²                         %-10f\n", result.average[result.header[:r2adj]])
+    out *= @sprintf(" F-statistic                         %-10f\n", result.average[result.header[:F]])
+    out *= @sprintf(" Combined criteria                   %-10f\n", result.average[result.header[:order]])
+    out *= @sprintf("──────────────────────────────────────────────────────────────────────────────\n")
     return out
 end
 
