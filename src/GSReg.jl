@@ -1,8 +1,8 @@
-module GSReg
+__precompile__()
+# Can we remove the everywhere (?)
+@everywhere module GSReg
 
-using DataFrames, Missings
-using Base.Threads
-using CSV
+using DataFrames
 using Compat, Compat.LinearAlgebra
 
 export gsreg
@@ -13,51 +13,22 @@ const OUTSAMPLE_DEFAULT = 0
 const SAMESAMPLE_DEFAULT = false
 const TTEST_DEFAULT = false
 const METHOD_DEFAULT = "fast"
-const THREADS_DEFAULT = nthreads()
 const CRITERIA_DEFAULT = nothing
-const CRITERIA_DEFAULT_OUTSAMPLE = [ :rmseout ]
+const CRITERIA_DEFAULT_OUTSAMPLE = [:rmseout]
 const CRITERIA_DEFAULT_INSAMPLE = [ ]
 const CSV_DEFAULT = "gsreg.csv"
+const ORDER_RESULTS_DEFAULT = false
+const VECTOR_OPERATION_DEFAULT = false
+const MODEL_AVG_DEFAULT = false
 
-AVAILABLE_METHODS = ["precise","fast"]
+const AVAILABLE_METHODS = ["precise", "fast"]
+const AVAILABLE_VARIABLES = [:b, :bstd, :t_test]
 
-# NOTE:
-# (adanmauri) Replaced below
-"""
-AVAILABLE_CRITERIA = Dict(
-    "r2adj" => Dict(
-        "sample" => "in",
-        "index" => "max"
-    ),
-    "bic" => Dict(
-        "sample" => "in",
-        "index" => "min"
-    ),
-    "aic" => Dict(
-        "sample" => "in",
-        "index" => "min"
-    ),
-    "aicc" => Dict(
-        "sample" => "in",
-        "index" => "min"
-    ),
-    "cp" => Dict(
-        "sample" => "in",
-        "index" => "min"
-    ),
-    "rmsein" => Dict(
-        "sample" => "in",
-        "index" => "min"
-    ),
-    "rmseout" => Dict(
-        "sample" => "out",
-        "index" => "min"
-    )
-)"""
+const INDEX = :index
+const EQUATION_GENERAL_INFORMATION = [:nobs, :ncoef, :sse, :r2, :F, :rmse]
+const ORDER = :order
+const WEIGHT = :weight
 
-# NOTE:
-# (adanmari) This name would be changed
-AVAILABLE_VARIABLES = [ :b, :bstd, :t_test ]
 AVAILABLE_CRITERIA = Dict(
     :r2adj => Dict(
         "verbose_title" => "Adjusted R²",
@@ -101,10 +72,10 @@ AVAILABLE_CRITERIA = Dict(
     )
 )
 
-
 include("strings.jl")
-include("other/utils.jl")
+include("utils.jl")
 include("interface.jl")
+include("gsreg_result.jl")
 include("core.jl")
 
 end # module GSReg
