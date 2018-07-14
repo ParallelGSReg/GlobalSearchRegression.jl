@@ -10,7 +10,8 @@ function gsreg(
         vectoroperation=true,
         summary=nothing,
         csv=CSV_DEFAULT,
-        resultscsv=CSV_DEFAULT
+        resultscsv=CSV_DEFAULT,
+        orderresults=ORDER_RESULTS_DEFAULT
     )
     return gsreg(
             equation,
@@ -24,7 +25,8 @@ function gsreg(
             vectoroperation=vectoroperation,
             summary=summary,
             resultscsv=resultscsv,
-            csv=csv
+            csv=csv,
+            orderresults=orderresults
         )
 end
 
@@ -40,7 +42,8 @@ function gsreg(
         vectoroperation=true,
         summary=nothing,
         resultscsv=CSV_DEFAULT,
-        csv=CSV_DEFAULT
+        csv=CSV_DEFAULT,
+        orderresults=ORDER_RESULTS_DEFAULT
     )
     
     if contains(equation, "~")
@@ -63,7 +66,8 @@ function gsreg(
         vectoroperation=vectoroperation,
         summary=summary,
         resultscsv=resultscsv,
-        csv=csv
+        csv=csv,
+        orderresults=orderresults
     )
 end
 
@@ -79,7 +83,8 @@ function gsreg(
         vectoroperation=true,
         summary=nothing,
         resultscsv=CSV_DEFAULT,
-        csv=CSV_DEFAULT
+        csv=CSV_DEFAULT,
+        orderresults=ORDER_RESULTS_DEFAULT
     )
 
     keys = names(data)
@@ -105,7 +110,8 @@ function gsreg(
         vectoroperation=vectoroperation,
         summary=summary,
         resultscsv=resultscsv,
-        csv=csv
+        csv=csv,
+        orderresults=orderresults
     )
 end
 
@@ -121,7 +127,8 @@ function gsreg(
         vectoroperation=true,
         summary=nothing,
         resultscsv=CSV_DEFAULT,
-        csv=CSV_DEFAULT
+        csv=CSV_DEFAULT,
+        orderresults=ORDER_RESULTS_DEFAULT
     )
 
     if method == "fast"
@@ -182,7 +189,8 @@ function gsreg(
         vectoroperation=vectoroperation,
         summary=summary,
         datanames=datanames,
-        datatype=datatype
+        datatype=datatype,
+        orderresults=orderresults
     )
     if resultscsv != nothing
         export_csv(resultscsv, result)

@@ -13,6 +13,8 @@ type GSRegResult
     datatype                # Float32 or Float64 precision
     nobs                    # Number of observations
     header                  # Header Symbos and positions
+    orderresults            # Order or not the results
+    bestresult              # Best result
 
     function GSRegResult(
             depvar::Symbol,
@@ -25,7 +27,8 @@ type GSRegResult
             ttest,
             vectoroperation,
             datanames,
-            datatype
+            datatype,
+            orderresults
         )
         if :r2adj ∉ criteria
             push!(criteria, :r2adj)
@@ -39,6 +42,6 @@ type GSRegResult
         end
 
         header = get_result_header(expvars, intercept, ttest, criteria)
-        new(depvar, expvars, data, intercept, outsample, samesample, criteria, ttest, vectoroperation, nothing, datanames, datatype, nobs, header)
+        new(depvar, expvars, data, intercept, outsample, samesample, criteria, ttest, vectoroperation, nothing, datanames, datatype, nobs, header, orderresults)
     end
 end

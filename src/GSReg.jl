@@ -17,6 +17,7 @@ const CRITERIA_DEFAULT = nothing
 const CRITERIA_DEFAULT_OUTSAMPLE = [:rmseout]
 const CRITERIA_DEFAULT_INSAMPLE = [ ]
 const CSV_DEFAULT = "gsreg.csv"
+const ORDER_RESULTS_DEFAULT = false
 
 const AVAILABLE_METHODS = ["precise", "fast"]
 const AVAILABLE_VARIABLES = [:b, :bstd, :t_test]
