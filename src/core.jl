@@ -118,7 +118,7 @@ function gsreg_single_proc_result!(data, results, intercept, outsample, criteria
 end
 
 function gsreg_proc_result!(data, results, intercept, outsample, criteria, ttest, vectoroperation, datanames, datatype, header, num_job, num_jobs, ops_by_worker)
-    @time for j = 1:ops_by_worker
+    for j = 1:ops_by_worker
         order = (j-1) * num_jobs + num_job
         gsreg_single_proc_result!(data, results, intercept, outsample, criteria, ttest, vectoroperation, datanames, datatype, header, order)
     end

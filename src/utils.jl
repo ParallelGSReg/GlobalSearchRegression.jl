@@ -10,20 +10,15 @@ function get_data_position(name, expvars, intercept, ttest, criteria)
     displacement = displacement + mult_col * (data_cols_num) + 1
 
     # EQUATION_GENERAL_INFORMATION
-    if name in EQUATION_GENERAL_INFORMATION
-        return displacement + findfirst(EQUATION_GENERAL_INFORMATION, name)-1
+    equation_general_information_and_criteria = unique([ EQUATION_GENERAL_INFORMATION; criteria ])
+    if name in equation_general_information_and_criteria
+        return displacement + findfirst(equation_general_information_and_criteria, name)-1
     end
-    displacement = displacement + length(EQUATION_GENERAL_INFORMATION)
-
-    # ORDERING_CRITERIA
-    if name in criteria
-        return displacement + findfirst(criteria, name)-1
-    end
-    displacement = displacement + length(criteria) - 1
+    displacement = displacement + length(equation_general_information_and_criteria)
 
     # ORDER
     if name == ORDER
-        return displacement + 1
+        return displacement
     end
     displacement = 1
 
@@ -55,16 +50,11 @@ function get_result_header(expvars, intercept, ttest, criteria)
             header[Symbol(string(expvar,"_t"))] = get_data_position(Symbol(string(expvar,"_t")), expvars, intercept, ttest, criteria)
         end
     end
-    header[:nobs] = get_data_position(:nobs, expvars, intercept, ttest, criteria)
-    header[:ncoef] = get_data_position(:ncoef, expvars, intercept, ttest, criteria)
-    header[:sse] = get_data_position(:sse, expvars, intercept, ttest, criteria)
-    header[:r2] = get_data_position(:r2, expvars, intercept, ttest, criteria)
-    header[:F] = get_data_position(:F, expvars, intercept, ttest, criteria)
-    header[:rmse] = get_data_position(:rmse, expvars, intercept, ttest, criteria)
-    header[:order] = get_data_position(:order, expvars, intercept, ttest, criteria)
-    for c in criteria
-        header[c] = get_data_position(c, expvars, intercept, ttest, criteria)    
+
+    for key in unique([ EQUATION_GENERAL_INFORMATION; criteria ])
+        header[key] = get_data_position(key, expvars, intercept, ttest, criteria)
     end
+
     header[:order] = get_data_position(:order, expvars, intercept, ttest, criteria)
     return header
 end
@@ -96,21 +86,14 @@ function get_default_varnames(expvars_num::Integer)
 end
 
 function export_csv(output, result)
-    sub_headers = (result.ttest) ? ["_b", "_bstd", "_t"] : ["_b"]
+    file = open(output, "w")
 
-    headers = vcat([INDEX], [Symbol(string(v,n)) for v in result.expvars for n in sub_headers], EQUATION_GENERAL_INFORMATION, result.criteria, ORDER)
-    head = ""
-    l = length(headers)
-    for i = 1:l
-        head = string(head, string(headers[i]))
-        if ( i != l )
-            head = string(head,",")
-        end
+    head = []
+    for elem in sort(collect(Dict(value => key for (key, value) in result.header)))
+         push!(head, elem[2])
     end
+    writecsv(file, [head])
 
-    file = open(string("asd",output), "w")
-    write(file, head)
-    #writecsv(file, "\n")
     writecsv(file, result.results)
     close(file)
 end
