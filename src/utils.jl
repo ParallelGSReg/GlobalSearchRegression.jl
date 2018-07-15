@@ -10,7 +10,7 @@ Returns the position of the header value based on this structure.
     - Order from user combined criteria
     - Weight
 """
-function get_data_position(name, expvars, intercept, ttest, criteria)
+function get_data_position(name, expvars, intercept, ttest, residualtest, time, criteria)
     data_cols_num = length(expvars)
     mult_col = (ttest == true)?3:1    
 
@@ -22,7 +22,7 @@ function get_data_position(name, expvars, intercept, ttest, criteria)
     displacement += mult_col * (data_cols_num) + 1
 
     # EQUATION_GENERAL_INFORMATION
-    equation_general_information_and_criteria = unique([ EQUATION_GENERAL_INFORMATION; criteria ])
+    equation_general_information_and_criteria = unique([ EQUATION_GENERAL_INFORMATION; criteria; (time != nothing)?RESIDUAL_TESTS_TIME:RESIDUAL_TESTS_CROSS ])
     if name in equation_general_information_and_criteria
         return displacement + findfirst(equation_general_information_and_criteria, name)-1
     end
@@ -59,23 +59,29 @@ end
 """
 Constructs the header for results based in get_data_position orders.
 """
-function get_result_header(expvars, intercept, ttest, criteria)
+function get_result_header(expvars, intercept, ttest, residualtest, time, criteria)
     header = Dict{Symbol,Int64}()
-    header[:index] = get_data_position(:index, expvars, intercept, ttest, criteria)
+    header[:index] = get_data_position(:index, expvars, intercept, ttest, residualtest, time, criteria)
     for expvar in expvars
-        header[Symbol(string(expvar,"_b"))] = get_data_position(Symbol(string(expvar,"_b")), expvars, intercept, ttest, criteria)
+        header[Symbol(string(expvar,"_b"))] = get_data_position(Symbol(string(expvar,"_b")), expvars, intercept, ttest, residualtest, time, criteria)
         if ttest
-            header[Symbol(string(expvar,"_bstd"))] = get_data_position(Symbol(string(expvar,"_bstd")), expvars, intercept, ttest, criteria)
-            header[Symbol(string(expvar,"_t"))] = get_data_position(Symbol(string(expvar,"_t")), expvars, intercept, ttest, criteria)
+            header[Symbol(string(expvar,"_bstd"))] = get_data_position(Symbol(string(expvar,"_bstd")), expvars, intercept, ttest, residualtest, time, criteria)
+            header[Symbol(string(expvar,"_t"))] = get_data_position(Symbol(string(expvar,"_t")), expvars, intercept, ttest, residualtest, time, criteria)
         end
     end
 
-    for key in unique([ EQUATION_GENERAL_INFORMATION; criteria ])
-        header[key] = get_data_position(key, expvars, intercept, ttest, criteria)
+    keys = unique([ EQUATION_GENERAL_INFORMATION; criteria ])
+
+    if residualtest
+        keys = unique([ keys; (time != nothing)?RESIDUAL_TESTS_TIME:RESIDUAL_TESTS_CROSS ])
     end
 
-    header[:order] = get_data_position(:order, expvars, intercept, ttest, criteria)
-    header[:weight] = get_data_position(:weight, expvars, intercept, ttest, criteria)
+    for key in keys
+        header[key] = get_data_position(key, expvars, intercept, ttest, residualtest, time, criteria)
+    end
+
+    header[:order] = get_data_position(:order, expvars, intercept, ttest, residualtest, time, criteria)
+    header[:weight] = get_data_position(:weight, expvars, intercept, ttest, residualtest, time, criteria)
     return header
 end
 

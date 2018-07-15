@@ -5,4 +5,6 @@ OUTSAMPLE_HIGHER_VALUE = "outsample parameter is too high to ensure enought obse
 CSV_DUPLICATED_PARAMETERS = "resultscsv and csv parameters are defined at the same time"
 NO_ENOUGH_OBSERVATIONS = "there is no enough observations"
 SELECTED_VARIABLES_DOES_NOT_EXISTS = "selected variables does not exists"
+TIME_VARIABLE_INEXISTENT = "selected time variable does not exists"
 METHOD_INVALID = "invalid method, must be ""fast"" (32b) or ""precise"""
+RESIDUALTEST_EXCEPTION = "for white noise residual filtering, residualtest option must be true"

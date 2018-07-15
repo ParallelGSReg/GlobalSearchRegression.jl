@@ -3,12 +3,13 @@ __precompile__()
 @everywhere module GSReg
 
 using DataFrames
-using Compat, Compat.LinearAlgebra
+using Compat, Compat.LinearAlgebra, Distributions
 
 export gsreg
 
 const INTERCEPT_DEFAULT = true
 const INSAMPLE_MIN_SIZE = 20
+
 const OUTSAMPLE_DEFAULT = 0
 const SAMESAMPLE_DEFAULT = false
 const TTEST_DEFAULT = false
@@ -20,12 +21,18 @@ const CSV_DEFAULT = "gsreg.csv"
 const ORDER_RESULTS_DEFAULT = false
 const VECTOR_OPERATION_DEFAULT = false
 const MODEL_AVG_DEFAULT = false
+const RESIDUAL_TEST_DEFAULT = nothing
+const KEEP_WHITE_NOISE_DEFAULT = false
+const TIME_DEFAULT = nothing
+const SUMMARY_DEFAULT = nothing
 
 const AVAILABLE_METHODS = ["precise", "fast"]
 const AVAILABLE_VARIABLES = [:b, :bstd, :t_test]
 
 const INDEX = :index
 const EQUATION_GENERAL_INFORMATION = [:nobs, :ncoef, :sse, :r2, :F, :rmse]
+const RESIDUAL_TESTS_TIME = [:jbtest, :wtest, :bgtest]
+const RESIDUAL_TESTS_CROSS = [:jbtest, :wtest]
 const ORDER = :order
 const WEIGHT = :weight
 

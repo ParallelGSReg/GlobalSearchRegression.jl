@@ -9,6 +9,9 @@ function gsreg(
         ttest=nothing,
         vectoroperation=nothing,
         modelavg=nothing,
+        residualtest=nothing,
+        keepwnoise=nothing,
+        time=nothing,
         summary=nothing,
         datanames=nothing,
         datatype=nothing,
@@ -25,6 +28,9 @@ function gsreg(
         ttest,
         vectoroperation,
         modelavg,
+        residualtest,
+        keepwnoise,
+        time,
         datanames,
         datatype,
         orderresults
@@ -38,7 +44,21 @@ function gsreg(
     return result
 end
 
-function gsreg_single_proc_result!(data, results, intercept, outsample, criteria, ttest, vectoroperation, datanames, datatype, header, order)
+function gsreg_single_proc_result!(
+        order,
+        data,
+        results,
+        intercept,
+        outsample,
+        criteria,
+        ttest,
+        vectoroperation,
+        residualtest,
+        keepwnoise,
+        time,
+        datanames,
+        datatype,
+        header)
     cols = get_selected_cols(order)
     data_cols_num = size(data, 2)
     if intercept
@@ -52,8 +72,10 @@ function gsreg_single_proc_result!(data, results, intercept, outsample, criteria
     ncoef = size(expvars, 2)
     qrf = qrfact(expvars)
     b = qrf \ depvar                        # estimate
-    er = depvar - expvars * b               # in-sample residuals
-    sse = sum(er .^ 2)                      # residual sum of squares
+    ŷ = expvars * b                         # predicted values
+    er = depvar - ŷ                         # in-sample residuals
+    er2 = er .^ 2                           # squared errors
+    sse = sum(er2)                          # residual sum of squares
     df_e = nobs - ncoef                     # degrees of freedom
     rmse = sqrt(sse / nobs)                 # root mean squared error
     r2 = 1 - var(er) / var(depvar)          # model R-squared
@@ -87,6 +109,51 @@ function gsreg_single_proc_result!(data, results, intercept, outsample, criteria
     results[order, header[:rmse]] = datatype(rmse)
     results[order, header[:order]] = 0
 
+    if residualtest
+        x = er
+        n = length(x)
+        m1 = sum(x)/n
+        m2 = sum((x - m1).^2)/n
+        m3 = sum((x - m1).^3)/n
+        m4 = sum((x - m1).^4)/n
+        b1 = (m3/m2^(3/2))^2
+        b2 = (m4/m2^2)
+        statistic = n * b1/6 + n*(b2 - 3)^2/24
+        d = Chisq(2.)
+        results[order, header[:jbtest]] = 1.-cdf(d,statistic)
+
+        regmatw = hcat((ŷ .^ 2), ŷ , ones(size(ŷ,1)))
+        qrfw = qrfact(regmatw)
+        regcoeffw = qrfw \ er2
+        residw = er2 - regmatw*regcoeffw
+        rsqw = 1 - dot(residw,residw)/dot(er2,er2) # uncentered R^2
+        statisticw = n*rsqw
+        results[order, header[:wtest]] = ccdf(Chisq(2), statisticw)
+
+                if time != nothing
+                e = er
+                lag = 1
+                xmat = expvars
+
+                n = size(e,1)
+                elag = zeros(Float64,n,lag)
+                for ii = 1:lag  # construct lagged residuals
+                    elag[ii+1:end,ii] = e[1:end-ii]
+                end
+
+                offset = lag
+                regmatbg = [xmat[offset+1:end,:] elag[offset+1:end,:]]
+                qrfbg = qrfact(regmatbg)
+                regcoeffbg = qrfbg \ e[offset+1:end]
+                residbg = e[offset+1:end] - regmatbg*regcoeffbg
+
+                rsqbg = 1 - dot(residbg,residbg)/dot(e[offset+1:end],e[offset+1:end]) # uncentered R^2
+                statisticbg = (n-offset)*rsqbg
+                results[order, header[:bgtest]] = ccdf(Chisq(lag), statisticbg)
+        end
+
+    end
+
     if vectoroperation == false
         if ttest
             for (index, col) in enumerate(cols)
@@ -117,10 +184,10 @@ function gsreg_single_proc_result!(data, results, intercept, outsample, criteria
     end
 end
 
-function gsreg_proc_result!(data, results, intercept, outsample, criteria, ttest, vectoroperation, datanames, datatype, header, num_job, num_jobs, ops_by_worker)
+function gsreg_proc_result!(num_job, num_jobs, ops_by_worker, opts...)
     for j = 1:ops_by_worker
         order = (j-1) * num_jobs + num_job
-        gsreg_single_proc_result!(data, results, intercept, outsample, criteria, ttest, vectoroperation, datanames, datatype, header, order)
+        gsreg_single_proc_result!(order, opts...)
     end
 end
 
@@ -136,7 +203,7 @@ function proc!(result::GSRegResult)
 
     if nprocs() == nworkers()
         for order = 1:num_operations
-            gsreg_single_proc_result!(pdata, presults, result.intercept, result.outsample, result.criteria, result.ttest, result.vectoroperation, result.datanames, result.datatype, result.header, order)
+            gsreg_single_proc_result!(order, pdata, presults, result.intercept, result.outsample, result.criteria, result.ttest, result.vectoroperation,  result.residualtest, result.keepwnoise, result.time, result.datanames, result.datatype, result.header)
         end
     else
         num_workers = nworkers()
@@ -145,7 +212,7 @@ function proc!(result::GSRegResult)
         remainder = num_operations - ops_by_worker * num_jobs
         jobs = []
         for num_job = 1:num_jobs
-            push!(jobs, @spawnat num_job+1 gsreg_proc_result!(pdata, presults, result.intercept, result.outsample, result.criteria, result.ttest, result.vectoroperation, result.datanames, result.datatype, result.header, num_job, num_jobs, ops_by_worker))
+            push!(jobs, @spawnat num_job+1 gsreg_proc_result!(num_job, num_jobs, ops_by_worker, pdata, presults, result.intercept, result.outsample, result.criteria, result.ttest, result.vectoroperation, result.residualtest, result.keepwnoise, result.time, result.datanames, result.datatype, result.header))
         end
 
         for job in jobs
@@ -155,7 +222,7 @@ function proc!(result::GSRegResult)
         if( remainder > 0 )
             for j = 1:remainder
                 order = j + ops_by_worker * num_jobs
-                gsreg_single_proc_result!(pdata, presults, result.intercept, result.outsample, result.criteria, result.ttest, result.vectoroperation, result.datanames, result.datatype, result.header, order)
+                gsreg_single_proc_result!(order, pdata, presults, result.intercept, result.outsample, result.criteria, result.ttest, result.vectoroperation, result.residualtest, result.keepwnoise, result.time, result.datanames, result.datatype, result.header)
             end
         end
     end
@@ -286,7 +353,7 @@ function to_string(result::GSRegResult)
         end
         out *= @sprintf("\n")
     end
-    
+
     out *= @sprintf("──────────────────────────────────────────────────────────────────────────────\n")
     out *= @sprintf(" Observations                        %-10d\n", result.bestresult[result.header[:nobs]])
     out *= @sprintf(" Adjusted R²                         %-10f\n", result.bestresult[result.header[:r2adj]])
@@ -302,6 +369,8 @@ function to_string(result::GSRegResult)
     end
 
     if result.modelavg
+    out *= @sprintf("\n")
+    out *= @sprintf("\n")
     out *= @sprintf("══════════════════════════════════════════════════════════════════════════════\n")
     out *= @sprintf("                            Model averaging results                           \n")
     out *= @sprintf("══════════════════════════════════════════════════════════════════════════════\n")
