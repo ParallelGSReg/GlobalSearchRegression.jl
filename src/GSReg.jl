@@ -1,11 +1,7 @@
 __precompile__()
-# Can we remove the everywhere (?)
-@everywhere module GSReg
+module GSReg
 
-using DataFrames
-using Compat, Compat.LinearAlgebra, Distributions
-
-export gsreg
+using DataFrames, Compat, Compat.LinearAlgebra, Distributions
 
 const INTERCEPT_DEFAULT = true
 const INSAMPLE_MIN_SIZE = 20
@@ -14,7 +10,7 @@ const OUTSAMPLE_DEFAULT = 0
 const SAMESAMPLE_DEFAULT = false
 const TTEST_DEFAULT = false
 const METHOD_DEFAULT = "fast"
-const CRITERIA_DEFAULT = nothing
+const CRITERIA_DEFAULT = []
 const CRITERIA_DEFAULT_OUTSAMPLE = [:rmseout]
 const CRITERIA_DEFAULT_INSAMPLE = [ ]
 const CSV_DEFAULT = "gsreg.csv"
@@ -84,5 +80,7 @@ include("utils.jl")
 include("interface.jl")
 include("gsreg_result.jl")
 include("core.jl")
+
+export gsreg
 
 end # module GSReg

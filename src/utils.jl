@@ -72,7 +72,7 @@ function get_result_header(expvars, intercept, ttest, residualtest, time, criter
 
     keys = unique([ EQUATION_GENERAL_INFORMATION; criteria ])
 
-    if residualtest
+    if residualtest != nothing && residualtest
         keys = unique([ keys; (time != nothing)?RESIDUAL_TESTS_TIME:RESIDUAL_TESTS_CROSS ])
     end
 
