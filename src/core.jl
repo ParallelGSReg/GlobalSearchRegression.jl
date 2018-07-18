@@ -365,43 +365,45 @@ function to_string(result::GSRegResult)
     end
 
     if !result.modelavg
-    out *= @sprintf("──────────────────────────────────────────────────────────────────────────────\n")
+        out *= @sprintf("──────────────────────────────────────────────────────────────────────────────\n")
     end
 
     if result.modelavg
-    out *= @sprintf("\n")
-    out *= @sprintf("\n")
-    out *= @sprintf("══════════════════════════════════════════════════════════════════════════════\n")
-    out *= @sprintf("                            Model averaging results                           \n")
-    out *= @sprintf("══════════════════════════════════════════════════════════════════════════════\n")
-    out *= @sprintf("                                                                              \n")
-    out *= @sprintf("                                     Dependent variable: %s                   \n", result.depvar)
-    out *= @sprintf("                                     ─────────────────────────────────────────\n")
-    out *= @sprintf("                                                                              \n")
-    out *= @sprintf(" Covariates                          Coef.")
-    if result.ttest
-        out *= @sprintf("        Std.         t-test")
-    end
-    out *= @sprintf("\n")
-    out *= @sprintf("──────────────────────────────────────────────────────────────────────────────\n")
-    end
-
-    for varname in result.expvars
-        out *= @sprintf(" %-35s", varname)
-        out *= @sprintf(" %-10f", result.average[result.header[Symbol(string(varname, "_b"))]])
+        out *= @sprintf("\n")
+        out *= @sprintf("\n")
+        out *= @sprintf("══════════════════════════════════════════════════════════════════════════════\n")
+        out *= @sprintf("                            Model averaging results                           \n")
+        out *= @sprintf("══════════════════════════════════════════════════════════════════════════════\n")
+        out *= @sprintf("                                                                              \n")
+        out *= @sprintf("                                     Dependent variable: %s                   \n", result.depvar)
+        out *= @sprintf("                                     ─────────────────────────────────────────\n")
+        out *= @sprintf("                                                                              \n")
+        out *= @sprintf(" Covariates                          Coef.")
         if result.ttest
-            out *= @sprintf("   %-10f", result.average[result.header[Symbol(string(varname, "_bstd"))]])
-            out *= @sprintf("   %-10f", result.average[result.header[Symbol(string(varname, "_b"))]] / result.average[result.header[Symbol(string(varname, "_bstd"))]])
+            out *= @sprintf("        Std.         t-test")
         end
         out *= @sprintf("\n")
+        out *= @sprintf("──────────────────────────────────────────────────────────────────────────────\n")
+
+
+        for varname in result.expvars
+            out *= @sprintf(" %-35s", varname)
+            out *= @sprintf(" %-10f", result.average[result.header[Symbol(string(varname, "_b"))]])
+            if result.ttest
+                out *= @sprintf("   %-10f", result.average[result.header[Symbol(string(varname, "_bstd"))]])
+                out *= @sprintf("   %-10f", result.average[result.header[Symbol(string(varname, "_b"))]] / result.average[result.header[Symbol(string(varname, "_bstd"))]])
+            end
+            out *= @sprintf("\n")
+        end
+        out *= @sprintf("\n")
+        out *= @sprintf("──────────────────────────────────────────────────────────────────────────────\n")
+        out *= @sprintf(" Observations                        %-10f\n", result.average[result.header[:nobs]])
+        out *= @sprintf(" Adjusted R²                         %-10f\n", result.average[result.header[:r2adj]])
+        out *= @sprintf(" F-statistic                         %-10f\n", result.average[result.header[:F]])
+        out *= @sprintf(" Combined criteria                   %-10f\n", result.average[result.header[:order]])
+        out *= @sprintf("──────────────────────────────────────────────────────────────────────────────\n")
+
     end
-    out *= @sprintf("\n")
-    out *= @sprintf("──────────────────────────────────────────────────────────────────────────────\n")
-    out *= @sprintf(" Observations                        %-10f\n", result.average[result.header[:nobs]])
-    out *= @sprintf(" Adjusted R²                         %-10f\n", result.average[result.header[:r2adj]])
-    out *= @sprintf(" F-statistic                         %-10f\n", result.average[result.header[:F]])
-    out *= @sprintf(" Combined criteria                   %-10f\n", result.average[result.header[:order]])
-    out *= @sprintf("──────────────────────────────────────────────────────────────────────────────\n")
     return out
 end
 

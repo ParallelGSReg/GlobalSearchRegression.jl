@@ -114,7 +114,7 @@ end
 """
 Exports main results with headers
 """
-function export_csv(output, result)
+function export_csv(output::String, result::GSRegResult)
     file = open(output, "w")
 
     head = []

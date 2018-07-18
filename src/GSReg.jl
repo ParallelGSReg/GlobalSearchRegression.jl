@@ -13,7 +13,7 @@ const METHOD_DEFAULT = "fast"
 const CRITERIA_DEFAULT = []
 const CRITERIA_DEFAULT_OUTSAMPLE = [:rmseout]
 const CRITERIA_DEFAULT_INSAMPLE = [ ]
-const CSV_DEFAULT = "gsreg.csv"
+const CSV_DEFAULT = nothing
 const ORDER_RESULTS_DEFAULT = false
 const VECTOR_OPERATION_DEFAULT = false
 const MODEL_AVG_DEFAULT = false
@@ -75,12 +75,12 @@ AVAILABLE_CRITERIA = Dict(
     )
 )
 
+include("gsreg_result.jl")
 include("strings.jl")
 include("utils.jl")
 include("interface.jl")
-include("gsreg_result.jl")
 include("core.jl")
 
-export gsreg
+export gsreg, export_csv
 
 end # module GSReg
