@@ -9,7 +9,6 @@ GSReg is an automatic model selection command for time series, cross-section and
 gsreg(equation::String, data::DataFrame)
 gsreg(equation::Array{String}, data::DataFrame)
 gsreg(equation::Array{Symbol}, data::DataFrame)
-gsreg(equation::Array{Symbol}; data::DataFrame)
 ```
 
 ## Basic usage
@@ -54,7 +53,22 @@ using CSV, GSReg
 
 data = CSV.read("data.csv")
 
-result = gsreg("y x*", data)
+result = gsreg("y x*", data,
+    intercept=true,
+    outsample=10,
+    criteria=[:r2adj, :bic, :aic, :aicc, :cp, :rmse, :rmseout, :sse],
+    ttest=true,
+    method="fast", #precise
+    vectoroperation=true,
+    modelavg=true,
+    residualtest=false,
+    keepwnoise=false,
+    time=:date,
+    summary=false,
+    csv="output.csv",
+    resultscsv="output.csv",
+    orderresults=false
+)
 ```
 
 ## Options:
