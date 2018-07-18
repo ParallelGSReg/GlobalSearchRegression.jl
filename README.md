@@ -1,65 +1,86 @@
 # GSReg [![Build Status](https://travis-ci.org/ParallelGSReg/GSReg.jl.svg?branch=master)](https://travis-ci.org/ParallelGSReg/GSReg.jl)
 
+## Abstract
+GSReg is an automatic model selection command for time series, cross-section and panel data regressions. By default (otherwise, users have many options to modify this simplest specification), gsreg performs alternative OLS regressions looking for the best depvar Data Generating Process, iterating over all possible combinations among explanatory variables
+
 ## Syntax
 
 ```julia
-GSReg.gsreg(equation::String, data::DataFrame; noconstant::Bool=true)
-GSReg.gsreg(equation::Array{String}, data::DataFrame; noconstant::Bool=true)
-GSReg.gsreg(equation::Array{Symbol}, data::DataFrame; noconstant::Bool=true)
-GSReg.gsreg(equation::Array{Symbol}; data::DataFrame, noconstant::Bool=true)
-
+gsreg(equation::String, data::DataFrame)
+gsreg(equation::Array{String}, data::DataFrame)
+gsreg(equation::Array{Symbol}, data::DataFrame)
+gsreg(equation::Array{Symbol}; data::DataFrame)
 ```
 
 ## Basic usage
 
-To load the module:
-
-```julia
-Pkg.clone("git://git@github.com:ParallelGSReg/GSReg.jl.git")
-```
-
 To perform a regression analysis:
 
 ```julia
-using CSV
+using CSV, GSReg
+
 data = CSV.read("data.csv")
 
-result = GSReg.gsreg([:y, :x1, :x2, :x3], data; noconstant=true)
+result = gsreg("y x*", data)
 ```
 
 ## Other usage methods:
 
 ```julia
-
 # Stata like
-result = GSReg.gsreg("y x1 x2 x3", data)
+result = gsreg("y x1 x2 x3", data)
 
 # Stata like with comma
-result = GSReg.gsreg("y,x1,x2,x3", data)
+result = gsreg("y,x1,x2,x3", data)
 
 # R like
-result = GSReg.gsreg("y ~ x1 + x2 + x3", data)
-result = GSReg.gsreg("y ~ x1 + x2 + x3", data=data)
+result = gsreg("y ~ x1 + x2 + x3", data)
+result = gsreg("y ~ x1 + x2 + x3", data=data)
 
 # Array of strings
-result = GSReg.gsreg(["y", "x1", "x2", "x3"], data)
+result = gsreg(["y", "x1", "x2", "x3"], data)
 
 # Also, with wildcard
-result = GSReg.gsreg("y *", data)
-result = GSReg.gsreg("y x*", data)
-result = GSReg.gsreg("y x1 z*", data)
-result = GSReg.gsreg("y ~ x*", data)
-result = GSReg.gsreg("y ~ .", data)
+result = gsreg("y *", data)
+result = gsreg("y x*", data)
+result = gsreg("y x1 z*", data)
+result = gsreg("y ~ x*", data)
+result = gsreg("y ~ .", data)
+```
+## Full usage options
+
+```julia
+using CSV, GSReg
+
+data = CSV.read("data.csv")
+
+result = gsreg("y x*", data)
 ```
 
-outsample
-samesample
-threads
-criteria => r2adj
-            rmseout
+## Options:
 
-Go to usage comparison for more information about how to use GSReg with a R and Stata comparison. *TODO*
+intercept::Bool,
+outsample::Int,
+samesample::Bool,
+criteria::Array,
+ttest::Bool,
+method{fast,precise},
+vectoroperation::Bool,
+modelavg::Bool,
+residualtest::Bool,
+keepwnoise::Bool,
+time=Symbol,
+summary=Bool,
+csv=String,
+resultscsv=String (alias),
+orderresults=Boolean(false)
 
+
+## Parallel
+
+You must run julia with -p option
+
+ 
 ## Credits
 
 The GSReg module, which perform regression analysis, was written primarily by [Demian Panigo](https://github.com/dpanigo/), [Valentín Mari](https://github.com/vmari/) and [Adán Mauri Ungaro](https://github.com/adanmauri/). The GSReg module was inpired by GSReg for Stata, written by Pablo Gluzmann and [Demian Panigo](https://github.com/dpanigo/).

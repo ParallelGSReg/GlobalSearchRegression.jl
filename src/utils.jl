@@ -22,7 +22,8 @@ function get_data_position(name, expvars, intercept, ttest, residualtest, time, 
     displacement += mult_col * (data_cols_num) + 1
 
     # EQUATION_GENERAL_INFORMATION
-    equation_general_information_and_criteria = unique([ EQUATION_GENERAL_INFORMATION; criteria; (time != nothing)?RESIDUAL_TESTS_TIME:RESIDUAL_TESTS_CROSS ])
+    testfields = (residualtest!=nothing && residualtest)?((time != nothing)?RESIDUAL_TESTS_TIME:RESIDUAL_TESTS_CROSS):[]
+    equation_general_information_and_criteria = unique([ EQUATION_GENERAL_INFORMATION; criteria; testfields ])
     if name in equation_general_information_and_criteria
         return displacement + findfirst(equation_general_information_and_criteria, name)-1
     end

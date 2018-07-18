@@ -10,3 +10,4 @@ docs/build
 deps/deps.jl
 test/data
 !test/data/5x10*
+!test/data/20x100.csv

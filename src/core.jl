@@ -109,7 +109,7 @@ function gsreg_single_proc_result!(
     results[order, header[:rmse]] = datatype(rmse)
     results[order, header[:order]] = 0
 
-    if residualtest
+    if residualtest != nothing && residualtest
         x = er
         n = length(x)
         m1 = sum(x)/n
