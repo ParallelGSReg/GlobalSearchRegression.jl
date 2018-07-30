@@ -15,7 +15,8 @@ function gsreg(
         summary=nothing,
         datanames=nothing,
         datatype=nothing,
-        orderresults=nothing
+        orderresults=nothing,
+        onmessage=nothing
     )
     result = GSRegResult(
         depvar,
@@ -33,7 +34,8 @@ function gsreg(
         time,
         datanames,
         datatype,
-        orderresults
+        orderresults,
+        onmessage
     )
     proc!(result)
     if summary != nothing
@@ -63,7 +65,7 @@ function gsreg_single_proc_result!(
     data_cols_num = size(data, 2)
     if intercept
         append!(cols, data_cols_num)
-    end 
+    end
 
     depvar = @view(data[1:end-outsample, 1])
     expvars = @view(data[1:end-outsample, cols])
@@ -164,12 +166,17 @@ function gsreg_single_proc_result!(
             end
         end
 
-        if :aic in criteria || :aicc in criteria
+        if :aic in criteria
             results[order,header[:aic]] = 2 * results[order,header[:ncoef]] + results[order,header[:nobs]] * log(results[order,header[:sse]] / results[order,header[:nobs]])
         end
 
         if :aicc in criteria
-            results[order,header[:aicc]] = results[order,header[:aic]] + (2(results[order,header[:ncoef]] + 1) * (results[order,header[:ncoef]]+2)) / (results[order,header[:nobs]] - (results[order,header[:ncoef]] + 1 ) - 1)
+            if :aic in criteria
+                results[order,header[:aicc]] = results[order,header[:aic]] + (2(results[order,header[:ncoef]] + 1) * (results[order,header[:ncoef]]+2)) / (results[order,header[:nobs]] - (results[order,header[:ncoef]] + 1 ) - 1)
+            else
+                aic = 2 * results[order,header[:ncoef]] + results[order,header[:nobs]] * log(results[order,header[:sse]] / results[order,header[:nobs]])
+                results[order,header[:aicc]] = aic + (2(results[order,header[:ncoef]] + 1) * (results[order,header[:ncoef]]+2)) / (results[order,header[:nobs]] - (results[order,header[:ncoef]] + 1 ) - 1)
+            end
         end
 
         if :bic in criteria
@@ -179,7 +186,7 @@ function gsreg_single_proc_result!(
         if :r2adj in criteria
             results[order,header[:r2adj]] = 1 - (1 - results[order,header[:r2]]) * ((results[order,header[:nobs]] - 1) / (results[order,header[:nobs]] - results[order,header[:ncoef]]))
         end
-            
+
         results[order,header[:F]] = (results[order,header[:r2]] / (results[order,header[:ncoef]]-1)) / ((1-results[order,header[:r2]]) / (results[order,header[:nobs]] - results[order,header[:ncoef]]))
     end
 end
@@ -198,8 +205,12 @@ function proc!(result::GSRegResult)
     end
     num_operations = 2 ^ expvars_num - 1
 
+    result.onmessage("Creating environment")
+
     pdata = convert(SharedArray, result.data)
     presults = fill!(SharedArray{result.datatype}(num_operations, length(keys(result.header))),NaN)
+
+    result.onmessage("Doing $num_operations regressions")
 
     if nprocs() == nworkers()
         for order = 1:num_operations
@@ -226,12 +237,13 @@ function proc!(result::GSRegResult)
             end
         end
     end
-    
+
     result.results = Array(presults)
     presult = nothing
     pdata = nothing
 
     if result.vectoroperation
+        result.onmessage("Calculating Vector operations")
         if result.ttest
             for expvar in result.expvars
                 pos_b = result.header[Symbol(string(expvar, "_b"))]
@@ -256,7 +268,7 @@ function proc!(result::GSRegResult)
         if :r2adj in result.criteria
             result.results[:,result.header[:r2adj]] = 1 - (1 - result.results[:,result.header[:r2]]) .* ((result.results[:,result.header[:nobs]] - 1) ./ (result.results[:,result.header[:nobs]] - result.results[:,result.header[:ncoef]]))
         end
-            
+
         result.results[:,result.header[:F]] = (result.results[:,result.header[:r2]] ./ (result.results[:,result.header[:ncoef]]-1)) ./ ((1-result.results[:,result.header[:r2]]) ./ (result.results[:,result.header[:nobs]] - result.results[:,result.header[:ncoef]]))
     end
 
@@ -271,6 +283,7 @@ function proc!(result::GSRegResult)
     end
 
     if result.modelavg
+        result.onmessage("Generating model averaging results")
         # usar order para weight
         delta = maximum(result.results[:,result.header[:order]]) - result.results[:,result.header[:order]]
         w1 = exp.(-delta/2)
@@ -303,9 +316,12 @@ function proc!(result::GSRegResult)
     end
 
     if result.orderresults
+        result.onmessage("Sorting results")
         result.results = sortrows(result.results; lt=(x,y)->isless(x[result.header[:order]],y[result.header[:order]]), rev=true, alg=MergeSort)
         result.bestresult = result.results[1,:]
     else
+
+        result.onmessage("Looking for the best result")
         max_order = result.results[1,result.header[:order]]
         best_result_index = 1
         for i = 1:num_operations
@@ -317,7 +333,6 @@ function proc!(result::GSRegResult)
         result.bestresult = result.results[best_result_index,:]
     end
 end
-
 
 function to_string(result::GSRegResult)
     out = ""
@@ -405,6 +420,14 @@ function to_string(result::GSRegResult)
 
     end
     return out
+end
+
+function to_dict(res::GSRegResult)
+    Dict(
+        "datanames" => get_selected_cols(Int64(result.bestresult[result.header[:index]])),
+        "average" => res.average,
+        "bestresult" => res.bestresult
+    )
 end
 
 Base.show(io::IO, result::GSRegResult) = print(to_string(result))

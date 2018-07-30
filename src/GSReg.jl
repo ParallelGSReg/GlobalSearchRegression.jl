@@ -1,7 +1,7 @@
 __precompile__()
 module GSReg
 
-using DataFrames, Compat, Compat.LinearAlgebra, Distributions
+using DataFrames, Compat, Compat.LinearAlgebra, Distributions, JSON
 
 const INTERCEPT_DEFAULT = true
 const INSAMPLE_MIN_SIZE = 20
@@ -21,6 +21,7 @@ const RESIDUAL_TEST_DEFAULT = nothing
 const KEEP_WHITE_NOISE_DEFAULT = false
 const TIME_DEFAULT = nothing
 const SUMMARY_DEFAULT = nothing
+const ON_MESSAGE_DEFAULT = message -> println(message)
 
 const AVAILABLE_METHODS = ["precise", "fast"]
 const AVAILABLE_VARIABLES = [:b, :bstd, :t_test]

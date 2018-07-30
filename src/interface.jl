@@ -15,7 +15,8 @@ function gsreg(
         summary=SUMMARY_DEFAULT,
         csv=CSV_DEFAULT,
         resultscsv=CSV_DEFAULT,
-        orderresults=ORDER_RESULTS_DEFAULT
+        orderresults=ORDER_RESULTS_DEFAULT,
+        onmessage=ON_MESSAGE_DEFAULT
     )
     return gsreg(
             equation,
@@ -34,7 +35,8 @@ function gsreg(
             summary=summary,
             resultscsv=resultscsv,
             csv=csv,
-            orderresults=orderresults
+            orderresults=orderresults,
+            onmessage=onmessage
         )
 end
 
@@ -55,9 +57,10 @@ function gsreg(
         summary=SUMMARY_DEFAULT,
         resultscsv=CSV_DEFAULT,
         csv=CSV_DEFAULT,
-        orderresults=ORDER_RESULTS_DEFAULT
+        orderresults=ORDER_RESULTS_DEFAULT,
+        onmessage=ON_MESSAGE_DEFAULT
     )
-    
+
     if contains(equation, "~")
         equation = replace(equation, r"\s+|\s+$/g", "")
         dep_indep = split(equation, "~")
@@ -83,7 +86,8 @@ function gsreg(
         summary=summary,
         resultscsv=resultscsv,
         csv=csv,
-        orderresults=orderresults
+        orderresults=orderresults,
+        onmessage=onmessage
     )
 end
 
@@ -104,7 +108,8 @@ function gsreg(
         summary=SUMMARY_DEFAULT,
         resultscsv=CSV_DEFAULT,
         csv=CSV_DEFAULT,
-        orderresults=ORDER_RESULTS_DEFAULT
+        orderresults=ORDER_RESULTS_DEFAULT,
+        onmessage=ON_MESSAGE_DEFAULT
     )
 
     keys = names(data)
@@ -135,7 +140,8 @@ function gsreg(
         summary=summary,
         resultscsv=resultscsv,
         csv=csv,
-        orderresults=orderresults
+        orderresults=orderresults,
+        onmessage=onmessage
     )
 end
 
@@ -156,7 +162,8 @@ function gsreg(
         summary=SUMMARY_DEFAULT,
         resultscsv=CSV_DEFAULT,
         csv=CSV_DEFAULT,
-        orderresults=ORDER_RESULTS_DEFAULT
+        orderresults=ORDER_RESULTS_DEFAULT,
+        onmessage=ON_MESSAGE_DEFAULT
     )
 
     if method == "fast"
@@ -244,7 +251,8 @@ function gsreg(
         summary=summary,
         datanames=datanames,
         datatype=datatype,
-        orderresults=orderresults
+        orderresults=orderresults,
+        onmessage=onmessage
     )
     if resultscsv != nothing
         export_csv(resultscsv, result)

@@ -17,6 +17,7 @@ type GSRegResult
     nobs                   # Number of observations
     header                 # Header Symbols and positions
     orderresults           # Order or not the results
+    onmessage              # handler for feedback messages
     results                # Results array
     bestresult             # Best result
     average                # Model averaging array data
@@ -37,7 +38,8 @@ type GSRegResult
             time,
             datanames,
             datatype,
-            orderresults
+            orderresults,
+            onmessage
         )
         if :r2adj ∉ criteria
             push!(criteria, :r2adj)
@@ -52,6 +54,6 @@ type GSRegResult
         end
 
         header = get_result_header(expvars, intercept, ttest, residualtest, time, criteria)
-        new(depvar, expvars, data, intercept, outsample, samesample, criteria, ttest, vectoroperation, modelavg, residualtest, keepwnoise, time, datanames, datatype, nobs, header, orderresults)
+        new(depvar, expvars, data, intercept, outsample, samesample, criteria, ttest, vectoroperation, modelavg, residualtest, keepwnoise, time, datanames, datatype, nobs, header, orderresults, onmessage)
     end
 end
