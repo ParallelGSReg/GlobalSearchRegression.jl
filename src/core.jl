@@ -455,11 +455,25 @@ function to_string(result::GSRegResult)
 end
 
 function to_dict(res::GSRegResult)
-    Dict(
-        "datanames" => get_selected_cols(Int64(result.bestresult[result.header[:index]])),
-        "average" => res.average,
-        "bestresult" => res.bestresult
+    result = Dict()
+    for (header, index) in res.header
+        push!(result, Pair(string(header), res.bestresult[index]))
+    end
+
+    dic = Dict(
+        "selected_cols" => map( x -> res.datanames[x], get_selected_cols(Int64(res.bestresult[res.header[:index]]))),
+        "bestresult" => result
     )
+
+    if res.modelavg
+        average = Dict()
+        for (header, index) in res.header
+            push!(result, Pair(string(header), res.average[index]))
+        end
+        push!(dic, Pair("average", average))
+    end
+
+    dic
 end
 
 Base.show(io::IO, result::GSRegResult) = print(to_string(result))
