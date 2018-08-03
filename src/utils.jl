@@ -113,18 +113,20 @@ function get_selected_cols(i)
     return cols
 end
 
-"""
-Exports main results with headers
-"""
-function export_csv(output::String, result::GSRegResult)
-    file = open(output, "w")
-
+function export_csv(io::IOBuffer, result::GSRegResult)
     head = []
     for elem in sort(collect(Dict(value => key for (key, value) in result.header)))
          push!(head, elem[2])
     end
-    writecsv(file, [head])
+    writecsv(io, [head])
+    writecsv(io, result.results)
+end
 
-    writecsv(file, result.results)
+"""
+Exports main results with headers to file
+"""
+function export_csv(output::String, result::GSRegResult)
+    file = open(output, "w")
+    export_csv(file, result)
     close(file)
 end

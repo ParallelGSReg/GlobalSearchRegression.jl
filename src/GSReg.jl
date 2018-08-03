@@ -1,7 +1,7 @@
-__precompile__(true)
 module GSReg
-
-using DataFrames, Compat, Compat.LinearAlgebra, Distributions, JSON
+using DataFrames, Compat, Compat.LinearAlgebra, Distributions, JSON,
+ HttpServer, Mux, HTTP, WebSockets, HttpServer.mimetypes,
+  Mux.stack, CSV, HttpCommon, DataStructures
 
 const INTERCEPT_DEFAULT = true
 const INSAMPLE_MIN_SIZE = 20
@@ -80,8 +80,9 @@ include("gsreg_result.jl")
 include("strings.jl")
 include("utils.jl")
 include("interface.jl")
+include("server.jl")
 include("core.jl")
 
-export gsreg, export_csv
+export gsreg, export_csv, gui
 
 end # module GSReg
