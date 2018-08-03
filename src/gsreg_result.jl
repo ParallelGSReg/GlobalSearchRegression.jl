@@ -53,7 +53,7 @@ type GSRegResult
             push!(datanames, :_cons)
         end
 
-        header = get_result_header(expvars, intercept, ttest, residualtest, time, criteria)
+        header = get_result_header(expvars, intercept, ttest, residualtest, time, criteria, modelavg)
         new(depvar, expvars, data, intercept, outsample, samesample, criteria, ttest, vectoroperation, modelavg, residualtest, keepwnoise, time, datanames, datatype, nobs, header, orderresults, onmessage)
     end
 end

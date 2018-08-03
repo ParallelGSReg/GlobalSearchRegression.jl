@@ -468,7 +468,7 @@ function to_dict(res::GSRegResult)
     if res.modelavg
         average = Dict()
         for (header, index) in res.header
-            push!(result, Pair(string(header), res.average[index]))
+            push!(average, Pair(string(header), res.average[index]))
         end
         push!(dic, Pair("average", average))
     end

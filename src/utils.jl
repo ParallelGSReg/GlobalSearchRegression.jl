@@ -12,7 +12,7 @@ Returns the position of the header value based on this structure.
 """
 function get_data_position(name, expvars, intercept, ttest, residualtest, time, criteria)
     data_cols_num = length(expvars)
-    mult_col = (ttest == true)?3:1    
+    mult_col = (ttest == true)?3:1
 
     # INDEX
     if name == INDEX
@@ -48,19 +48,19 @@ function get_data_position(name, expvars, intercept, ttest, residualtest, time, 
             return displacement + 2
         end
         if contains(string_name, "_b")
-            return displacement + 1 
+            return displacement + 1
         end
         if contains(string_name, "_t")
-            return displacement + 3 
+            return displacement + 3
         end
     end
-    
+
 end
 
 """
 Constructs the header for results based in get_data_position orders.
 """
-function get_result_header(expvars, intercept, ttest, residualtest, time, criteria)
+function get_result_header(expvars, intercept, ttest, residualtest, time, criteria, modelavg)
     header = Dict{Symbol,Int64}()
     header[:index] = get_data_position(:index, expvars, intercept, ttest, residualtest, time, criteria)
     for expvar in expvars
@@ -82,7 +82,9 @@ function get_result_header(expvars, intercept, ttest, residualtest, time, criter
     end
 
     header[:order] = get_data_position(:order, expvars, intercept, ttest, residualtest, time, criteria)
-    header[:weight] = get_data_position(:weight, expvars, intercept, ttest, residualtest, time, criteria)
+    if modelavg
+        header[:weight] = get_data_position(:weight, expvars, intercept, ttest, residualtest, time, criteria)
+    end
     return header
 end
 
@@ -107,7 +109,7 @@ function get_selected_cols(i)
             append!(cols, k)
         end
         k = k + 1
-    end  
+    end
     return cols
 end
 
