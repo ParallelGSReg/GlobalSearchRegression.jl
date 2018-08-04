@@ -16,7 +16,8 @@ function gsreg(
         csv=CSV_DEFAULT,
         resultscsv=CSV_DEFAULT,
         orderresults=ORDER_RESULTS_DEFAULT,
-        onmessage=ON_MESSAGE_DEFAULT
+        onmessage=ON_MESSAGE_DEFAULT,
+        parallel=PARALLEL_DEFAULT
     )
     return gsreg(
             equation,
@@ -36,7 +37,8 @@ function gsreg(
             resultscsv=resultscsv,
             csv=csv,
             orderresults=orderresults,
-            onmessage=onmessage
+            onmessage=onmessage,
+            parallel=parallel
         )
 end
 
@@ -58,7 +60,8 @@ function gsreg(
         resultscsv=CSV_DEFAULT,
         csv=CSV_DEFAULT,
         orderresults=ORDER_RESULTS_DEFAULT,
-        onmessage=ON_MESSAGE_DEFAULT
+        onmessage=ON_MESSAGE_DEFAULT,
+        parallel=PARALLEL_DEFAULT
     )
 
     if contains(equation, "~")
@@ -87,7 +90,8 @@ function gsreg(
         resultscsv=resultscsv,
         csv=csv,
         orderresults=orderresults,
-        onmessage=onmessage
+        onmessage=onmessage,
+        parallel=parallel
     )
 end
 
@@ -109,7 +113,8 @@ function gsreg(
         resultscsv=CSV_DEFAULT,
         csv=CSV_DEFAULT,
         orderresults=ORDER_RESULTS_DEFAULT,
-        onmessage=ON_MESSAGE_DEFAULT
+        onmessage=ON_MESSAGE_DEFAULT,
+        parallel=PARALLEL_DEFAULT
     )
 
     keys = names(data)
@@ -141,7 +146,8 @@ function gsreg(
         resultscsv=resultscsv,
         csv=csv,
         orderresults=orderresults,
-        onmessage=onmessage
+        onmessage=onmessage,
+        parallel=parallel
     )
 end
 
@@ -163,7 +169,8 @@ function gsreg(
         resultscsv=CSV_DEFAULT,
         csv=CSV_DEFAULT,
         orderresults=ORDER_RESULTS_DEFAULT,
-        onmessage=ON_MESSAGE_DEFAULT
+        onmessage=ON_MESSAGE_DEFAULT,
+        parallel=PARALLEL_DEFAULT
     )
 
     if method == "fast"
@@ -231,6 +238,16 @@ function gsreg(
         sort!(data, time)
     end
 
+    if parallel != nothing
+        if parallel > nworkers()
+            error("Number of parallel workers can not exceed available cores. Use addprocs()")
+        end
+
+        if parallel < 1
+            error("Number of workers can not be less than 1")
+        end
+    end
+
     data = data[equation]
     datanames = names(data)
     data = convert(Array{datatype}, data)
@@ -252,7 +269,8 @@ function gsreg(
         datanames=datanames,
         datatype=datatype,
         orderresults=orderresults,
-        onmessage=onmessage
+        onmessage=onmessage,
+        parallel=parallel
     )
     if resultscsv != nothing
         export_csv(resultscsv, result)

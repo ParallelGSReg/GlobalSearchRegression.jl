@@ -113,7 +113,7 @@ function get_selected_cols(i)
     return cols
 end
 
-function export_csv(io::IOBuffer, result::GSRegResult)
+function export_csv(io::IO, result::GSRegResult)
     head = []
     for elem in sort(collect(Dict(value => key for (key, value) in result.header)))
          push!(head, elem[2])

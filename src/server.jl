@@ -33,17 +33,18 @@ function sendMessage(id::String, data)
 end
 
 function sendMessage(ws::WebSocket, data)
-    writeguarded(ws, JSON.json(data))
+    write(ws, JSON.json(data))
 end
 
 function gsreg(job::GSRegJob)
     global jobs_finished
-    try
+    #try
         sendMessage(job.hash, Dict("operation_id" => job.id, "message" => "Reading data"))
         data = CSV.read(job.file)
         sendMessage(job.hash, Dict("operation_id" => job.id, "message" => "Executing GSReg"))
 
         opt = job.options["options"]
+        opt[:parallel] = job.options["paraprocs"]
 
         job.time_started = time()
         job.res = gsreg(job.options["depvar"] * " " * join(job.options["expvars"], " "), data; opt...,
@@ -51,12 +52,12 @@ function gsreg(job::GSRegJob)
         job.time_finished = time()
         push!(jobs_finished, Pair(job.id, job))
 
-        sendMessage(job.hash, Dict("operation_id" => job.id, "done" => true, "message" => "Successful operation", "result" => GSReg.to_dict(job.res)))
-    catch e
+        sendMessage(job.hash, Dict("operation_id" => job.id, "done" => true, "message" => "Successful operation", "result" => to_dict(job.res)))
+    #=catch e
         io = IOBuffer()
         showerror(io, e)
         sendMessage(job.hash, Dict("operation_id" => job.id, "done" => false, "message" => String(take!(io))))
-    end
+    end=#
 end
 
 """
@@ -101,11 +102,7 @@ function toJsonWithCors(res, req)
         headers["Content-Type"] = "application/json; charset=utf-8"
     end
     headers["Access-Control-Allow-Headers"] = "X-User-Token, Content-Type"
-    if get(req[:headers], "Origin", "") == "http://127.0.0.1:45872"
-        headers["Access-Control-Allow-Origin"] = "http://127.0.0.1:45872"
-    else
-        headers["Access-Control-Allow-Origin"] = "https://app.gsreg.org"
-    end
+    headers["Access-Control-Allow-Origin"] = "*"
 
     Dict(
         :headers => headers,
@@ -137,23 +134,27 @@ end
 """
     TODO: doc and d better validation, more secure for cloud environments
 """
-function validateInput(opt)
+function validateInput!(opt)
     options = Dict{Symbol,Any}()
     opt_types = Dict(
         "intercept" => Bool,
-        "time" => string,
+        "time" => String,
         "residualtest" => Bool,
         "keepwnoise" => Bool,
         "ttest" => Bool,
         "orderresults" => Bool,
         "modelavg" => Bool,
-        "outsample" => Integer,
-        "method" => string,
+        "outsample" => Int,
+        "method" => String,
         "criteria" => Array{Symbol}
     )
     for (name, value) in opt["options"]
-        if value != nothing && name != "csv" && name != "resultscsv"
-            push!(options, Pair(Symbol(name), opt_types[name](value)) )
+        if value != nothing && name == "criteria"
+            push!(options, Pair(:criteria, Array{Symbol}(value)))
+        elseif value != nothing && name == "time"
+            push!(options, Pair(:time, Symbol(value)))
+        elseif value != nothing && name != "csv" && name != "resultscsv"
+            push!(options, Pair(Symbol(name), value))
         end
     end
     opt["options"] = options
@@ -250,7 +251,7 @@ function solve(req)
     end
 
     # validate correct use of options
-    opt = validateInput(options)
+    validateInput!(options)
 
     # if we're in cloud solution, skip computations larger than our capabilities
     if ( haskey(ENV, "ENVIRONMENT") && ENV["ENVIRONMENT"] == "cloud" )
@@ -258,7 +259,7 @@ function solve(req)
     end
 
     # Enqueue the job
-    job = GSRegJob(tempfile, req[:token], opt)
+    job = GSRegJob(tempfile, req[:token], options)
     enqueue_job(job)
 
     Dict(
@@ -318,9 +319,14 @@ function result_file(req)
         csv = IOBuffer()
         export_csv(csv, jobs_finished[id].res)
         delete!(jobs_finished, id)
+        if job.options["csv"] != nothing
+            filename = endswith(job.options["csv"], ".csv") ? job.options["csv"] : job.options["csv"] * ".csv"
+        else
+            filename = "gsreg" * Libc.strftime("%d/%b/%Y%H%M%S", time()) * ".csv"
+        end
         Dict(
             :body => String(csv),
-            :headers => Dict("Content-Type" => "application/octet-stream", "Content-Disposition" => "attachment; filename=result.csv")
+            :headers => Dict("Content-Type" => "application/octet-stream", "Content-Disposition" => "attachment; filename=$filename")
         )
     else
         Dict( :status => 404, :body => "Not found" )
@@ -378,7 +384,11 @@ function gui(;port=45872, cloud=false, log=false)
         while true
             wait(job_queue_cond)
             while !(isempty(job_queue))
-                gsreg(dequeue!(job_queue))
+                try
+                    gsreg(dequeue!(job_queue))
+                catch
+                    println("Error executing gsreg job")
+                end
             end
         end
     end

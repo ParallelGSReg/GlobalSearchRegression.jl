@@ -22,6 +22,7 @@ const KEEP_WHITE_NOISE_DEFAULT = false
 const TIME_DEFAULT = nothing
 const SUMMARY_DEFAULT = nothing
 const ON_MESSAGE_DEFAULT = message -> println(message)
+const PARALLEL_DEFAULT = nothing
 
 const AVAILABLE_METHODS = ["precise", "fast"]
 const AVAILABLE_VARIABLES = [:b, :bstd, :t_test]

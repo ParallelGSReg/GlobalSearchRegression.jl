@@ -16,7 +16,8 @@ function gsreg(
         datanames=nothing,
         datatype=nothing,
         orderresults=nothing,
-        onmessage=nothing
+        onmessage=nothing,
+        parallel=nothing
     )
     result = GSRegResult(
         depvar,
@@ -35,7 +36,8 @@ function gsreg(
         datanames,
         datatype,
         orderresults,
-        onmessage
+        onmessage,
+        parallel
     )
     proc!(result)
     if summary != nothing
@@ -217,7 +219,7 @@ function proc!(result::GSRegResult)
             gsreg_single_proc_result!(order, pdata, presults, result.intercept, result.outsample, result.criteria, result.ttest, result.vectoroperation,  result.residualtest, result.keepwnoise, result.time, result.datanames, result.datatype, result.header)
         end
     else
-        num_workers = nworkers()
+        num_workers = (result.parallel != nothing) ? result.parallel : nworkers()
         ops_by_worker = div(num_operations, num_workers)
         num_jobs = (num_workers > num_operations)?num_operations:num_workers
         remainder = num_operations - ops_by_worker * num_jobs
@@ -317,9 +319,7 @@ function proc!(result::GSRegResult)
 
     if result.orderresults
         result.onmessage("Sorting results")
-        tic()
         result.results = gsregsortrows(result.results, [result.header[:order]]; rev=true)
-        toc()
         result.bestresult = result.results[1,:]
     else
 
@@ -470,7 +470,7 @@ function to_dict(res::GSRegResult)
         for (header, index) in res.header
             push!(average, Pair(string(header), res.average[index]))
         end
-        push!(dic, Pair("average", average))
+        push!(dic, Pair("avgresults", average))
     end
 
     dic
