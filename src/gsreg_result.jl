@@ -47,6 +47,10 @@ type GSRegResult
             push!(criteria, :r2adj)
         end
 
+        if :rmseout ∉ criteria && outsample != OUTSAMPLE_DEFAULT
+            push!(criteria, :rmseout)
+        end
+
         nobs = size(data, 1)
 
         if intercept

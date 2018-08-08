@@ -38,7 +38,7 @@ end
 
 function gsreg(job::GSRegJob)
     global jobs_finished
-    #try
+    try
         sendMessage(job.hash, Dict("operation_id" => job.id, "message" => "Reading data"))
         data = CSV.read(job.file)
         sendMessage(job.hash, Dict("operation_id" => job.id, "message" => "Executing GSReg"))
@@ -53,11 +53,11 @@ function gsreg(job::GSRegJob)
         push!(jobs_finished, Pair(job.id, job))
 
         sendMessage(job.hash, Dict("operation_id" => job.id, "done" => true, "message" => "Successful operation", "result" => to_dict(job.res)))
-    #=catch e
+    catch e
         io = IOBuffer()
         showerror(io, e)
         sendMessage(job.hash, Dict("operation_id" => job.id, "done" => false, "message" => String(take!(io))))
-    end=#
+    end
 end
 
 """
@@ -307,7 +307,7 @@ fileresponse(f) = Dict(
                     :headers => fileheaders(f)
                     )
 
-fresp(f) = isfile(f) ? fileresponse(f) : fileresponse(joinpath(SERVER_BASE_DIR,"index.html"))
+fresp(f) = isfile(f) ? fileresponse(f) : fileresponse(joinpath(dirname(@__FILE__), "..", SERVER_BASE_DIR,"index.html"))
 
 """
     operation_id -> csv
@@ -317,7 +317,8 @@ function result_file(req)
     id = req[:params][:id]
     if haskey(jobs_finished, id)
         csv = IOBuffer()
-        export_csv(csv, jobs_finished[id].res)
+        job = jobs_finished[id]
+        export_csv(csv, job.res)
         delete!(jobs_finished, id)
         if job.options["csv"] != nothing
             filename = endswith(job.options["csv"], ".csv") ? job.options["csv"] : job.options["csv"] * ".csv"
@@ -367,7 +368,7 @@ function gui(;port=45872, cloud=false, log=false)
         page("/server-info", req -> toJsonWithCors(server_info(req), req)),
         page("/result/:id", req -> result_file(req)),
         page("/solve/:hash/:options", req -> toJsonWithCors(solve(req), req)),
-        branch( req -> validpath(joinpath(SERVER_BASE_DIR, req[:path]...)), req -> fresp(joinpath(SERVER_BASE_DIR, req[:path]...))),
+        branch( req -> validpath(joinpath(SERVER_BASE_DIR, req[:path]...)), req -> fresp(joinpath(dirname(@__FILE__), "..", SERVER_BASE_DIR, req[:path]...))),
         Mux.notfound
     )
 
