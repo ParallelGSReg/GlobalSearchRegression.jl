@@ -1,4 +1,4 @@
-type GSRegResult
+mutable struct GSRegResult
     depvar::Symbol         # Dependant variable names
     expvars::Array{Symbol} # Explanatory variables names
     data                   # Actual data
