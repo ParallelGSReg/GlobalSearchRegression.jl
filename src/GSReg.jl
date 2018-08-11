@@ -1,7 +1,5 @@
 module GSReg
-using DataFrames, Compat, Compat.LinearAlgebra, Distributions, JSON,
- HttpServer, Mux, HTTP, WebSockets, HttpServer.mimetypes,
-  Mux.stack, CSV, HttpCommon, DataStructures
+using DataFrames, Compat, Compat.LinearAlgebra, Distributions
 
 const INTERCEPT_DEFAULT = true
 const INSAMPLE_MIN_SIZE = 20
@@ -20,7 +18,7 @@ const RESIDUAL_TEST_DEFAULT = nothing
 const KEEP_WHITE_NOISE_DEFAULT = false
 const TIME_DEFAULT = nothing
 const SUMMARY_DEFAULT = nothing
-const ON_MESSAGE_DEFAULT = message -> println(message)
+const ON_MESSAGE_DEFAULT = message -> ()
 const PARALLEL_DEFAULT = nothing
 
 const AVAILABLE_METHODS = ["precise", "fast"]
@@ -80,9 +78,8 @@ include("gsreg_result.jl")
 include("strings.jl")
 include("utils.jl")
 include("interface.jl")
-include("server.jl")
 include("core.jl")
 
-export gsreg, export_csv, gui
+export gsreg, export_csv, to_dict, to_string
 
 end # module GSReg

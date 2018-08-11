@@ -49,6 +49,8 @@ function parse_data(data, datanames)
 end
 
 
+
+
 """
 Returns the position of the header value based on this structure.
     - Index
@@ -171,8 +173,6 @@ function export_csv(io::IO, result::GSRegResult)
     writecsv(io, [head])
     writecsv(io, result.results)
 end
-
-
 
 """
 Exports main results with headers to file

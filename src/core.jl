@@ -322,7 +322,6 @@ function proc!(result::GSRegResult)
         result.results = gsregsortrows(result.results, [result.header[:order]]; rev=true)
         result.bestresult = result.results[1,:]
     else
-
         result.onmessage("Looking for the best result")
         max_order = result.results[1,result.header[:order]]
         best_result_index = 1
