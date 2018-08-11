@@ -21,8 +21,6 @@ function gsreg(
     parallel=PARALLEL_DEFAULT
     )
 
-    println("1")
-
     return gsreg(
         equation,
         data,
@@ -70,7 +68,6 @@ function gsreg(
     parallel=PARALLEL_DEFAULT
     )
 
-    println("2")
     equation = equation_str_to_strarr(equation)
 
     return gsreg(
@@ -120,7 +117,6 @@ function gsreg(
     parallel=PARALLEL_DEFAULT
     )
 
-    println("3")
     equation = equation_strarr_to_symarr(equation, data, datanames)
 
     if isempty(equation)
@@ -223,8 +219,6 @@ function gsreg(
     onmessage=ON_MESSAGE_DEFAULT,
     parallel=PARALLEL_DEFAULT
     )
-
-    println("4")
 
     if method == "precise"
         datatype = Float64
