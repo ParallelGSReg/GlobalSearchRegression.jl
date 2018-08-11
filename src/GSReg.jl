@@ -1,5 +1,5 @@
 module GSReg
-using DataFrames, Compat, Compat.LinearAlgebra, Distributions
+using DataFrames, Distributions
 
 const INTERCEPT_DEFAULT = true
 const INSAMPLE_MIN_SIZE = 20
