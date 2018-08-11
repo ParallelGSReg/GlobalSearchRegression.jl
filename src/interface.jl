@@ -1,80 +1,136 @@
 function gsreg(
-        equation::String;
-        data::DataFrame=nothing,
-        intercept::Bool=INTERCEPT_DEFAULT,
-        outsample::Int=OUTSAMPLE_DEFAULT,
-        samesample::Bool=SAMESAMPLE_DEFAULT,
-        criteria=CRITERIA_DEFAULT,
-        ttest=TTEST_DEFAULT,
-        method=METHOD_DEFAULT,
-        vectoroperation=VECTOR_OPERATION_DEFAULT,
-        modelavg=MODEL_AVG_DEFAULT,
-        residualtest=RESIDUAL_TEST_DEFAULT,
-        keepwnoise=KEEP_WHITE_NOISE_DEFAULT,
-        time=TIME_DEFAULT,
-        summary=SUMMARY_DEFAULT,
-        csv=CSV_DEFAULT,
-        resultscsv=CSV_DEFAULT,
-        orderresults=ORDER_RESULTS_DEFAULT,
-        onmessage=ON_MESSAGE_DEFAULT,
-        parallel=PARALLEL_DEFAULT
+    equation::String;
+    data=nothing,
+    datanames=nothing,
+    intercept=INTERCEPT_DEFAULT,
+    outsample=OUTSAMPLE_DEFAULT,
+    samesample=SAMESAMPLE_DEFAULT,
+    criteria=CRITERIA_DEFAULT,
+    ttest=TTEST_DEFAULT,
+    method=METHOD_DEFAULT,
+    vectoroperation=VECTOR_OPERATION_DEFAULT,
+    modelavg=MODEL_AVG_DEFAULT,
+    residualtest=RESIDUAL_TEST_DEFAULT,
+    keepwnoise=KEEP_WHITE_NOISE_DEFAULT,
+    time=TIME_DEFAULT,
+    summary=SUMMARY_DEFAULT,
+    csv=CSV_DEFAULT,
+    resultscsv=CSV_DEFAULT,
+    orderresults=ORDER_RESULTS_DEFAULT,
+    onmessage=ON_MESSAGE_DEFAULT,
+    parallel=PARALLEL_DEFAULT
     )
+
+    println("1")
+
     return gsreg(
-            equation,
-            data,
-            intercept=intercept,
-            outsample=outsample,
-            samesample=samesample,
-            criteria=criteria,
-            ttest=ttest,
-            method=method,
-            vectoroperation=vectoroperation,
-            modelavg=modelavg,
-            residualtest=residualtest,
-            keepwnoise=keepwnoise,
-            time=time,
-            summary=summary,
-            resultscsv=resultscsv,
-            csv=csv,
-            orderresults=orderresults,
-            onmessage=onmessage,
-            parallel=parallel
-        )
+        equation,
+        data,
+        datanames=datanames,
+        intercept=intercept,
+        outsample=outsample,
+        samesample=samesample,
+        criteria=criteria,
+        ttest=ttest,
+        method=method,
+        vectoroperation=vectoroperation,
+        modelavg=modelavg,
+        residualtest=residualtest,
+        keepwnoise=keepwnoise,
+        time=time,
+        summary=summary,
+        resultscsv=resultscsv,
+        csv=csv,
+        orderresults=orderresults,
+        onmessage=onmessage,
+        parallel=parallel
+    )
 end
 
 function gsreg(
-        equation::String,
-        data::DataFrame;
-        intercept::Bool=INTERCEPT_DEFAULT,
-        outsample::Int=OUTSAMPLE_DEFAULT,
-        samesample::Bool=SAMESAMPLE_DEFAULT,
-        criteria=CRITERIA_DEFAULT,
-        ttest=TTEST_DEFAULT,
-        method=METHOD_DEFAULT,
-        vectoroperation=VECTOR_OPERATION_DEFAULT,
-        modelavg=MODEL_AVG_DEFAULT,
-        residualtest=RESIDUAL_TEST_DEFAULT,
-        keepwnoise=KEEP_WHITE_NOISE_DEFAULT,
-        time=TIME_DEFAULT,
-        summary=SUMMARY_DEFAULT,
-        resultscsv=CSV_DEFAULT,
-        csv=CSV_DEFAULT,
-        orderresults=ORDER_RESULTS_DEFAULT,
-        onmessage=ON_MESSAGE_DEFAULT,
-        parallel=PARALLEL_DEFAULT
+    equation::String,
+    data;
+    datanames=nothing,
+    intercept=INTERCEPT_DEFAULT,
+    outsample=OUTSAMPLE_DEFAULT,
+    samesample=SAMESAMPLE_DEFAULT,
+    criteria=CRITERIA_DEFAULT,
+    ttest=TTEST_DEFAULT,
+    method=METHOD_DEFAULT,
+    vectoroperation=VECTOR_OPERATION_DEFAULT,
+    modelavg=MODEL_AVG_DEFAULT,
+    residualtest=RESIDUAL_TEST_DEFAULT,
+    keepwnoise=KEEP_WHITE_NOISE_DEFAULT,
+    time=TIME_DEFAULT,
+    summary=SUMMARY_DEFAULT,
+    csv=CSV_DEFAULT,
+    resultscsv=CSV_DEFAULT,
+    orderresults=ORDER_RESULTS_DEFAULT,
+    onmessage=ON_MESSAGE_DEFAULT,
+    parallel=PARALLEL_DEFAULT
     )
 
-    if contains(equation, "~")
-        equation = replace(equation, r"\s+|\s+$/g", "")
-        dep_indep = split(equation, "~")
-        equation = [String(ss) for ss in vcat(dep_indep[1], split(dep_indep[2], "+"))]
-    else
-        equation = [String(ss) for ss in split(replace(equation, r"\s+|\s+$/g", ","), ",")]
+    println("2")
+    equation = equation_str_to_strarr(equation)
+
+    return gsreg(
+        equation,
+        data,
+        datanames=datanames,
+        intercept=intercept,
+        outsample=outsample,
+        samesample=samesample,
+        criteria=criteria,
+        ttest=ttest,
+        method=method,
+        vectoroperation=vectoroperation,
+        modelavg=modelavg,
+        residualtest=residualtest,
+        keepwnoise=keepwnoise,
+        time=time,
+        summary=summary,
+        resultscsv=resultscsv,
+        csv=csv,
+        orderresults=orderresults,
+        onmessage=onmessage,
+        parallel=parallel
+    )
+end
+
+function gsreg(
+    equation::Array{String},
+    data;
+    datanames=nothing,
+    intercept=INTERCEPT_DEFAULT,
+    outsample=OUTSAMPLE_DEFAULT,
+    samesample=SAMESAMPLE_DEFAULT,
+    criteria=CRITERIA_DEFAULT,
+    ttest=TTEST_DEFAULT,
+    method=METHOD_DEFAULT,
+    vectoroperation=VECTOR_OPERATION_DEFAULT,
+    modelavg=MODEL_AVG_DEFAULT,
+    residualtest=RESIDUAL_TEST_DEFAULT,
+    keepwnoise=KEEP_WHITE_NOISE_DEFAULT,
+    time=TIME_DEFAULT,
+    summary=SUMMARY_DEFAULT,
+    csv=CSV_DEFAULT,
+    resultscsv=CSV_DEFAULT,
+    orderresults=ORDER_RESULTS_DEFAULT,
+    onmessage=ON_MESSAGE_DEFAULT,
+    parallel=PARALLEL_DEFAULT
+    )
+
+    println("3")
+    equation = equation_strarr_to_symarr(equation, data, datanames)
+
+    if isempty(equation)
+        error(VARIABLES_NOT_OR_VALID_OR_NOT_DEFINED)
     end
 
     return gsreg(
         equation,
         data,
+        datanames=datanames,
         intercept=intercept,
         outsample=outsample,
         samesample=samesample,
@@ -96,41 +152,35 @@ function gsreg(
 end
 
 function gsreg(
-        equation::Array{String},
-        data::DataFrame;
-        intercept::Bool=INTERCEPT_DEFAULT,
-        outsample::Int=OUTSAMPLE_DEFAULT,
-        samesample::Bool=SAMESAMPLE_DEFAULT,
-        criteria=CRITERIA_DEFAULT,
-        ttest=TTEST_DEFAULT,
-        method=METHOD_DEFAULT,
-        vectoroperation=VECTOR_OPERATION_DEFAULT,
-        modelavg=MODEL_AVG_DEFAULT,
-        residualtest=RESIDUAL_TEST_DEFAULT,
-        keepwnoise=KEEP_WHITE_NOISE_DEFAULT,
-        time=TIME_DEFAULT,
-        summary=SUMMARY_DEFAULT,
-        resultscsv=CSV_DEFAULT,
-        csv=CSV_DEFAULT,
-        orderresults=ORDER_RESULTS_DEFAULT,
-        onmessage=ON_MESSAGE_DEFAULT,
-        parallel=PARALLEL_DEFAULT
+    equation::Array{Symbol},
+    data;
+    datanames=nothing,
+    intercept=INTERCEPT_DEFAULT,
+    outsample=OUTSAMPLE_DEFAULT,
+    samesample=SAMESAMPLE_DEFAULT,
+    criteria=CRITERIA_DEFAULT,
+    ttest=TTEST_DEFAULT,
+    method=METHOD_DEFAULT,
+    vectoroperation=VECTOR_OPERATION_DEFAULT,
+    modelavg=MODEL_AVG_DEFAULT,
+    residualtest=RESIDUAL_TEST_DEFAULT,
+    keepwnoise=KEEP_WHITE_NOISE_DEFAULT,
+    time=TIME_DEFAULT,
+    summary=SUMMARY_DEFAULT,
+    csv=CSV_DEFAULT,
+    resultscsv=CSV_DEFAULT,
+    orderresults=ORDER_RESULTS_DEFAULT,
+    onmessage=ON_MESSAGE_DEFAULT,
+    parallel=PARALLEL_DEFAULT
     )
 
-    keys = names(data)
-    n_equation = []
-    for e in equation
-        replace("*", ".", e)
-        if e[end] == '*'
-            append!(n_equation, filter!(x->x!=nothing, [String(key)[1:length(e[1:end-1])] == e[1:end-1]?String(key):nothing for key in keys]))
-        else
-            append!(n_equation, [e])
-        end
-    end
+    data, datanames = parse_data(data, datanames)
+    datanames = datanames_strarr_to_symarr!(datanames)
 
     return gsreg(
-        map(Symbol, unique(n_equation)),
+        equation,
         data,
+        datanames;
         intercept=intercept,
         outsample=outsample,
         samesample=samesample,
@@ -152,36 +202,40 @@ function gsreg(
 end
 
 function gsreg(
-        equation::Array{Symbol},
-        data::DataFrame;
-        intercept::Bool=INTERCEPT_DEFAULT,
-        outsample::Int=OUTSAMPLE_DEFAULT,
-        samesample::Bool=SAMESAMPLE_DEFAULT,
-        criteria=CRITERIA_DEFAULT,
-        ttest=TTEST_DEFAULT,
-        method=METHOD_DEFAULT,
-        vectoroperation=VECTOR_OPERATION_DEFAULT,
-        modelavg=MODEL_AVG_DEFAULT,
-        residualtest=RESIDUAL_TEST_DEFAULT,
-        keepwnoise=KEEP_WHITE_NOISE_DEFAULT,
-        time=TIME_DEFAULT,
-        summary=SUMMARY_DEFAULT,
-        resultscsv=CSV_DEFAULT,
-        csv=CSV_DEFAULT,
-        orderresults=ORDER_RESULTS_DEFAULT,
-        onmessage=ON_MESSAGE_DEFAULT,
-        parallel=PARALLEL_DEFAULT
+    equation::Array{Symbol},
+    data,
+    datanames::Array;
+    intercept=INTERCEPT_DEFAULT,
+    outsample=OUTSAMPLE_DEFAULT,
+    samesample=SAMESAMPLE_DEFAULT,
+    criteria=CRITERIA_DEFAULT,
+    ttest=TTEST_DEFAULT,
+    method=METHOD_DEFAULT,
+    vectoroperation=VECTOR_OPERATION_DEFAULT,
+    modelavg=MODEL_AVG_DEFAULT,
+    residualtest=RESIDUAL_TEST_DEFAULT,
+    keepwnoise=KEEP_WHITE_NOISE_DEFAULT,
+    time=TIME_DEFAULT,
+    summary=SUMMARY_DEFAULT,
+    csv=CSV_DEFAULT,
+    resultscsv=CSV_DEFAULT,
+    orderresults=ORDER_RESULTS_DEFAULT,
+    onmessage=ON_MESSAGE_DEFAULT,
+    parallel=PARALLEL_DEFAULT
     )
 
-    if method == "fast"
-        for c = eachcol(data)
-            data[c[1]] = map(Float32,c[2])
-        end
-        datatype = Float32
-    elseif method == "precise"
+    println("4")
+
+    if method == "precise"
         datatype = Float64
+    elseif method == "fast"
+        datatype = Float32
     else
         error(METHOD_INVALID)
+    end
+
+    if !isa(data, Array{datatype})
+        data = convert(Array{datatype}, data)
     end
 
     if outsample != OUTSAMPLE_DEFAULT
@@ -204,18 +258,16 @@ function gsreg(
         residualtest = true
     end
 
-    if time != nothing && time ∉ names(data)
-        error(TIME_VARIABLE_INEXISTENT)
-    end
-
-    #if residualtest == true &&
-
     if criteria == CRITERIA_DEFAULT
         if outsample != OUTSAMPLE_DEFAULT
             criteria = CRITERIA_DEFAULT_OUTSAMPLE
         else
             criteria = CRITERIA_DEFAULT_INSAMPLE
         end
+    end
+
+    if time != nothing && time ∉ datanames
+        error(TIME_VARIABLE_INEXISTENT)
     end
 
     if resultscsv != csv
@@ -226,18 +278,7 @@ function gsreg(
         end
     end
 
-    if size(data, 1) < size(equation[2:end], 1) + 1
-        error(NO_ENOUGH_OBSERVATIONS)
-    end
-
-    if !in_vector(equation, names(data))
-        error(SELECTED_VARIABLES_DOES_NOT_EXISTS)
-    end
-
-    if time != nothing
-        sort!(data, time)
-    end
-
+    # TODO: Is this been used?
     if parallel != nothing
         if parallel > nworkers()
             error("Number of parallel workers can not exceed available cores. Use addprocs()")
@@ -248,13 +289,23 @@ function gsreg(
         end
     end
 
-    data = data[equation]
-    datanames = names(data)
-    data = convert(Array{datatype}, data)
+    if size(data, 1) < size(equation[2:end], 1) + 1
+        error(NO_ENOUGH_OBSERVATIONS)
+    end
+
+    if !in_vector(equation, datanames)
+        error(SELECTED_VARIABLES_DOES_NOT_EXISTS)
+    end
+
+    if time != nothing
+        sort!(data, time)
+    end
+
     result = gsreg(
         equation[1],
         equation[2:end],
         data,
+        datanames=datanames,
         intercept=intercept,
         outsample=outsample,
         samesample=samesample,
@@ -266,7 +317,6 @@ function gsreg(
         keepwnoise=keepwnoise,
         time=time,
         summary=summary,
-        datanames=datanames,
         datatype=datatype,
         orderresults=orderresults,
         onmessage=onmessage,

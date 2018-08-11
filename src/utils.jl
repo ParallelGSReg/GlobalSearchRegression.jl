@@ -1,3 +1,53 @@
+function equation_str_to_strarr(equation)
+    if contains(equation, "~")
+        equation = replace(equation, r"\s+|\s+$/g", "")
+        dep_indep = split(equation, "~")
+        equation = [String(ss) for ss in vcat(dep_indep[1], split(dep_indep[2], "+"))]
+    else
+        equation = [String(ss) for ss in split(replace(equation, r"\s+|\s+$/g", ","), ",")]
+    end
+    return equation
+end
+
+function equation_strarr_to_symarr(equation, data, datanames)
+    data, datanames = parse_data(data, datanames)
+    n_equation = []
+    for e in equation
+        replace("*", ".", e)
+        if e[end] == '*'
+            append!(n_equation, filter!(x->x!=nothing, [String(key)[1:length(e[1:end-1])] == e[1:end-1]?String(key):nothing for key in datanames]))
+        else
+            append!(n_equation, [e])
+        end
+    end
+    return map(Symbol, unique(n_equation))
+end
+
+function datanames_strarr_to_symarr!(datanames)
+    dn = datanames
+    datanames = []
+    for name in dn
+        push!(datanames, Symbol(name))
+    end
+    return datanames
+end
+
+function parse_data(data, datanames)
+    if isa(data, DataFrames.DataFrame)
+        datanames = names(data)
+        data = convert(Array{Float64}, data)
+    elseif isa(data, Tuple)
+        datanames = data[2]
+        data = data[1]
+    elseif isa(data, Array{Any, 2}) && datanames != nothing
+        if !isa(data, Array{Float32, 2}) && !isa(data, Array{Float64, 2})
+            data = []
+            datanames = []
+        end
+    end 
+    return data, datanames
+end
+
 
 """
 Returns the position of the header value based on this structure.
@@ -121,6 +171,8 @@ function export_csv(io::IO, result::GSRegResult)
     writecsv(io, [head])
     writecsv(io, result.results)
 end
+
+
 
 """
 Exports main results with headers to file

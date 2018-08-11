@@ -5,7 +5,6 @@ using DataFrames, Compat, Compat.LinearAlgebra, Distributions, JSON,
 
 const INTERCEPT_DEFAULT = true
 const INSAMPLE_MIN_SIZE = 20
-
 const OUTSAMPLE_DEFAULT = 0
 const SAMESAMPLE_DEFAULT = false
 const TTEST_DEFAULT = false
