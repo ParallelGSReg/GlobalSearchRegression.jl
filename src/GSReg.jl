@@ -1,5 +1,5 @@
 module GSReg
-using DataFrames, Distributions
+using DataFrames, Distributions, Distributed, Printf
 
 const INTERCEPT_DEFAULT = true
 const INSAMPLE_MIN_SIZE = 20

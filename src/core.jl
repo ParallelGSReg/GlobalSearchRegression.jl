@@ -78,7 +78,7 @@ function gsreg_single_proc_result!(
     b = qrf \ depvar                        # estimate
     ŷ = expvars * b                         # predicted values
     er = depvar - ŷ                         # in-sample residuals
-    er2 = er .^ 2                           # squared errors
+    er2 = er .^ 2                          # squared errors
     sse = sum(er2)                          # residual sum of squares
     df_e = nobs - ncoef                     # degrees of freedom
     rmse = sqrt(sse / nobs)                 # root mean squared error
@@ -117,21 +117,21 @@ function gsreg_single_proc_result!(
         x = er
         n = length(x)
         m1 = sum(x)/n
-        m2 = sum((x - m1).^2)/n
-        m3 = sum((x - m1).^3)/n
-        m4 = sum((x - m1).^4)/n
-        b1 = (m3/m2^(3/2))^2
-        b2 = (m4/m2^2)
-        statistic = n * b1/6 + n*(b2 - 3)^2/24
+        m2 = sum((x - m1) .^ 2)/n
+        m3 = sum((x - m1) .^ 3)/n
+        m4 = sum((x - m1) .^ 4)/n
+        b1 = (m3 / m2 ^ (3 / 2)) ^ 2
+        b2 = (m4 / m2 ^ 2)
+        statistic = n * b1 / 6 + n * (b2 - 3) ^ 2 / 24
         d = Chisq(2.)
-        results[order, header[:jbtest]] = 1.-cdf(d,statistic)
+        results[order, header[:jbtest]] = 1 .- cdf(d, statistic)
 
-        regmatw = hcat((ŷ .^ 2), ŷ , ones(size(ŷ,1)))
+        regmatw = hcat((ŷ .^ 2), ŷ , ones(size(ŷ, 1)))
         qrfw = qrfact(regmatw)
         regcoeffw = qrfw \ er2
-        residw = er2 - regmatw*regcoeffw
-        rsqw = 1 - dot(residw,residw)/dot(er2,er2) # uncentered R^2
-        statisticw = n*rsqw
+        residw = er2 - regmatw * regcoeffw
+        rsqw = 1 - dot(residw, residw) / dot(er2, er2) # uncentered R^2
+        statisticw = n * rsqw
         results[order, header[:wtest]] = ccdf(Chisq(2), statisticw)
 
                 if time != nothing
@@ -142,17 +142,17 @@ function gsreg_single_proc_result!(
                 n = size(e,1)
                 elag = zeros(Float64,n,lag)
                 for ii = 1:lag  # construct lagged residuals
-                    elag[ii+1:end,ii] = e[1:end-ii]
+                    elag[ii+1:end, ii] = e[1:end-ii]
                 end
 
                 offset = lag
                 regmatbg = [xmat[offset+1:end,:] elag[offset+1:end,:]]
                 qrfbg = qrfact(regmatbg)
                 regcoeffbg = qrfbg \ e[offset+1:end]
-                residbg = e[offset+1:end] - regmatbg*regcoeffbg
+                residbg = e[offset+1:end] - regmatbg * regcoeffbg
 
-                rsqbg = 1 - dot(residbg,residbg)/dot(e[offset+1:end],e[offset+1:end]) # uncentered R^2
-                statisticbg = (n-offset)*rsqbg
+                rsqbg = 1 - dot(residbg,residbg) / dot(e[offset+1:end], e[offset+1:end]) # uncentered R^2
+                statisticbg = (n - offset) * rsqbg
                 results[order, header[:bgtest]] = ccdf(Chisq(lag), statisticbg)
         end
 
@@ -164,32 +164,32 @@ function gsreg_single_proc_result!(
                 pos_b = header[Symbol(string(datanames[col], "_b"))]
                 pos_bstd = header[Symbol(string(datanames[col], "_bstd"))]
                 pos_t = header[Symbol(string(datanames[col], "_t"))]
-                results[order, pos_t] = results[order,pos_b] / results[order,pos_bstd]
+                results[order, pos_t] = results[order,pos_b] / results[order, pos_bstd]
             end
         end
 
         if :aic in criteria
-            results[order,header[:aic]] = 2 * results[order,header[:ncoef]] + results[order,header[:nobs]] * log(results[order,header[:sse]] / results[order,header[:nobs]])
+            results[order,header[:aic]] = 2 * results[order, header[:ncoef]] + results[order, header[:nobs]] * log(results[order,header[:sse]] / results[order, header[:nobs]])
         end
 
         if :aicc in criteria
             if :aic in criteria
-                results[order,header[:aicc]] = results[order,header[:aic]] + (2(results[order,header[:ncoef]] + 1) * (results[order,header[:ncoef]]+2)) / (results[order,header[:nobs]] - (results[order,header[:ncoef]] + 1 ) - 1)
+                results[order, header[:aicc]] = results[order, header[:aic]] + (2(results[order, header[:ncoef]] + 1) * (results[order, header[:ncoef]]+2)) / (results[order, header[:nobs]] - (results[order, header[:ncoef]] + 1 ) - 1)
             else
-                aic = 2 * results[order,header[:ncoef]] + results[order,header[:nobs]] * log(results[order,header[:sse]] / results[order,header[:nobs]])
-                results[order,header[:aicc]] = aic + (2(results[order,header[:ncoef]] + 1) * (results[order,header[:ncoef]]+2)) / (results[order,header[:nobs]] - (results[order,header[:ncoef]] + 1 ) - 1)
+                aic = 2 * results[order, header[:ncoef]] + results[order, header[:nobs]] * log(results[order, header[:sse]] / results[order, header[:nobs]])
+                results[order, header[:aicc]] = aic + (2(results[order, header[:ncoef]] + 1) * (results[order, header[:ncoef]]+2)) / (results[order, header[:nobs]] - (results[order, header[:ncoef]] + 1 ) - 1)
             end
         end
 
         if :bic in criteria
-            results[order,header[:bic]] = results[order,header[:nobs]] * log.(results[order,header[:rmse]]) + ( results[order,header[:ncoef]] - 1 ) * log.(results[order,header[:nobs]]) + results[order,header[:nobs]] + results[order,header[:nobs]] * log(2π)
+            results[order, header[:bic]] = results[order, header[:nobs]] * log.(results[order,header[:rmse]]) + ( results[order, header[:ncoef]] - 1 ) * log.(results[order, header[:nobs]]) + results[order, header[:nobs]] + results[order, header[:nobs]] * log(2π)
         end
 
         if :r2adj in criteria
-            results[order,header[:r2adj]] = 1 - (1 - results[order,header[:r2]]) * ((results[order,header[:nobs]] - 1) / (results[order,header[:nobs]] - results[order,header[:ncoef]]))
+            results[order,header[:r2adj]] = 1 - (1 - results[order, header[:r2]]) * ((results[order, header[:nobs]] - 1) / (results[order, header[:nobs]] - results[order, header[:ncoef]]))
         end
 
-        results[order,header[:F]] = (results[order,header[:r2]] / (results[order,header[:ncoef]]-1)) / ((1-results[order,header[:r2]]) / (results[order,header[:nobs]] - results[order,header[:ncoef]]))
+        results[order, header[:F]] = (results[order, header[:r2]] / (results[order,header[:ncoef]] - 1)) / ((1 - results[order, header[:r2]]) / (results[order, header[:nobs]] - results[order, header[:ncoef]]))
     end
 end
 
@@ -221,7 +221,7 @@ function proc!(result::GSRegResult)
     else
         num_workers = (result.parallel != nothing) ? result.parallel : nworkers()
         ops_by_worker = div(num_operations, num_workers)
-        num_jobs = (num_workers > num_operations)?num_operations:num_workers
+        num_jobs = (num_workers > num_operations) ? num_operations : num_workers
         remainder = num_operations - ops_by_worker * num_jobs
         jobs = []
         for num_job = 1:num_jobs
@@ -304,9 +304,9 @@ function proc!(result::GSRegResult)
             obs = obs[find(x -> !isnan(obs[x,1]), 1:size(obs,1)),:]
 
             #weight resizing
-            obs[:, (result.ttest)?3:2] /= sum(obs[:,(result.ttest)?3:2])
+            obs[:, (result.ttest) ? 3 : 2] /= sum(obs[:,(result.ttest) ? 3 : 2])
 
-            result.average[result.header[Symbol(string(expvar, "_b"))]] = sum(obs[:, 1] .* obs[:, (result.ttest)?3:2])
+            result.average[result.header[Symbol(string(expvar, "_b"))]] = sum(obs[:, 1] .* obs[:, (result.ttest) ? 3 : 2])
             if result.ttest
                 result.average[result.header[Symbol(string(expvar, "_bstd"))]] = sum(obs[:, 2] .* obs[:, 3])
             end

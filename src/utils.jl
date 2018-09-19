@@ -15,7 +15,7 @@ function equation_strarr_to_symarr(equation, data, datanames)
     for e in equation
         replace("*", ".", e)
         if e[end] == '*'
-            append!(n_equation, filter!(x->x!=nothing, [String(key)[1:length(e[1:end-1])] == e[1:end-1]?String(key):nothing for key in datanames]))
+            append!(n_equation, filter!(x->x != nothing, [String(key)[1:length(e[1:end - 1])] == e[1:end - 1] ? String(key) : nothing for key in datanames]))
         else
             append!(n_equation, [e])
         end
@@ -44,7 +44,7 @@ function parse_data(data, datanames)
             data = []
             datanames = []
         end
-    end 
+    end
     return data, datanames
 end
 
@@ -64,7 +64,7 @@ Returns the position of the header value based on this structure.
 """
 function get_data_position(name, expvars, intercept, ttest, residualtest, time, criteria)
     data_cols_num = length(expvars)
-    mult_col = (ttest == true)?3:1
+    mult_col = (ttest == true) ? 3 : 1
 
     # INDEX
     if name == INDEX
@@ -74,10 +74,10 @@ function get_data_position(name, expvars, intercept, ttest, residualtest, time, 
     displacement += mult_col * (data_cols_num) + 1
 
     # EQUATION_GENERAL_INFORMATION
-    testfields = (residualtest!=nothing && residualtest)?((time != nothing)?RESIDUAL_TESTS_TIME:RESIDUAL_TESTS_CROSS):[]
+    testfields = (residualtest != nothing && residualtest) ? ((time != nothing) ? RESIDUAL_TESTS_TIME : RESIDUAL_TESTS_CROSS) : []
     equation_general_information_and_criteria = unique([ EQUATION_GENERAL_INFORMATION; criteria; testfields ])
     if name in equation_general_information_and_criteria
-        return displacement + findfirst(equation_general_information_and_criteria, name)-1
+        return displacement + findfirst(equation_general_information_and_criteria, name) - 1
     end
     displacement += length(equation_general_information_and_criteria)
 
@@ -95,7 +95,7 @@ function get_data_position(name, expvars, intercept, ttest, residualtest, time, 
     string_name = string(name)
     base_name = Symbol(replace(replace(replace(string_name, "_bstd", ""), "_t", ""), "_b", ""))
     if base_name in expvars
-        displacement = displacement + (findfirst(expvars, base_name)-1) * mult_col
+        displacement = displacement + (findfirst(expvars, base_name) - 1) * mult_col
         if contains(string_name, "_bstd")
             return displacement + 2
         end
@@ -126,7 +126,7 @@ function get_result_header(expvars, intercept, ttest, residualtest, time, criter
     keys = unique([ EQUATION_GENERAL_INFORMATION; criteria ])
 
     if residualtest != nothing && residualtest
-        keys = unique([ keys; (time != nothing)?RESIDUAL_TESTS_TIME:RESIDUAL_TESTS_CROSS ])
+        keys = unique([ keys; (time != nothing) ? RESIDUAL_TESTS_TIME : RESIDUAL_TESTS_CROSS ])
     end
 
     for key in keys
