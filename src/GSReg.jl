@@ -1,5 +1,5 @@
 module GSReg
-using DataFrames, Distributions, Distributed, Printf
+using DataFrames, Distributions, Distributed, Printf, SharedArrays, LinearAlgebra, DelimitedFiles
 
 const INTERCEPT_DEFAULT = true
 const INSAMPLE_MIN_SIZE = 20

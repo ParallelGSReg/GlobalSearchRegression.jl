@@ -10,7 +10,6 @@ mutable struct GSRegResult
     vectoroperation        # Calculate using vector operations
     modelavg               # Generate model averaging report
     residualtest           # Estimate white noise residual tests
-    keepwnoise             # Filter results based on white noise residual tests
     time                   # Pre-order data by Symbol
     datanames              # Original CSV header names
     datatype               # Float32 or Float64 precision
@@ -35,7 +34,6 @@ mutable struct GSRegResult
             vectoroperation,
             modelavg,
             residualtest,
-            keepwnoise,
             time,
             datanames,
             datatype,
@@ -60,6 +58,6 @@ mutable struct GSRegResult
         end
 
         header = get_result_header(expvars, intercept, ttest, residualtest, time, criteria, modelavg)
-        new(depvar, expvars, data, intercept, outsample, samesample, criteria, ttest, vectoroperation, modelavg, residualtest, keepwnoise, time, datanames, datatype, nobs, header, orderresults, onmessage, parallel)
+        new(depvar, expvars, data, intercept, outsample, samesample, criteria, ttest, vectoroperation, modelavg, residualtest, time, datanames, datatype, nobs, header, orderresults, onmessage, parallel)
     end
 end

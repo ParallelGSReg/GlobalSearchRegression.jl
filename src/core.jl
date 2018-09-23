@@ -10,7 +10,6 @@ function gsreg(
         vectoroperation=nothing,
         modelavg=nothing,
         residualtest=nothing,
-        keepwnoise=nothing,
         time=nothing,
         summary=nothing,
         datanames=nothing,
@@ -31,7 +30,6 @@ function gsreg(
         vectoroperation,
         modelavg,
         residualtest,
-        keepwnoise,
         time,
         datanames,
         datatype,
@@ -58,7 +56,6 @@ function gsreg_single_proc_result!(
         ttest,
         vectoroperation,
         residualtest,
-        keepwnoise,
         time,
         datanames,
         datatype,
@@ -74,18 +71,18 @@ function gsreg_single_proc_result!(
 
     nobs = size(depvar, 1)
     ncoef = size(expvars, 2)
-    qrf = qrfact(expvars)
+    qrf = qr(expvars)
     b = qrf \ depvar                        # estimate
     ŷ = expvars * b                         # predicted values
     er = depvar - ŷ                         # in-sample residuals
-    er2 = er .^ 2                          # squared errors
+    er2 = er .^ 2                           # squared errors
     sse = sum(er2)                          # residual sum of squares
     df_e = nobs - ncoef                     # degrees of freedom
     rmse = sqrt(sse / nobs)                 # root mean squared error
     r2 = 1 - var(er) / var(depvar)          # model R-squared
 
     if ttest
-        bstd = sqrt.(sum( (UpperTriangular(qrf[:R]) \ eye(ncoef)) .^ 2, 2) * (sse / df_e) ) # std deviation of coefficients
+        bstd = sqrt.( sum( (UpperTriangular(qrf.R) \ Matrix(1.0LinearAlgebra.I, ncoef, ncoef) ) .^ 2, dims=2) * (sse / df_e) ) # std deviation of coefficients
     end
 
     if outsample > 0
@@ -101,7 +98,7 @@ function gsreg_single_proc_result!(
 
     for (index, col) in enumerate(cols)
         results[order, header[Symbol(string(datanames[col], "_b"))]] = datatype(b[index])
-        if ttest == true
+        if ttest
             results[order, header[Symbol(string(datanames[col], "_bstd"))]] = datatype(bstd[index])
         end
     end
@@ -116,44 +113,42 @@ function gsreg_single_proc_result!(
     if residualtest != nothing && residualtest
         x = er
         n = length(x)
-        m1 = sum(x)/n
-        m2 = sum((x - m1) .^ 2)/n
-        m3 = sum((x - m1) .^ 3)/n
-        m4 = sum((x - m1) .^ 4)/n
+        m1 = sum(x) / n
+        m2 = sum((x .- m1) .^ 2) / n
+        m3 = sum((x .- m1) .^ 3) / n
+        m4 = sum((x .- m1) .^ 4) / n
         b1 = (m3 / m2 ^ (3 / 2)) ^ 2
         b2 = (m4 / m2 ^ 2)
         statistic = n * b1 / 6 + n * (b2 - 3) ^ 2 / 24
         d = Chisq(2.)
         results[order, header[:jbtest]] = 1 .- cdf(d, statistic)
-
+        
         regmatw = hcat((ŷ .^ 2), ŷ , ones(size(ŷ, 1)))
-        qrfw = qrfact(regmatw)
+        qrfw = qr(regmatw)
         regcoeffw = qrfw \ er2
         residw = er2 - regmatw * regcoeffw
         rsqw = 1 - dot(residw, residw) / dot(er2, er2) # uncentered R^2
         statisticw = n * rsqw
         results[order, header[:wtest]] = ccdf(Chisq(2), statisticw)
+        if time != nothing
+            e = er
+            lag = 1
+            xmat = expvars
 
-                if time != nothing
-                e = er
-                lag = 1
-                xmat = expvars
+            n = size(e,1)
+            elag = zeros(Float64,n,lag)
+            for ii = 1:lag  # construct lagged residuals
+                elag[ii+1:end, ii] = e[1:end-ii]
+            end
 
-                n = size(e,1)
-                elag = zeros(Float64,n,lag)
-                for ii = 1:lag  # construct lagged residuals
-                    elag[ii+1:end, ii] = e[1:end-ii]
-                end
-
-                offset = lag
-                regmatbg = [xmat[offset+1:end,:] elag[offset+1:end,:]]
-                qrfbg = qrfact(regmatbg)
-                regcoeffbg = qrfbg \ e[offset+1:end]
-                residbg = e[offset+1:end] - regmatbg * regcoeffbg
-
-                rsqbg = 1 - dot(residbg,residbg) / dot(e[offset+1:end], e[offset+1:end]) # uncentered R^2
-                statisticbg = (n - offset) * rsqbg
-                results[order, header[:bgtest]] = ccdf(Chisq(lag), statisticbg)
+            offset = lag
+            regmatbg = [xmat[offset+1:end,:] elag[offset+1:end,:]]
+            qrfbg = qr(regmatbg)
+            regcoeffbg = qrfbg \ e[offset+1:end]
+            residbg = e[offset+1:end] .- regmatbg * regcoeffbg
+            rsqbg = 1 - dot(residbg,residbg) / dot(e[offset+1:end], e[offset+1:end]) # uncentered R^2
+            statisticbg = (n - offset) * rsqbg
+            results[order, header[:bgtest]] = ccdf(Chisq(lag), statisticbg)
         end
 
     end
@@ -216,7 +211,7 @@ function proc!(result::GSRegResult)
 
     if nprocs() == nworkers()
         for order = 1:num_operations
-            gsreg_single_proc_result!(order, pdata, presults, result.intercept, result.outsample, result.criteria, result.ttest, result.vectoroperation,  result.residualtest, result.keepwnoise, result.time, result.datanames, result.datatype, result.header)
+            gsreg_single_proc_result!(order, pdata, presults, result.intercept, result.outsample, result.criteria, result.ttest, result.vectoroperation,  result.residualtest, result.time, result.datanames, result.datatype, result.header)
         end
     else
         num_workers = (result.parallel != nothing) ? result.parallel : nworkers()
@@ -224,10 +219,22 @@ function proc!(result::GSRegResult)
         num_jobs = (num_workers > num_operations) ? num_operations : num_workers
         remainder = num_operations - ops_by_worker * num_jobs
         jobs = []
+        println("")
+        println("")
+        println("")
+        println("")
+        println("")
         for num_job = 1:num_jobs
-            push!(jobs, @spawnat num_job+1 gsreg_proc_result!(num_job, num_jobs, ops_by_worker, pdata, presults, result.intercept, result.outsample, result.criteria, result.ttest, result.vectoroperation, result.residualtest, result.keepwnoise, result.time, result.datanames, result.datatype, result.header))
+            println("Job")    
+            push!(jobs, @spawnat num_job+1 gsreg_proc_result!(num_job, num_jobs, ops_by_worker, pdata, presults, result.intercept, result.outsample, result.criteria, result.ttest, result.vectoroperation, result.residualtest, result.time, result.datanames, result.datatype, result.header))
         end
 
+        println("")
+        println("")
+        println("")
+        println("")
+        println("")
+        println("")
         for job in jobs
             fetch(job)
         end
@@ -235,7 +242,7 @@ function proc!(result::GSRegResult)
         if( remainder > 0 )
             for j = 1:remainder
                 order = j + ops_by_worker * num_jobs
-                gsreg_single_proc_result!(order, pdata, presults, result.intercept, result.outsample, result.criteria, result.ttest, result.vectoroperation, result.residualtest, result.keepwnoise, result.time, result.datanames, result.datatype, result.header)
+                gsreg_single_proc_result!(order, pdata, presults, result.intercept, result.outsample, result.criteria, result.ttest, result.vectoroperation, result.residualtest, result.time, result.datanames, result.datatype, result.header)
             end
         end
     end
@@ -256,43 +263,39 @@ function proc!(result::GSRegResult)
         end
 
         if :aic in result.criteria || :aicc in result.criteria
-            result.results[:,result.header[:aic]] = 2 * result.results[:,result.header[:ncoef]] + result.results[:,result.header[:nobs]] .* log.(result.results[:,result.header[:sse]] ./ result.results[:,result.header[:nobs]])
+            result.results[:,result.header[:aic]] = 2 * result.results[:,result.header[:ncoef]] .+ result.results[:,result.header[:nobs]] .* log.(result.results[:,result.header[:sse]] ./ result.results[:,result.header[:nobs]])
         end
 
         if :aicc in result.criteria
-            result.results[:,result.header[:aicc]] = result.results[:,result.header[:aic]] + (2(result.results[:,result.header[:ncoef]] + 1) .* (result.results[:,result.header[:ncoef]]+2)) ./ (result.results[:,result.header[:nobs]] - (result.results[:,result.header[:ncoef]] + 1 ) - 1)
+            result.results[:,result.header[:aicc]] = result.results[:,result.header[:aic]] .+ (2(result.results[:,result.header[:ncoef]] .+ 1) .* (result.results[:,result.header[:ncoef]] .+ 2)) ./ (result.results[:,result.header[:nobs]] .- (result.results[:,result.header[:ncoef]] .+ 1 ) .- 1)
         end
 
         if :bic in result.criteria
-            result.results[:,result.header[:bic]] = result.results[:,result.header[:nobs]] .* log.(result.results[:,result.header[:rmse]]) + ( result.results[:,result.header[:ncoef]] - 1 ) .* log.(result.results[:,result.header[:nobs]]) + result.results[:,result.header[:nobs]] + result.results[:,result.header[:nobs]] .* log(2π)
+            result.results[:,result.header[:bic]] = result.results[:,result.header[:nobs]] .* log.(result.results[:,result.header[:rmse]]) .+ ( result.results[:,result.header[:ncoef]] .- 1 ) .* log.(result.results[:,result.header[:nobs]]) .+ result.results[:,result.header[:nobs]] .+ result.results[:,result.header[:nobs]] .* log(2π)
         end
 
         if :r2adj in result.criteria
-            result.results[:,result.header[:r2adj]] = 1 - (1 - result.results[:,result.header[:r2]]) .* ((result.results[:,result.header[:nobs]] - 1) ./ (result.results[:,result.header[:nobs]] - result.results[:,result.header[:ncoef]]))
+            result.results[:,result.header[:r2adj]] = 1 .- (1 .- result.results[:,result.header[:r2]]) .* ((result.results[:,result.header[:nobs]] .- 1) ./ (result.results[:,result.header[:nobs]] .- result.results[:,result.header[:ncoef]]))
         end
-
-        result.results[:,result.header[:F]] = (result.results[:,result.header[:r2]] ./ (result.results[:,result.header[:ncoef]]-1)) ./ ((1-result.results[:,result.header[:r2]]) ./ (result.results[:,result.header[:nobs]] - result.results[:,result.header[:ncoef]]))
+        
+        result.results[:,result.header[:F]] = (result.results[:,result.header[:r2]] ./ (result.results[:,result.header[:ncoef]] .- 1)) ./ ((1 .- result.results[:,result.header[:r2]]) ./ (result.results[:,result.header[:nobs]] .- result.results[:,result.header[:ncoef]]))
     end
 
     # CP must be computed with vector operations
     if :cp in result.criteria
-        result.results[:,result.header[:cp]] = (result.results[:,result.header[:nobs]] - maximum(result.results[:,result.header[:ncoef]]) - 2) .* (result.results[:,result.header[:rmse]] ./ minimum(result.results[:,result.header[:rmse]])) - (result.results[:,result.header[:nobs]] - 2 .* result.results[:,result.header[:ncoef]])
+        result.results[:,result.header[:cp]] = (result.results[:,result.header[:nobs]] .- maximum(result.results[:,result.header[:ncoef]]) .- 2) .* (result.results[:,result.header[:rmse]] ./ minimum(result.results[:,result.header[:rmse]])) .- (result.results[:,result.header[:nobs]] .- 2 .* result.results[:,result.header[:ncoef]])
     end
-
     len_criteria = length(result.criteria)
     for criteria in result.criteria
-        result.results[:,result.header[:order]] += AVAILABLE_CRITERIA[criteria]["index"] * (1 / len_criteria) * ( (result.results[:,result.header[criteria]] - mean(result.results[:,result.header[criteria]]) ) ./ std(result.results[:,result.header[criteria]]) )
+        result.results[:, result.header[:order]] += AVAILABLE_CRITERIA[criteria]["index"] * (1 / len_criteria) * ( (result.results[:, result.header[criteria]] .- mean(result.results[:, result.header[criteria]]) ) ./ std(result.results[:, result.header[criteria]]) )
     end
-
     if result.modelavg
         result.onmessage("Generating model averaging results")
         # usar order para weight
-        delta = maximum(result.results[:,result.header[:order]]) - result.results[:,result.header[:order]]
+        delta = maximum(result.results[:,result.header[:order]]) .- result.results[:,result.header[:order]]
         w1 = exp.(-delta/2)
         result.results[:,result.header[:weight]] = w1./sum(w1)
-
-        result.average = Array{Float64}(1, length(keys(result.header)))
-
+        result.average = Array{Float64}(undef, 1, length(keys(result.header)))
         for expvar in result.expvars
             obs = result.results[:,result.header[Symbol(string(expvar, "_b"))]]
             if result.ttest
@@ -301,7 +304,7 @@ function proc!(result::GSRegResult)
             obs = hcat(obs, result.results[:,result.header[:weight]])
 
             #filter NaN values from selection
-            obs = obs[find(x -> !isnan(obs[x,1]), 1:size(obs,1)),:]
+            obs = obs[findall(x -> !isnan(obs[x,1]), 1:size(obs,1)),:]
 
             #weight resizing
             obs[:, (result.ttest) ? 3 : 2] /= sum(obs[:,(result.ttest) ? 3 : 2])
@@ -333,36 +336,6 @@ function proc!(result::GSRegResult)
         end
         result.bestresult = result.results[best_result_index,:]
     end
-end
-
-function gsregsortrows(B::AbstractMatrix,cols::Array; kws...)
-    for i = 1:length(cols)
-        if i == 1
-            p = sortperm(B[:,cols[i]]; kws...)
-            B = B[p,:]
-        else
-            i0_old = 0
-            i1_old = 0
-            i0_new = 0
-            i1_new = 0
-            for j = 1:size(B,1)-1
-                if B[j,cols[1:i-1]] == B[j+1,cols[1:i-1]] && i0_old == i0_new
-                    i0_new = j
-                elseif B[j,cols[1:i-1]] != B[j+1,cols[1:i-1]] && i0_old != i0_new && i1_new == i1_old
-                    i1_new = j
-                elseif i0_old != i0_new && j == size(B,1)-1
-                    i1_new = j+1
-                end
-                if i0_new != i0_old && i1_new != i1_old
-                    p = sortperm(B[i0_new:i1_new,cols[i]]; kws...)
-                    B[i0_new:i1_new,:] = B[i0_new:i1_new,:][p,:]
-                    i0_old = i0_new
-                    i1_old = i1_new
-                end
-            end
-        end
-    end
-    return B
 end
 
 function to_string(result::GSRegResult)
@@ -443,7 +416,7 @@ function to_string(result::GSRegResult)
         end
         out *= @sprintf("\n")
         out *= @sprintf("──────────────────────────────────────────────────────────────────────────────\n")
-        out *= @sprintf(" Observations                        %-10f\n", result.average[result.header[:nobs]])
+        out *= @sprintf(" Observations                        %-10d\n", result.average[result.header[:nobs]])
         out *= @sprintf(" Adjusted R²                         %-10f\n", result.average[result.header[:r2adj]])
         out *= @sprintf(" F-statistic                         %-10f\n", result.average[result.header[:F]])
         out *= @sprintf(" Combined criteria                   %-10f\n", result.average[result.header[:order]])
