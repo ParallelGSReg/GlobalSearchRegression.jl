@@ -1,3 +1,4 @@
+Pkg.add("Pkg")
 using Pkg
 Pkg.add("Test")
 using GSReg, Test, DataFrames, Distributions
