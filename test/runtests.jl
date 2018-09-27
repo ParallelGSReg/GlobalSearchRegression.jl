@@ -1,3 +1,4 @@
+Pkg.add("Test")
 using GSReg, Test, DataFrames, Distributions
 data = DataFrame(randn(10,6))
 
