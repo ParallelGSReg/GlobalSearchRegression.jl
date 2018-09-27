@@ -163,6 +163,7 @@ function gsreg(
     parallel=PARALLEL_DEFAULT
     )
 
+    data = data[equation]
     data, datanames = parse_data(data, datanames)
     datanames = datanames_strarr_to_symarr!(datanames)
 

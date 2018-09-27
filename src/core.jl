@@ -122,7 +122,7 @@ function gsreg_single_proc_result!(
         statistic = n * b1 / 6 + n * (b2 - 3) ^ 2 / 24
         d = Chisq(2.)
         results[order, header[:jbtest]] = 1 .- cdf(d, statistic)
-        
+
         regmatw = hcat((ŷ .^ 2), ŷ , ones(size(ŷ, 1)))
         qrfw = qr(regmatw)
         regcoeffw = qrfw \ er2
@@ -219,22 +219,9 @@ function proc!(result::GSRegResult)
         num_jobs = (num_workers > num_operations) ? num_operations : num_workers
         remainder = num_operations - ops_by_worker * num_jobs
         jobs = []
-        println("")
-        println("")
-        println("")
-        println("")
-        println("")
         for num_job = 1:num_jobs
-            println("Job")    
             push!(jobs, @spawnat num_job+1 gsreg_proc_result!(num_job, num_jobs, ops_by_worker, pdata, presults, result.intercept, result.outsample, result.criteria, result.ttest, result.vectoroperation, result.residualtest, result.time, result.datanames, result.datatype, result.header))
         end
-
-        println("")
-        println("")
-        println("")
-        println("")
-        println("")
-        println("")
         for job in jobs
             fetch(job)
         end
@@ -277,7 +264,7 @@ function proc!(result::GSRegResult)
         if :r2adj in result.criteria
             result.results[:,result.header[:r2adj]] = 1 .- (1 .- result.results[:,result.header[:r2]]) .* ((result.results[:,result.header[:nobs]] .- 1) ./ (result.results[:,result.header[:nobs]] .- result.results[:,result.header[:ncoef]]))
         end
-        
+
         result.results[:,result.header[:F]] = (result.results[:,result.header[:r2]] ./ (result.results[:,result.header[:ncoef]] .- 1)) ./ ((1 .- result.results[:,result.header[:r2]]) ./ (result.results[:,result.header[:nobs]] .- result.results[:,result.header[:ncoef]]))
     end
 
