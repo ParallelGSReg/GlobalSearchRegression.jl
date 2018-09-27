@@ -165,16 +165,6 @@ function get_selected_cols(i)
     return cols
 end
 
-function export_csv(io::IO, result::GSRegResult)
-    head = []
-    for elem in sort(collect(Dict(value => key for (key, value) in result.header)))
-         push!(head, elem[2])
-    end
-    writedlm(io, [head], ',')
-    writedlm(io, result.results, ',')
-end
-
-
 function gsregsortrows(B::AbstractMatrix,cols::Array; kws...)
     for i = 1:length(cols)
         if i == 1
@@ -203,6 +193,15 @@ function gsregsortrows(B::AbstractMatrix,cols::Array; kws...)
         end
     end
     return B
+end
+
+function export_csv(io::IO, result::GSRegResult)
+    head = []
+    for elem in sort(collect(Dict(value => key for (key, value) in result.header)))
+         push!(head, elem[2])
+    end
+    writedlm(io, [head], ',')
+    writedlm(io, result.results, ',')
 end
 
 """
