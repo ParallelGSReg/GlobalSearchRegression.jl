@@ -1,4 +1,5 @@
 name = "GSReg"
+uuid = "72de06b2-c1fe-11e8-2173-617efb64043c"
 authors = ["Demian Panigo <panigo@gmail.com>", "Valentin Mari <valentinmari@hotmail.com>", "Adán Mauri Ungaro <adan.mauri@gmail.com>"]
 version = "0.0.0"
 
