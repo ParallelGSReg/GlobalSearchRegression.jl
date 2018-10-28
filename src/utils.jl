@@ -49,9 +49,6 @@ function parse_data(data, datanames)
     return data, datanames
 end
 
-
-
-
 """
 Returns the position of the header value based on this structure.
     - Index
@@ -211,4 +208,17 @@ function export_csv(output::String, result::GSRegResult)
     file = open(output, "w")
     export_csv(file, result)
     close(file)
+end
+
+function get_data_column_pos(name, datanames)
+    return findfirst(x -> name==x, datanames)
+end
+
+function get_data_valid_columns(depvar, expvars, datanames)
+    columns = falses(1, length(datanames))
+    vars = hcat([depvar], expvars)
+    for i = 1:length(vars)
+        columns[get_data_column_pos(vars[i], datanames)] = true
+    end
+    return columns
 end

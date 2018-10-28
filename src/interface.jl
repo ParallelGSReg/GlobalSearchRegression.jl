@@ -170,7 +170,6 @@ function gsreg(
     parallel=PARALLEL_DEFAULT
     )
 
-    data = data[equation]
     data, datanames = parse_data(data, datanames)
     datanames = datanames_strarr_to_symarr!(datanames)
 
@@ -220,7 +219,7 @@ function gsreg(
     onmessage=ON_MESSAGE_DEFAULT,
     parallel=PARALLEL_DEFAULT
     )
-
+    
     if method == "precise"
         datatype = Float64
     elseif method == "fast"
@@ -297,9 +296,14 @@ function gsreg(
         data = gsregsortrows(data, [pos])
     end
 
+    depvar = equation[1]
+    expvars = equation[2:end]
+
+    data = data[:,get_data_valid_columns(depvar, expvars, datanames)
+
     result = gsreg(
-        equation[1],
-        equation[2:end],
+        depvar,
+        expvars,
         data,
         datanames=datanames,
         intercept=intercept,
