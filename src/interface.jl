@@ -302,8 +302,8 @@ function gsreg(
     data = data[:,get_data_valid_columns(depvar, expvars, datanames)
 
     result = gsreg(
-        equation[1],
-        equation[2:end],
+        depvar,
+        expvars,
         data,
         datanames=datanames,
         intercept=intercept,
