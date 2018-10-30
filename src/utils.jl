@@ -9,8 +9,7 @@ function equation_str_to_strarr(equation)
     return equation
 end
 
-function equation_strarr_to_symarr(equation, data, datanames)
-    data, datanames = parse_data(data, datanames)
+function equation_strarr_to_symarr(equation, datanames)
     n_equation = []
     for e in equation
         replace("*", "." => e)
@@ -22,15 +21,6 @@ function equation_strarr_to_symarr(equation, data, datanames)
         end
     end
     return map(Symbol, unique(n_equation))
-end
-
-function datanames_strarr_to_symarr!(datanames)
-    dn = datanames
-    datanames = []
-    for name in dn
-        push!(datanames, Symbol(name))
-    end
-    return datanames
 end
 
 function parse_data(data, datanames)
@@ -214,11 +204,65 @@ function get_data_column_pos(name, datanames)
     return findfirst(x -> name==x, datanames)
 end
 
-function get_data_valid_columns(depvar, expvars, datanames)
-    columns = falses(1, length(datanames))
-    vars = hcat([depvar], expvars)
-    for i = 1:length(vars)
-        columns[get_data_column_pos(vars[i], datanames)] = true
+function get_datanames(data, datanames)
+    if isa(data, DataFrames.DataFrame)
+        datanames = names(data)
+    elseif isa(data, Tuple)
+        datanames = data[2]
+    elseif !(isa(data, Array{Any, 2}) && datanames != nothing)
+        datanames = []
     end
-    return columns
+    return datanames
+end
+
+function datanames_strarr_to_symarr!(datanames)
+    dn = datanames
+    datanames = []
+    for name in dn
+        push!(datanames, Symbol(name))
+    end
+    return datanames
+end
+
+function convert_if_is_tuple_to_array(data, datanames)
+    if isa(data, DataFrames.DataFrame)
+        
+    elseif isa(data, Tuple)
+        data = data[1]
+    elseif !isa(data, Array{Any, 2})
+        data = []
+    end
+    return data
+end
+
+function filter_data_valid_columns(data, depvar, expvars, datanames)
+    vars = vcat([depvar], expvars)
+    if isa(data, DataFrames.DataFrame)
+        data = data[vars]
+    elseif isa(data, Array)
+        columns = []
+        for i = 1:length(vars)
+            append!(columns, get_data_column_pos(vars[i], datanames))
+        end
+        data = data[:,columns]
+    end
+    return data
+end
+
+function filter_rows_with_empty_values(data)
+    if isa(data, DataFrames.DataFrame)
+        data = data[completecases(data), :]
+    elseif isa(data, Array)
+        for i = 1:size(data, 2)
+            data = data[data[:,i] .!= "", :]
+        end
+    end
+    return data
+end
+
+function convert_if_is_dataframe_to_array(data)
+    if isa(data, DataFrames.DataFrame)
+        data = convert(Array{Float64}, data)
+    end
+    return data
 end

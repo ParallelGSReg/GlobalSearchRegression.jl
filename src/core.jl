@@ -52,6 +52,8 @@ function gsreg_single_proc_result!(
         order,
         data,
         results,
+        depvar,
+        expvars,
         intercept,
         outsample,
         criteria,
@@ -63,26 +65,28 @@ function gsreg_single_proc_result!(
         datanames,
         datatype,
         header)
+
     cols = get_selected_cols(order)
     data_cols_num = size(data, 2)
+
     if intercept
         append!(cols, data_cols_num)
     end
 
-    depvar = @view(data[1:end-outsample, 1])
-    expvars = @view(data[1:end-outsample, cols])
+    depvar_data = @view(data[1:end-outsample, 1])
+    expvars_data = @view(data[1:end-outsample, cols])
 
-    nobs = size(depvar, 1)
-    ncoef = size(expvars, 2)
-    qrf = qr(expvars)
-    b = qrf \ depvar                        # estimate
-    ŷ = expvars * b                         # predicted values
-    er = depvar - ŷ                         # in-sample residuals
+    nobs = size(depvar_data, 1)
+    ncoef = size(expvars_data, 2)
+    qrf = qr(expvars_data)
+    b = qrf \ depvar_data                   # estimate
+    ŷ = expvars_data * b                    # predicted values
+    er = depvar_data - ŷ                    # in-sample residuals
     er2 = er .^ 2                           # squared errors
     sse = sum(er2)                          # residual sum of squares
     df_e = nobs - ncoef                     # degrees of freedom
     rmse = sqrt(sse / nobs)                 # root mean squared error
-    r2 = 1 - var(er) / var(depvar)          # model R-squared
+    r2 = 1 - var(er) / var(depvar_data)     # model R-squared
 
     if ttest
         bstd = sqrt.( sum( (UpperTriangular(qrf.R) \ Matrix(1.0LinearAlgebra.I, ncoef, ncoef) ) .^ 2, dims=2) * (sse / df_e) ) # std deviation of coefficients
@@ -98,11 +102,11 @@ function gsreg_single_proc_result!(
     end
 
     results[order, header[:index]] = order
-
     for (index, col) in enumerate(cols)
-        results[order, header[Symbol(string(datanames[col], "_b"))]] = datatype(b[index])
+        header[Symbol(string(expvars[col-1], "_b"))]
+        results[order, header[Symbol(string(expvars[col-1], "_b"))]] = datatype(b[index])
         if ttest
-            results[order, header[Symbol(string(datanames[col], "_bstd"))]] = datatype(bstd[index])
+            results[order, header[Symbol(string(expvars[col-1], "_bstd"))]] = datatype(bstd[index])
         end
     end
 
@@ -143,7 +147,7 @@ function gsreg_single_proc_result!(
         if time != nothing
             e = er
             lag = 1
-            xmat = expvars
+            xmat = expvars_data
 
             n = size(e,1)
             elag = zeros(Float64,n,lag)
@@ -176,10 +180,10 @@ function gsreg_single_proc_result!(
     if vectoroperation == false
         if ttest
             for (index, col) in enumerate(cols)
-                pos_b = header[Symbol(string(datanames[col], "_b"))]
-                pos_bstd = header[Symbol(string(datanames[col], "_bstd"))]
-                pos_t = header[Symbol(string(datanames[col], "_t"))]
-                results[order, pos_t] = results[order,pos_b] / results[order, pos_bstd]
+                pos_b = header[Symbol(string(expvars[col-1], "_b"))]
+                pos_bstd = header[Symbol(string(expvars[col-1], "_bstd"))]
+                pos_t = header[Symbol(string(expvars[col-1], "_t"))]
+                results[order, pos_t] = results[order, pos_b] / results[order, pos_bstd]
             end
         end
 
@@ -231,7 +235,7 @@ function proc!(result::GSRegResult)
 
     if nprocs() == nworkers()
         for order = 1:num_operations
-            gsreg_single_proc_result!(order, pdata, presults, result.intercept, result.outsample, result.criteria, result.ttest, result.vectoroperation,  result.residualtest, result.keepwnoise, result.time, result.datanames, result.datatype, result.header)
+            gsreg_single_proc_result!(order, pdata, presults, result.depvar, result.expvars, result.intercept, result.outsample, result.criteria, result.ttest, result.vectoroperation,  result.residualtest, result.keepwnoise, result.time, result.datanames, result.datatype, result.header)
         end
     else
         num_workers = (result.parallel != nothing) ? result.parallel : nworkers()
@@ -240,7 +244,7 @@ function proc!(result::GSRegResult)
         remainder = num_operations - ops_by_worker * num_jobs
         jobs = []
         for num_job = 1:num_jobs
-            push!(jobs, @spawnat num_job+1 gsreg_proc_result!(num_job, num_jobs, ops_by_worker, pdata, presults, result.intercept, result.outsample, result.criteria, result.ttest, result.vectoroperation, result.residualtest, result.keepwnoise, result.time, result.datanames, result.datatype, result.header))
+            push!(jobs, @spawnat num_job+1 gsreg_proc_result!(num_job, num_jobs, ops_by_worker, pdata, presults, result.expvars, result.intercept, result.outsample, result.criteria, result.ttest, result.vectoroperation, result.residualtest, result.keepwnoise, result.time, result.datanames, result.datatype, result.header))
         end
         for job in jobs
             fetch(job)
@@ -249,7 +253,7 @@ function proc!(result::GSRegResult)
         if( remainder > 0 )
             for j = 1:remainder
                 order = j + ops_by_worker * num_jobs
-                gsreg_single_proc_result!(order, pdata, presults, result.intercept, result.outsample, result.criteria, result.ttest, result.vectoroperation, result.residualtest, result.keepwnoise, result.time, result.datanames, result.datatype, result.header)
+                gsreg_single_proc_result!(order, pdata, presults, result.depvar, result.expvars, result.intercept, result.outsample, result.criteria, result.ttest, result.vectoroperation, result.residualtest, result.keepwnoise, result.time, result.datanames, result.datatype, result.header)
             end
         end
     end
@@ -374,9 +378,9 @@ function to_string(result::GSRegResult)
     if result.intercept
         append!(cols, data_cols_num)
     end
-
+    
     for pos in cols
-        varname = result.datanames[pos]
+        varname = result.expvars[pos-1]
         out *= @sprintf(" %-35s", varname)
         out *= @sprintf(" %-10f", result.bestresult[result.header[Symbol(string(varname, "_b"))]])
         if result.ttest

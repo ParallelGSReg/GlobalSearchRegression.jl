@@ -117,7 +117,8 @@ function gsreg(
     parallel=PARALLEL_DEFAULT
     )
 
-    equation = equation_strarr_to_symarr(equation, data, datanames)
+    datanames = get_datanames(data, datanames)
+    equation = equation_strarr_to_symarr(equation, datanames)
 
     if isempty(equation)
         error(VARIABLES_NOT_OR_VALID_OR_NOT_DEFINED)
@@ -170,8 +171,13 @@ function gsreg(
     parallel=PARALLEL_DEFAULT
     )
 
-    data, datanames = parse_data(data, datanames)
     datanames = datanames_strarr_to_symarr!(datanames)
+    depvar = equation[1]
+    expvars = equation[2:end]
+    data = convert_if_is_tuple_to_array(data, datanames)
+    data = filter_data_valid_columns(data, depvar, expvars, datanames)
+    data = filter_rows_with_empty_values(data)
+    data = convert_if_is_dataframe_to_array(data)
 
     return gsreg(
         equation,
@@ -298,8 +304,6 @@ function gsreg(
 
     depvar = equation[1]
     expvars = equation[2:end]
-
-    data = data[:,get_data_valid_columns(depvar, expvars, datanames)
 
     result = gsreg(
         depvar,
