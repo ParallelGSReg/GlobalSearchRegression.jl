@@ -4,13 +4,11 @@ mutable struct GSRegResult
     data                   # Actual data
     intercept              # Include or not the constant
     outsample              # Amount of rows (observations) that will be use as outsample
-    samesample             # Each combination uses the same sample
     criteria               # Ordering criteria (r2adj, caic, aic, bic, cp, rmsein, rmseout)
     ttest                  # Calculate or not the ttest
     vectoroperation        # Calculate using vector operations
     modelavg               # Generate model averaging report
     residualtest           # Estimate white noise residual tests
-    keepwnoise             # Filter results based on white noise residual tests
     time                   # Pre-order data by Symbol
     datanames              # Original CSV header names
     datatype               # Float32 or Float64 precision
@@ -29,13 +27,11 @@ mutable struct GSRegResult
             data,
             intercept::Bool,
             outsample::Int,
-            samesample::Bool,
             criteria,
             ttest,
             vectoroperation,
             modelavg,
             residualtest,
-            keepwnoise,
             time,
             datanames,
             datatype,
@@ -60,6 +56,6 @@ mutable struct GSRegResult
         end
 
         header = get_result_header(expvars, intercept, ttest, residualtest, time, criteria, modelavg)
-        new(depvar, expvars, data, intercept, outsample, samesample, criteria, ttest, vectoroperation, modelavg, residualtest, keepwnoise, time, datanames, datatype, nobs, header, orderresults, onmessage, parallel)
+        new(depvar, expvars, data, intercept, outsample, criteria, ttest, vectoroperation, modelavg, residualtest, time, datanames, datatype, nobs, header, orderresults, onmessage, parallel)
     end
 end

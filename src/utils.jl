@@ -2,9 +2,9 @@ function equation_str_to_strarr(equation)
     if occursin("~", equation)
         equation = replace(equation, r"\s+|\s+$/g" => " ")
         dep_indep = split(equation, "~")
-        equation = [String(ss) for ss in vcat(dep_indep[1], split(dep_indep[2], "+"))]
+        equation = [String(strip(ss)) for ss in vcat(dep_indep[1], split(dep_indep[2], "+"))]
     else
-        equation = [String(ss) for ss in split(replace(equation, r"\s+|\s+$/g" => ","), ",")]
+        equation = [String(strip(ss)) for ss in split(replace(equation, r"\s+|\s+$/g" => ","), ",")]
     end
     return equation
 end
@@ -12,7 +12,7 @@ end
 function equation_strarr_to_symarr(equation, datanames)
     n_equation = []
     for e in equation
-        replace("*", "." => e)
+        e = replace(e, "." => "*")
         if e[end] == '*'
             datanames_arr = vec([String(key)[1:length(e[1:end - 1])] == e[1:end - 1] ? String(key) : nothing for key in datanames])
             append!(n_equation, filter!(x->x != nothing, datanames_arr))
@@ -21,22 +21,6 @@ function equation_strarr_to_symarr(equation, datanames)
         end
     end
     return map(Symbol, unique(n_equation))
-end
-
-function parse_data(data, datanames)
-    if isa(data, DataFrames.DataFrame)
-        datanames = names(data)
-        data = convert(Array{Float64}, data)
-    elseif isa(data, Tuple)
-        datanames = data[2]
-        data = data[1]
-    elseif isa(data, Array{Any, 2}) && datanames != nothing
-        if !isa(data, Array{Float32, 2}) && !isa(data, Array{Float64, 2})
-            data = []
-            datanames = []
-        end
-    end
-    return data, datanames
 end
 
 """
@@ -141,7 +125,7 @@ Returns selected appropiate covariates for each iteration
 """
 function get_selected_cols(i)
     cols = zeros(Int64, 0)
-    binary = string(i, base=2)
+    binary = string(i, base = 2)
     k = 2
     for i = 1:length(binary)
         if binary[length(binary) - i + 1] == '1'
@@ -209,8 +193,8 @@ function get_datanames(data, datanames)
         datanames = names(data)
     elseif isa(data, Tuple)
         datanames = data[2]
-    elseif !(isa(data, Array{Any, 2}) && datanames != nothing)
-        datanames = []
+    elseif (datanames == nothing)
+        error(DATANAMES_REQUIRED)
     end
     return datanames
 end
@@ -225,12 +209,15 @@ function datanames_strarr_to_symarr!(datanames)
 end
 
 function convert_if_is_tuple_to_array(data, datanames)
-    if isa(data, DataFrames.DataFrame)
-        
-    elseif isa(data, Tuple)
+    if isa(data, Tuple)
         data = data[1]
-    elseif !isa(data, Array{Any, 2})
-        data = []
+    end
+    return data
+end
+
+function convert_if_is_dataframe_to_array(data)
+    if isa(data, DataFrames.DataFrame)
+        data = convert(Array{Float64}, data)
     end
     return data
 end
@@ -249,20 +236,27 @@ function filter_data_valid_columns(data, depvar, expvars, datanames)
     return data
 end
 
-function filter_rows_with_empty_values(data)
+function sort_data_by_time(data, time, datanames)
+    pos = findfirst(isequal(time), datanames)
     if isa(data, DataFrames.DataFrame)
-        data = data[completecases(data), :]
+        sort!(data, (pos))
     elseif isa(data, Array)
-        for i = 1:size(data, 2)
-            data = data[data[:,i] .!= "", :]
-        end
+        data = gsregsortrows(data, [pos])
     end
     return data
 end
 
-function convert_if_is_dataframe_to_array(data)
+function filter_rows_with_empty_values(data)
     if isa(data, DataFrames.DataFrame)
-        data = convert(Array{Float64}, data)
+        data = data[completecases(data), :]
+    elseif isa(data, Array{Union{Missing, Float64},2})
+        for i = 1:size(data, 2)
+            data = data[map(b->!b, ismissing.(data[:,i])), :]
+        end
+    elseif isa(data, Array)
+        for i = 1:size(data, 2)
+            data = data[data[:,i] .!= "", :]
+        end
     end
     return data
 end

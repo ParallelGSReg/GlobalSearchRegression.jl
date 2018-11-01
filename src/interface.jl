@@ -4,14 +4,12 @@ function gsreg(
     datanames=nothing,
     intercept=INTERCEPT_DEFAULT,
     outsample=OUTSAMPLE_DEFAULT,
-    samesample=SAMESAMPLE_DEFAULT,
     criteria=CRITERIA_DEFAULT,
     ttest=TTEST_DEFAULT,
     method=METHOD_DEFAULT,
     vectoroperation=VECTOR_OPERATION_DEFAULT,
     modelavg=MODEL_AVG_DEFAULT,
     residualtest=RESIDUAL_TEST_DEFAULT,
-    keepwnoise=KEEP_WHITE_NOISE_DEFAULT,
     time=TIME_DEFAULT,
     summary=SUMMARY_DEFAULT,
     csv=CSV_DEFAULT,
@@ -27,14 +25,12 @@ function gsreg(
         datanames=datanames,
         intercept=intercept,
         outsample=outsample,
-        samesample=samesample,
         criteria=criteria,
         ttest=ttest,
         method=method,
         vectoroperation=vectoroperation,
         modelavg=modelavg,
         residualtest=residualtest,
-        keepwnoise=keepwnoise,
         time=time,
         summary=summary,
         resultscsv=resultscsv,
@@ -51,14 +47,12 @@ function gsreg(
     datanames=nothing,
     intercept=INTERCEPT_DEFAULT,
     outsample=OUTSAMPLE_DEFAULT,
-    samesample=SAMESAMPLE_DEFAULT,
     criteria=CRITERIA_DEFAULT,
     ttest=TTEST_DEFAULT,
     method=METHOD_DEFAULT,
     vectoroperation=VECTOR_OPERATION_DEFAULT,
     modelavg=MODEL_AVG_DEFAULT,
     residualtest=RESIDUAL_TEST_DEFAULT,
-    keepwnoise=KEEP_WHITE_NOISE_DEFAULT,
     time=TIME_DEFAULT,
     summary=SUMMARY_DEFAULT,
     csv=CSV_DEFAULT,
@@ -76,14 +70,12 @@ function gsreg(
         datanames=datanames,
         intercept=intercept,
         outsample=outsample,
-        samesample=samesample,
         criteria=criteria,
         ttest=ttest,
         method=method,
         vectoroperation=vectoroperation,
         modelavg=modelavg,
         residualtest=residualtest,
-        keepwnoise=keepwnoise,
         time=time,
         summary=summary,
         resultscsv=resultscsv,
@@ -100,14 +92,12 @@ function gsreg(
     datanames=nothing,
     intercept=INTERCEPT_DEFAULT,
     outsample=OUTSAMPLE_DEFAULT,
-    samesample=SAMESAMPLE_DEFAULT,
     criteria=CRITERIA_DEFAULT,
     ttest=TTEST_DEFAULT,
     method=METHOD_DEFAULT,
     vectoroperation=VECTOR_OPERATION_DEFAULT,
     modelavg=MODEL_AVG_DEFAULT,
     residualtest=RESIDUAL_TEST_DEFAULT,
-    keepwnoise=KEEP_WHITE_NOISE_DEFAULT,
     time=TIME_DEFAULT,
     summary=SUMMARY_DEFAULT,
     csv=CSV_DEFAULT,
@@ -130,14 +120,12 @@ function gsreg(
         datanames=datanames,
         intercept=intercept,
         outsample=outsample,
-        samesample=samesample,
         criteria=criteria,
         ttest=ttest,
         method=method,
         vectoroperation=vectoroperation,
         modelavg=modelavg,
         residualtest=residualtest,
-        keepwnoise=keepwnoise,
         time=time,
         summary=summary,
         resultscsv=resultscsv,
@@ -154,14 +142,12 @@ function gsreg(
     datanames=nothing,
     intercept=INTERCEPT_DEFAULT,
     outsample=OUTSAMPLE_DEFAULT,
-    samesample=SAMESAMPLE_DEFAULT,
     criteria=CRITERIA_DEFAULT,
     ttest=TTEST_DEFAULT,
     method=METHOD_DEFAULT,
     vectoroperation=VECTOR_OPERATION_DEFAULT,
     modelavg=MODEL_AVG_DEFAULT,
     residualtest=RESIDUAL_TEST_DEFAULT,
-    keepwnoise=KEEP_WHITE_NOISE_DEFAULT,
     time=TIME_DEFAULT,
     summary=SUMMARY_DEFAULT,
     csv=CSV_DEFAULT,
@@ -175,6 +161,11 @@ function gsreg(
     depvar = equation[1]
     expvars = equation[2:end]
     data = convert_if_is_tuple_to_array(data, datanames)
+
+    if time != nothing
+        data = sort_data_by_time(data, time, datanames)
+    end
+
     data = filter_data_valid_columns(data, depvar, expvars, datanames)
     data = filter_rows_with_empty_values(data)
     data = convert_if_is_dataframe_to_array(data)
@@ -185,14 +176,12 @@ function gsreg(
         datanames;
         intercept=intercept,
         outsample=outsample,
-        samesample=samesample,
         criteria=criteria,
         ttest=ttest,
         method=method,
         vectoroperation=vectoroperation,
         modelavg=modelavg,
         residualtest=residualtest,
-        keepwnoise=keepwnoise,
         time=time,
         summary=summary,
         resultscsv=resultscsv,
@@ -209,14 +198,12 @@ function gsreg(
     datanames::Array;
     intercept=INTERCEPT_DEFAULT,
     outsample=OUTSAMPLE_DEFAULT,
-    samesample=SAMESAMPLE_DEFAULT,
     criteria=CRITERIA_DEFAULT,
     ttest=TTEST_DEFAULT,
     method=METHOD_DEFAULT,
     vectoroperation=VECTOR_OPERATION_DEFAULT,
     modelavg=MODEL_AVG_DEFAULT,
     residualtest=RESIDUAL_TEST_DEFAULT,
-    keepwnoise=KEEP_WHITE_NOISE_DEFAULT,
     time=TIME_DEFAULT,
     summary=SUMMARY_DEFAULT,
     csv=CSV_DEFAULT,
@@ -225,7 +212,7 @@ function gsreg(
     onmessage=ON_MESSAGE_DEFAULT,
     parallel=PARALLEL_DEFAULT
     )
-    
+
     if method == "precise"
         datatype = Float64
     elseif method == "fast"
@@ -248,14 +235,6 @@ function gsreg(
 
     if outsample == false && :rmseout in criteria
         error(OUTSAMPLE_MISMATCH)
-    end
-
-    if keepwnoise != nothing && residualtest == false
-        error(RESIDUALTEST_EXCEPTION)
-    end
-
-    if keepwnoise != nothing
-        residualtest = true
     end
 
     if criteria == CRITERIA_DEFAULT
@@ -297,11 +276,6 @@ function gsreg(
         error(SELECTED_VARIABLES_DOES_NOT_EXISTS)
     end
 
-    if time != nothing
-        pos = findfirst(isequal(time), datanames)
-        data = gsregsortrows(data, [pos])
-    end
-
     depvar = equation[1]
     expvars = equation[2:end]
 
@@ -312,13 +286,11 @@ function gsreg(
         datanames=datanames,
         intercept=intercept,
         outsample=outsample,
-        samesample=samesample,
         criteria=criteria,
         ttest=ttest,
         vectoroperation=vectoroperation,
         modelavg=modelavg,
         residualtest=residualtest,
-        keepwnoise=keepwnoise,
         time=time,
         summary=summary,
         datatype=datatype,

@@ -74,7 +74,6 @@ result = gsreg("y x*", data,
 
 intercept::Bool,
 outsample::Int,
-samesample::Bool,
 criteria::Array,
 ttest::Bool,
 method{fast,precise},

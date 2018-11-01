@@ -4,13 +4,11 @@ function gsreg(
         data;
         intercept=nothing,
         outsample=nothing,
-        samesample=nothing,
         criteria=nothing,
         ttest=nothing,
         vectoroperation=nothing,
         modelavg=nothing,
         residualtest=nothing,
-        keepwnoise=nothing,
         time=nothing,
         summary=nothing,
         datanames=nothing,
@@ -25,13 +23,11 @@ function gsreg(
         data,
         intercept,
         outsample,
-        samesample,
         criteria,
         ttest,
         vectoroperation,
         modelavg,
         residualtest,
-        keepwnoise,
         time,
         datanames,
         datatype,
@@ -60,7 +56,6 @@ function gsreg_single_proc_result!(
         ttest,
         vectoroperation,
         residualtest,
-        keepwnoise,
         time,
         datanames,
         datatype,
@@ -164,17 +159,7 @@ function gsreg_single_proc_result!(
             statisticbg = (n - offset) * rsqbg
             bgtest = ccdf(Chisq(lag), statisticbg)
             results[order, header[:bgtest]] = bgtest
-
-#             if keepwnoise != nothing && keepwnoise > bgtest
-#                 results[order, 1:end] .= NaN
-#                 return false
-#             end
         end
-
-#         if keepwnoise != nothing && ( keepwnoise > jbtest || keepwnoise > wtest )
-#             results[order, 1:end] .= NaN
-#             return false
-#         end
     end
 
     if vectoroperation == false
@@ -235,7 +220,7 @@ function proc!(result::GSRegResult)
 
     if nprocs() == nworkers()
         for order = 1:num_operations
-            gsreg_single_proc_result!(order, pdata, presults, result.depvar, result.expvars, result.intercept, result.outsample, result.criteria, result.ttest, result.vectoroperation,  result.residualtest, result.keepwnoise, result.time, result.datanames, result.datatype, result.header)
+            gsreg_single_proc_result!(order, pdata, presults, result.depvar, result.expvars, result.intercept, result.outsample, result.criteria, result.ttest, result.vectoroperation,  result.residualtest, result.time, result.datanames, result.datatype, result.header)
         end
     else
         num_workers = (result.parallel != nothing) ? result.parallel : nworkers()
@@ -244,7 +229,7 @@ function proc!(result::GSRegResult)
         remainder = num_operations - ops_by_worker * num_jobs
         jobs = []
         for num_job = 1:num_jobs
-            push!(jobs, @spawnat num_job+1 gsreg_proc_result!(num_job, num_jobs, ops_by_worker, pdata, presults, result.expvars, result.intercept, result.outsample, result.criteria, result.ttest, result.vectoroperation, result.residualtest, result.keepwnoise, result.time, result.datanames, result.datatype, result.header))
+            push!(jobs, @spawnat num_job+1 gsreg_proc_result!(num_job, num_jobs, ops_by_worker, pdata, presults, result.depvar, result.expvars, result.intercept, result.outsample, result.criteria, result.ttest, result.vectoroperation, result.residualtest, result.time, result.datanames, result.datatype, result.header))
         end
         for job in jobs
             fetch(job)
@@ -253,17 +238,12 @@ function proc!(result::GSRegResult)
         if( remainder > 0 )
             for j = 1:remainder
                 order = j + ops_by_worker * num_jobs
-                gsreg_single_proc_result!(order, pdata, presults, result.depvar, result.expvars, result.intercept, result.outsample, result.criteria, result.ttest, result.vectoroperation, result.residualtest, result.keepwnoise, result.time, result.datanames, result.datatype, result.header)
+                gsreg_single_proc_result!(order, pdata, presults, result.depvar, result.expvars, result.intercept, result.outsample, result.criteria, result.ttest, result.vectoroperation, result.residualtest, result.time, result.datanames, result.datatype, result.header)
             end
         end
     end
 
     result.results = Array(presults)
-
-#     if result.keepwnoise != nothing
-#         rows_to_delete = findall(isnan, result.results[result.header[:index]])
-#         result.results = result.results[setdiff(1:end, rows_to_delete),:]
-#     end
 
     presult = nothing
     pdata = nothing
@@ -378,7 +358,7 @@ function to_string(result::GSRegResult)
     if result.intercept
         append!(cols, data_cols_num)
     end
-    
+
     for pos in cols
         varname = result.expvars[pos-1]
         out *= @sprintf(" %-35s", varname)

@@ -4,7 +4,6 @@ using DataFrames, Distributions, Distributed, Printf, SharedArrays, LinearAlgebr
 const INTERCEPT_DEFAULT = true
 const INSAMPLE_MIN_SIZE = 20
 const OUTSAMPLE_DEFAULT = 0
-const SAMESAMPLE_DEFAULT = false
 const TTEST_DEFAULT = false
 const METHOD_DEFAULT = "fast"
 const CRITERIA_DEFAULT = []
@@ -15,7 +14,6 @@ const ORDER_RESULTS_DEFAULT = false
 const VECTOR_OPERATION_DEFAULT = false
 const MODEL_AVG_DEFAULT = false
 const RESIDUAL_TEST_DEFAULT = nothing
-const KEEP_WHITE_NOISE_DEFAULT = false
 const TIME_DEFAULT = nothing
 const SUMMARY_DEFAULT = nothing
 const ON_MESSAGE_DEFAULT = message -> ()
