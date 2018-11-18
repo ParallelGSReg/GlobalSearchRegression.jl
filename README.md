@@ -1,4 +1,4 @@
-# GlobalSearchRegression [![Build Status](https://travis-ci.org/ParallelGSReg/GlobalSearchRegression.jl.svg?branch=master)](https://travis-ci.org/ParallelGSReg/GlobalSearchRegression.jl)
+# GlobalSearchRegression [![Build Status](https://travis-ci.org/ParallelGSReg/GlobalSearchRegression.jl.svg?branch=master)](https://travis-ci.org/ParallelGSReg/GlobalSearchRegression.jl) [![](https://img.shields.io/badge/docs-latest-blue.svg)](https://parallelgsreg.github.io/GlobalSearchRegression.jl/)
 
 ## Abstract
 GlobalSearchRegression is an automatic model selection command for time series, cross-section and panel data regressions. By default (otherwise, users have many options to modify this simplest specification), gsreg performs alternative OLS regressions looking for the best depvar Data Generating Process, iterating over all possible combinations among explanatory variables
