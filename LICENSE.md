@@ -1,4 +1,4 @@
-The GSReg.jl package is licensed under the MIT "Expat" License:
+The GlobalSearchRegression.jl package is licensed under the MIT "Expat" License:
 
 > Copyright (c) 2018 Demian Panigo, Valentín Mari, Adán Mauri Ungaro, Esteban Mocskos y Pablo Gluzmann. CONICET y Fundación YPF
 >

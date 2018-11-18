@@ -1,10 +1,10 @@
 ## Syntax
 
 ```julia
-GSReg.gsreg(equation::String, data::DataFrame; noconstant::Bool=true)
-GSReg.gsreg(equation::Array{String}, data::DataFrame; noconstant::Bool=true)
-GSReg.gsreg(equation::Array{Symbol}, data::DataFrame; noconstant::Bool=true)
-GSReg.gsreg(equation::Array{Symbol}; data::DataFrame, noconstant::Bool=true)
+gsreg(equation::String, data::DataFrame; noconstant::Bool=true)
+gsreg(equation::Array{String}, data::DataFrame; noconstant::Bool=true)
+gsreg(equation::Array{Symbol}, data::DataFrame; noconstant::Bool=true)
+gsreg(equation::Array{Symbol}; data::DataFrame, noconstant::Bool=true)
 
 ```
 
@@ -13,7 +13,7 @@ GSReg.gsreg(equation::Array{Symbol}; data::DataFrame, noconstant::Bool=true)
 To load the module:
 
 ```julia
-Pkg.clone("git://git@github.com:adanmauri/GSReg.jl.git")
+Pkg.clone("git://git@github.com:ParallelGSReg/GlobalSearchRegression.jl.git")
 ```
 
 To perform a regression analysis:
@@ -22,7 +22,7 @@ To perform a regression analysis:
 using CSV
 data = CSV.read("data.csv")
 
-result = GSReg.gsreg([:y, :x1, :x2, :x3], data; noconstant=true)
+result = gsreg([:y, :x1, :x2, :x3], data; noconstant=true)
 ```
 
 ## Other usage methods:
@@ -30,24 +30,24 @@ result = GSReg.gsreg([:y, :x1, :x2, :x3], data; noconstant=true)
 ```julia
 
 # Stata like
-result = GSReg.gsreg("y x1 x2 x3", data)
+result = gsreg("y x1 x2 x3", data)
 
 # Stata like with comma
-result = GSReg.gsreg("y,x1,x2,x3", data)
+result = gsreg("y,x1,x2,x3", data)
 
 # R like
-result = GSReg.gsreg("y ~ x1 + x2 + x3", data)
-result = GSReg.gsreg("y ~ x1 + x2 + x3", data=data)
+result = gsreg("y ~ x1 + x2 + x3", data)
+result = gsreg("y ~ x1 + x2 + x3", data=data)
 
 # Array of strings
-result = GSReg.gsreg(["y", "x1", "x2", "x3"], data)
+result = gsreg(["y", "x1", "x2", "x3"], data)
 
 # Also, with wildcard
-result = GSReg.gsreg("y x*", data)
-result = GSReg.gsreg("y x1 x*", data)
-result = GSReg.gsreg("y ~ x*", data)
+result = gsreg("y x*", data)
+result = gsreg("y x1 x*", data)
+result = gsreg("y ~ x*", data)
 ```
 
 ## Credits
 
-The GSReg module, which perform regression analysis, was written primarily by [Demian Panigo](https://github.com/dpanigo/), [Valentín Mari](https://github.com/vmari/) and [Adán Mauri Ungaro](https://github.com/adanmauri/). The GSReg module was inpired by GSReg for Stata, written by Pablo Gluzmann and [Demian Panigo](https://github.com/dpanigo/).
+The GlobalSearchRegression module, which perform regression analysis, was written primarily by [Demian Panigo](https://github.com/dpanigo/), [Valentín Mari](https://github.com/vmari/) and [Adán Mauri Ungaro](https://github.com/adanmauri/). The GlobalSearchRegression and the GlobalSearchRegressionGUI module was inpired by GSReg for Stata, written by Pablo Gluzmann and [Demian Panigo](https://github.com/dpanigo/).

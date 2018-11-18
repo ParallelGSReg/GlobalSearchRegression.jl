@@ -5,10 +5,10 @@ using Documenter, GSReg
 
 makedocs(
     # options
-    modules = [GSReg],
+    modules = [GlobalSearchRegression],
     doctest = false,
     clean = false,
-    sitename = "GSReg.jl",
+    sitename = "GlobalSearchRegression.jl",
     format = :html,
     pages = Any[
         "Introduction" => "index.md",
@@ -22,7 +22,7 @@ makedocs(
 # =======================================
 
 deploydocs(
-    repo = "github.com/ParallelGSReg/GSReg.jl.git",
+    repo = "github.com/ParallelGSReg/GlobalSearchRegression.jl.git",
     target = "build",
     julia = "0.6",
     deps = nothing,

@@ -1,4 +1,4 @@
-using Test, GSReg, DataFrames, Distributions
+using Test, GlobalSearchRegression, DataFrames, Distributions
 
 data = DataFrame(Array{Union{Missing,Float64}}(randn(100,6)))
 headers = [ :y ; [ Symbol("x$i") for i = 1:size(data,2) - 1 ] ]

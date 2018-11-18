@@ -1,4 +1,4 @@
-module GSReg
+module GlobalSearchRegression
 using DataFrames, Distributions, Distributed, Printf, SharedArrays, LinearAlgebra, DelimitedFiles
 
 const INTERCEPT_DEFAULT = true
@@ -80,4 +80,4 @@ include("core.jl")
 
 export gsreg, export_csv, to_dict, to_string
 
-end # module GSReg
+end # module GlobalSearchRegression
