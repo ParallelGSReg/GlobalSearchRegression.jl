@@ -86,6 +86,6 @@ gsreg("x2 x1 y", data; method="precise")
 
 gsreg("x2 x1 y", data; csv="results.csv")
 
-gsreg("x2 x1 y", data; resultscsv="results.csv")
+res = gsreg("x2 x1 y", data; resultscsv="results.csv")
 
-@test size(res.results,1) == 31
+@test size(res.results,1) == 3
