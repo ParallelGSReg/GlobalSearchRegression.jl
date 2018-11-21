@@ -88,8 +88,4 @@ gsreg("x2 x1 y", data; csv="results.csv")
 
 gsreg("x2 x1 y", data; resultscsv="results.csv")
 
-############# PARALLEL #################
-gsreg("x2 x1 y", data; parallel=2)
-
-
 @test size(res.results,1) == 31
