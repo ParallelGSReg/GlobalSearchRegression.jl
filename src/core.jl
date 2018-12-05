@@ -293,7 +293,7 @@ function proc!(result::GSRegResult)
         w1 = exp.(-delta/2)
         result.results[:,result.header[:weight]] = w1./sum(w1)
         result.average = Array{Float64}(undef, 1, length(keys(result.header)))
-        weight_pos = (result.ttest) ? 4 : 3
+        weight_pos = (result.ttest) ? 4 : 2
         for expvar in result.expvars
             obs = result.results[:,result.header[Symbol(string(expvar, "_b"))]]
             if result.ttest
