@@ -293,10 +293,12 @@ function proc!(result::GSRegResult)
         w1 = exp.(-delta/2)
         result.results[:,result.header[:weight]] = w1./sum(w1)
         result.average = Array{Float64}(undef, 1, length(keys(result.header)))
+        weight_pos = (result.ttest) ? 4 : 3
         for expvar in result.expvars
             obs = result.results[:,result.header[Symbol(string(expvar, "_b"))]]
             if result.ttest
                 obs = hcat(obs, result.results[:,result.header[Symbol(string(expvar, "_bstd"))]])
+                obs = hcat(obs, result.results[:,result.header[Symbol(string(expvar, "_t"))]])
             end
             obs = hcat(obs, result.results[:,result.header[:weight]])
 
@@ -304,11 +306,12 @@ function proc!(result::GSRegResult)
             obs = obs[findall(x -> !isnan(obs[x,1]), 1:size(obs,1)),:]
 
             #weight resizing
-            obs[:, (result.ttest) ? 3 : 2] /= sum(obs[:,(result.ttest) ? 3 : 2])
+            obs[:, weight_pos] /= sum(obs[:, weight_pos])
 
-            result.average[result.header[Symbol(string(expvar, "_b"))]] = sum(obs[:, 1] .* obs[:, (result.ttest) ? 3 : 2])
+            result.average[result.header[Symbol(string(expvar, "_b"))]] = sum(obs[:, 1] .* obs[:, weight_pos])
             if result.ttest
-                result.average[result.header[Symbol(string(expvar, "_bstd"))]] = sum(obs[:, 2] .* obs[:, 3])
+                result.average[result.header[Symbol(string(expvar, "_bstd"))]] = sum(obs[:, 2] .* obs[:, weight_pos])
+                result.average[result.header[Symbol(string(expvar, "_t"))]] = sum(obs[:, 3] .* obs[:, weight_pos])
             end
         end
 
@@ -407,7 +410,7 @@ function to_string(result::GSRegResult)
             out *= @sprintf(" %-10f", result.average[result.header[Symbol(string(varname, "_b"))]])
             if result.ttest
                 out *= @sprintf("   %-10f", result.average[result.header[Symbol(string(varname, "_bstd"))]])
-                out *= @sprintf("   %-10f", result.average[result.header[Symbol(string(varname, "_b"))]] / result.average[result.header[Symbol(string(varname, "_bstd"))]])
+                out *= @sprintf("   %-10f", result.average[result.header[Symbol(string(varname, "_t"))]])
             end
             out *= @sprintf("\n")
         end
