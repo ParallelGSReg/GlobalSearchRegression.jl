@@ -40,16 +40,16 @@ To run the simplest analysis just type the:
 
 ```julia
 julia> using GlobalSearchRegression, DelimitedFiles
-dataname = readdlm("path_to_your_data/your_data.csv", ',', header=true)
+julia> dataname = readdlm("path_to_your_data/your_data.csv", ',', header=true)
 ```
 and 
 
 ```julia
-gsreg("your_dependent_variable your_explanatory_variable_1 your_explanatory_variable_2 your_explanatory_variable_3 your_explanatory_variable_4", dataname)
+julia> gsreg("your_dependent_variable your_explanatory_variable_1 your_explanatory_variable_2 your_explanatory_variable_3 your_explanatory_variable_4", dataname)
 ```
 or
 ```julia
-gsreg("your_dependent_variable *", data)
+julia> gsreg("your_dependent_variable *", data)
 ```
 It performs an Ordinary Least Squares - all subset regression (OLS-ASR) approach to choose the best model among 2<sup>n</sup>-1 alternatives (in terms of in-sample accuracy, using the adjusted R<sup>2</sup>), where:
 * DelimitedFiles is the Julia buit-in package we use to read data from csv files (throught its readdlm function);
@@ -64,33 +64,33 @@ It performs an Ordinary Least Squares - all subset regression (OLS-ASR) approach
 
 ```julia
 # Stata like
-result = gsreg("y x1 x2 x3", data)
+julia> result = gsreg("y x1 x2 x3", data)
 
 # Stata like with comma
-result = gsreg("y,x1,x2,x3", data)
+julia> result = gsreg("y,x1,x2,x3", data)
 
 # R like
-result = gsreg("y ~ x1 + x2 + x3", data)
-result = gsreg("y ~ x1 + x2 + x3", data=data)
+julia> result = gsreg("y ~ x1 + x2 + x3", data)
+julia> result = gsreg("y ~ x1 + x2 + x3", data=data)
 
 # Array of strings
-result = gsreg(["y", "x1", "x2", "x3"], data)
+julia> result = gsreg(["y", "x1", "x2", "x3"], data)
 
 # Also, with wildcard
-result = gsreg("y *", data)
-result = gsreg("y x*", data)
-result = gsreg("y x1 z*", data)
-result = gsreg("y ~ x*", data)
-result = gsreg("y ~ .", data)
+julia> result = gsreg("y *", data)
+julia> result = gsreg("y x*", data)
+julia> result = gsreg("y x1 z*", data)
+julia> result = gsreg("y ~ x*", data)
+julia> result = gsreg("y ~ .", data)
 ```
 ## Advanced usage syntax
 
 ```julia
-using CSV, GSReg
+julia> using CSV, GSReg
 
-data = CSV.read("data.csv")
+julia> data = CSV.read("data.csv")
 
-result = gsreg("y x*", data,
+julia> result = gsreg("y x*", data,
     intercept=true,
     outsample=10,
     criteria=[:r2adj, :bic, :aic, :aicc, :cp, :rmse, :rmseout, :sse],
@@ -126,7 +126,7 @@ orderresults=Boolean(false)
 
 ## Parallel
 
-You should run julia with -p auto option
+You must run julia with -p auto option
 
  
 ## Credits
