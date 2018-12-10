@@ -1,27 +1,64 @@
 # GlobalSearchRegression [![Build Status](https://travis-ci.org/ParallelGSReg/GlobalSearchRegression.jl.svg?branch=master)](https://travis-ci.org/ParallelGSReg/GlobalSearchRegression.jl) [![](https://img.shields.io/badge/docs-latest-blue.svg)](https://parallelgsreg.github.io/GlobalSearchRegression.jl/)
 
 ## Abstract
-GlobalSearchRegression is an automatic model selection command for time series, cross-section and panel data regressions. By default (otherwise, users have many options to modify this simplest specification), gsreg performs alternative OLS regressions looking for the best depvar Data Generating Process, iterating over all possible combinations among explanatory variables
+GlobalSearchRegression is both the world-fastest all-subset-regression command (a widespread tool for automatic model/feature selection technique) and a first-step to develop a coeherent framework to merge Machine Learning and Econometric algorithms and building bridges between frequentist and bayesian statistics. 
 
-## Syntax
+Written in Julia, it is a High Performance Computing version of the [Stata-gsreg](https://www.researchgate.net/profile/Pablo_Gluzmann/publication/264782750_Global_Search_Regression_A_New_Automatic_Model-selection_Technique_for_Cross-section_Time-series_and_Panel-data_Regressions/links/53eed18a0cf23733e812c10d/Global-Search-Regression-A-New-Automatic-Model-selection-Technique-for-Cross-section-Time-series-and-Panel-data-Regressions.pdf?origin=publication_detail) command (get the code [here](https://ideas.repec.org/c/boc/bocode/s457737.html)). In a multicore personal computer (we use an Threadripper 1950x build for benchmarks), it runs up-to 100 times faster than the original Stata-code and up-to 10 times faster than well-known R-alternatives ([pdredge](https://www.rdocumentation.org/packages/MuMIn/versions/1.42.1/topics/pdredge)).
+
+Notwithstanding, GlobalSearchRegression main focus is not about execution-times but about progressively combining Machine Learning  algorithms (focusing on forecasting accuracy) with Econometric diagnosis tools (for causal inference) to simplify quantitative-research.
+
+Econometrics allows scientists to deal with competing theories about complex processes which could lead to very different diagnosis and even opposite policy advises. Advances in model selection techniques, driven by the increasing number of available HPC algorithms, constitutes one of its major contributions to Economic Theory. In-sample model selection has benefited from using mathematical developments to reduce the search space (e.g. Branch and Bound theorems) and efficiently find the best subset regression (in terms of defined information criteria). It is also possible to use heuristic approaches like Genetic algorithms, or different dimension reduction methods like Stepwise, Lasso or Ridge estimators. While failing to guarantee global optimality, they are fast and well-suited for Big and/or Sparse Data. On the contrary, out-of-sample model selection techniques require more computing resources. 
+
+In a Machine Learning environment (e.g. problems focusing on predictive analysis) there is an increasing universe of “training/test” algorithms (many of them showing very interesting performance in Julia) to compare alternative results and find-out a suitable model. 
+
+In Econometrics (e.g. problems focusing on causal inference) we require five important features which narrow the set of available algorithms: 1) Parsimony (to avoid very large atheoretical models); 2) Interpretability (for causal inference, rejecting “intuition-loss” transformation and/or complex combinations); 3) Across-models sensitivity analysis (economic theory is preferred against “best-model” unique results); 4) Robustness to time series and panel data information (preventing the use of raw bootstrapping or random subsample selection for training and test sets); and 5) advanced residual properties (e.g. going beyond the i.i.d assumption and looking for additional panel structure properties -for each model being evaluated-, which force a departure from many algorithms).
+
+For these reasons, most economists prefer flexible all-subset-regression approaches, choosing among alternative models by means of some out-of-sample criteria, model averaging results, theoretical limits on covariates coefficients and residual constraints. While still unfeasible for Sparse Data (p>>n), hardware and software innovations allow researchers to choose among one billion models in a few hours using a standard personal computer. Therefore, almost all statistical applications have an all-subset regression function. Some of them, have even developed a parallel version of their core algorithm (pdredge in R or gsregp in Stata). 
+
+
+## Installation
+GlobalSearchRegression requires [Julia 1.0.1 ](https://julialang.org/downloads/platform.html) (or newer releases) to be previously installed in your computer. Then, start Julia and type "]" (without double quotes) to open the package manager.
 
 ```julia
-gsreg(equation::String, data::DataFrame)
-gsreg(equation::Array{String}, data::DataFrame)
-gsreg(equation::Array{Symbol}, data::DataFrame)
+julia> ]
+pkg>
 ```
-
-## Basic usage
-
-To perform a regression analysis:
+After that, just install GlobalSearchRegression by typing "add GlobalSearchRegression"
 
 ```julia
-using CSV, GlobalSearchRegression
-
-data = CSV.read("data.csv")
-
-result = gsreg("y x*", data)
+pkg> add GlobalSearchRegression
 ```
+Optionally, some users could also find interesting to install CSV and DataFrames packages to allow for additional I/O functionalities.
+
+```julia
+pkg> add CSV DataFrames
+```
+
+## Basic Usage
+
+To run the simplest analysis just type the:
+
+```julia
+julia> using GlobalSearchRegression, DelimitedFiles
+dataname = readdlm("path_to_your_data/your_data.csv", ',', header=true)
+```
+and 
+
+```julia
+gsreg("your_dependent_variable your_explanatory_variable_1 your_explanatory_variable_2 your_explanatory_variable_3 your_explanatory_variable_4", dataname)
+```
+or
+```julia
+gsreg("your_dependent_variable *", data)
+```
+It performs an Ordinary Least Squares - all subset regression (OLS-ASR) approach to choose the best model among 2<sup>n</sup>-1 alternatives (in terms of in-sample accuracy, using the adjusted R<sup>2</sup>), where:
+* DelimitedFiles is the Julia buit-in package we use to read data from csv files (throught its readdlm function);
+* "path_to_your_data/your_data.csv" is a strign that indentifies your comma-separated database, allowing for missing observations. It's assumed that your database first row is used to identify variable names;
+* gsreg is the GlobalSearchRegression function that estimates all-subset-regressions (e.g. all-possible covariate combinations). In its simplest form, it has two arguments separated by a comma;
+* The first gsreg argument is the general equation. It must be typed between double quotes. Its first string is the dependent variable name (csv-file names must be respected, remember that Julia is case sensitive). After that, you can include as many explanatory variables as you want. Alternative, you can replace covariates by wildcars as in the example above (e.g. * for all other variables in the csv-files, or qwert* for all other variables in the csv-file with names starting by "qwert"); and
+* The second gsreg argument is name of the object containing your database. Following the example above, it must match the name you use in dataname = readdlm("path_to_your_data/your_data.csv", ',', header=true)
+
+
 
 ## Other usage methods:
 
@@ -46,7 +83,7 @@ result = gsreg("y x1 z*", data)
 result = gsreg("y ~ x*", data)
 result = gsreg("y ~ .", data)
 ```
-## Full usage options
+## Advanced usage syntax
 
 ```julia
 using CSV, GSReg
@@ -89,7 +126,7 @@ orderresults=Boolean(false)
 
 ## Parallel
 
-You must run julia with -p option
+You should run julia with -p auto option
 
  
 ## Credits
