@@ -7,7 +7,7 @@
 - [ ] Do all the next steps in one single call.
 
 ### Data transformation
-- [ ] Parse formula from multiple formats, including R, Stata and DataFrames # [checkbox:unchecked]
+- [ ] Parse formula from multiple formats, including R, Stata and DataFrames
 - [ ] Reduce database based on formula. (GUM) *including time if it's not included*
 - [ ] Order database with time and panel variables and remove if it's not used as covariate
 - [ ] Transform data representation for faster compute (Float64, Float32)
