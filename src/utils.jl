@@ -1,3 +1,12 @@
+function in_vector(sub_vector, vector)
+    for sv in sub_vector
+        if !in(sv, vector)
+            return false
+        end
+    end
+    return true
+end
+
 function equation_str_to_strarr(equation)
     if occursin("~", equation)
         equation = replace(equation, r"\s+|\s+$/g" => " ")
@@ -42,6 +51,61 @@ function datanames_strarr_to_symarr!(datanames)
     end
     return datanames
 end
+
+function convert_if_is_tuple_to_array(data, datanames)
+    if isa(data, Tuple)
+        data = data[1]
+    end
+    return data
+end
+
+function convert_if_is_dataframe_to_array(data)
+    if isa(data, DataFrames.DataFrame)
+        data = convert(Array{Float64}, data)
+    end
+    return data
+end
+
+function sort_data_by_time(data, time, datanames)
+    pos = findfirst(isequal(time), datanames)
+    if isa(data, DataFrames.DataFrame)
+        sort!(data, (pos))
+    elseif isa(data, Array)
+        data = gsregsortrows(data, [pos])
+    end
+    return data
+end
+
+function filter_data_valid_columns(data, equation, datanames)
+    if isa(data, DataFrames.DataFrame)
+        data = data[equation]
+        filter!(in(equation), datanames)
+    elseif isa(data, Array)
+        columns = []
+        for i = 1:length(equation)
+            append!(columns, get_data_column_pos(equation[i], datanames))
+        end
+        data = data[:,columns]
+        datanames = datanames[columns]
+    end
+    return (data, datanames)
+end
+
+function filter_rows_with_empty_values(data)
+    if isa(data, DataFrames.DataFrame)
+        data = data[completecases(data), :]
+    elseif isa(data, Array{Union{Missing, Float64},2})
+        for i = 1:size(data, 2)
+            data = data[map(b->!b, ismissing.(data[:,i])), :]
+        end
+    elseif isa(data, Array)
+        for i = 1:size(data, 2)
+            data = data[data[:,i] .!= "", :]
+        end
+    end
+    return data
+end
+
 
 """
 Returns the position of the header value based on this structure.
@@ -131,15 +195,6 @@ function get_result_header(expvars, intercept, ttest, residualtest, time, criter
     return header
 end
 
-function in_vector(sub_vector, vector)
-    for sv in sub_vector
-        if !in(sv, vector)
-            return false
-        end
-    end
-    return true
-end
-
 """
 Returns selected appropiate covariates for each iteration
 """
@@ -206,57 +261,4 @@ end
 
 function get_data_column_pos(name, datanames)
     return findfirst(x -> name==x, datanames)
-end
-
-function convert_if_is_tuple_to_array(data, datanames)
-    if isa(data, Tuple)
-        data = data[1]
-    end
-    return data
-end
-
-function convert_if_is_dataframe_to_array(data)
-    if isa(data, DataFrames.DataFrame)
-        data = convert(Array{Float64}, data)
-    end
-    return data
-end
-
-function filter_data_valid_columns(data, depvar, expvars, datanames)
-    vars = vcat([depvar], expvars)
-    if isa(data, DataFrames.DataFrame)
-        data = data[vars]
-    elseif isa(data, Array)
-        columns = []
-        for i = 1:length(vars)
-            append!(columns, get_data_column_pos(vars[i], datanames))
-        end
-        data = data[:,columns]
-    end
-    return data
-end
-
-function sort_data_by_time(data, time, datanames)
-    pos = findfirst(isequal(time), datanames)
-    if isa(data, DataFrames.DataFrame)
-        sort!(data, (pos))
-    elseif isa(data, Array)
-        data = gsregsortrows(data, [pos])
-    end
-    return data
-end
-
-function filter_rows_with_empty_values(data)
-    if isa(data, DataFrames.DataFrame)
-        data = data[completecases(data), :]
-    elseif isa(data, Array{Union{Missing, Float64},2})
-        for i = 1:size(data, 2)
-            data = data[map(b->!b, ismissing.(data[:,i])), :]
-        end
-    elseif isa(data, Array)
-        for i = 1:size(data, 2)
-            data = data[data[:,i] .!= "", :]
-        end
-    end
-    return data
 end

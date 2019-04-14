@@ -1,3 +1,12 @@
+function in_vector(sub_vector, vector)
+    for sv in sub_vector
+        if !in(sv, vector)
+            return false
+        end
+    end
+    return true
+end
+
 function equation_str_to_strarr(equation)
     if occursin("~", equation)
         equation = replace(equation, r"\s+|\s+$/g" => " ")
@@ -32,6 +41,69 @@ function get_datanames_from_data(data, datanames)
         error(DATANAMES_REQUIRED)
     end
     return datanames
+end
+
+function datanames_strarr_to_symarr!(datanames)
+    dn = datanames
+    datanames = []
+    for name in dn
+        push!(datanames, Symbol(name))
+    end
+    return datanames
+end
+
+function convert_if_is_tuple_to_array(data, datanames)
+    if isa(data, Tuple)
+        data = data[1]
+    end
+    return data
+end
+
+function convert_if_is_dataframe_to_array(data)
+    if isa(data, DataFrames.DataFrame)
+        data = convert(Array{Float64}, data)
+    end
+    return data
+end
+
+function filter_data_valid_columns(data, equation, datanames)
+    if isa(data, DataFrames.DataFrame)
+        data = data[equation]
+        filter!(in(equation), datanames)
+    elseif isa(data, Array)
+        columns = []
+        for i = 1:length(equation)
+            append!(columns, get_data_column_pos(equation[i], datanames))
+        end
+        data = data[:,columns]
+        datanames = datanames[columns]
+    end
+    return (data, datanames)
+end
+
+function sort_data_by_time(data, time, datanames)
+    pos = findfirst(isequal(time), datanames)
+    if isa(data, DataFrames.DataFrame)
+        sort!(data, (pos))
+    elseif isa(data, Array)
+        data = gsregsortrows(data, [pos])
+    end
+    return data
+end
+
+function filter_rows_with_empty_values(data)
+    if isa(data, DataFrames.DataFrame)
+        data = data[completecases(data), :]
+    elseif isa(data, Array{Union{Missing, Float64},2})
+        for i = 1:size(data, 2)
+            data = data[map(b->!b, ismissing.(data[:,i])), :]
+        end
+    elseif isa(data, Array)
+        for i = 1:size(data, 2)
+            data = data[data[:,i] .!= "", :]
+        end
+    end
+    return data
 end
 
 function datatransformation(
@@ -83,16 +155,13 @@ function datatransformation(
     time=TIME_DEFAULT
     )
 
-    # TODO: Refactor equation functions
     datanames = get_datanames_from_data(data, datanames)
     equation = equation_strarr_to_symarr(equation, datanames)
 
-    # TODO: Refactor equation functions
     if isempty(equation)
         error(VARIABLES_NOT_OR_VALID_OR_NOT_DEFINED)
     end
 
-    return equation
     return datatransformation(
         equation,
         data,
@@ -112,20 +181,29 @@ function datatransformation(
     time=TIME_DEFAULT
     )
 
-    # TODO: Refactor equation functions
     datanames = datanames_strarr_to_symarr!(datanames)
+    if time != nothing && time ∉ datanames
+        error(TIME_VARIABLE_INEXISTENT)
+    end
+    
     depvar = equation[1]
     expvars = equation[2:end]
     data = convert_if_is_tuple_to_array(data, datanames)
 
+    equation_time = equation
+    if time != nothing && findfirst(isequal(time), equation_time) == nothing
+        equation_time = vcat(equation_time, time)
+    end
+    (data, datanames) = filter_data_valid_columns(data, equation_time, datanames)
+
     if time != nothing
         data = sort_data_by_time(data, time, datanames)
     end
-
-    data = filter_data_valid_columns(data, depvar, expvars, datanames)
+    
+    (data, datanames) = filter_data_valid_columns(data, equation, datanames)
     data = filter_rows_with_empty_values(data)
     data = convert_if_is_dataframe_to_array(data)
-
+    
     return datatransformation(
         equation,
         data,
@@ -136,7 +214,7 @@ function datatransformation(
     )
 end
 
-function gsreg(
+function datatransformation(
     equation::Array{Symbol},
     data,
     datanames::Array;
@@ -157,53 +235,6 @@ function gsreg(
         data = convert(Array{datatype}, data)
     end
 
-    if outsample != OUTSAMPLE_DEFAULT
-        if outsample < 0
-            error(OUTSAMPLE_LOWER_VALUE)
-        elseif size(data, 1) - outsample < INSAMPLE_MIN_SIZE + size(data, 2) - 1
-            error(OUTSAMPLE_HIGHER_VALUE)
-        end
-    end
-
-    if outsample == false && :rmseout in criteria
-        error(OUTSAMPLE_MISMATCH)
-    end
-
-    if criteria == CRITERIA_DEFAULT
-        if outsample != OUTSAMPLE_DEFAULT
-            criteria = CRITERIA_DEFAULT_OUTSAMPLE
-        else
-            criteria = CRITERIA_DEFAULT_INSAMPLE
-        end
-    end
-
-    if time != nothing && time ∉ datanames
-        error(TIME_VARIABLE_INEXISTENT)
-    end
-
-    if resultscsv != csv
-        if resultscsv != CSV_DEFAULT && csv != CSV_DEFAULT
-            error(CSV_DUPLICATED_PARAMETERS)
-        elseif csv != CSV_DEFAULT
-            resultscsv = csv
-        end
-    end
-
-    # TODO: Is this been used?
-    if parallel != nothing
-        if parallel > nworkers()
-            error("Number of parallel workers can not exceed available cores. Use addprocs()")
-        end
-
-        if parallel < 1
-            error("Number of workers can not be less than 1")
-        end
-    end
-
-    if size(data, 1) < size(equation[2:end], 1) + 1
-        error(NO_ENOUGH_OBSERVATIONS)
-    end
-
     if !in_vector(equation, datanames)
         error(SELECTED_VARIABLES_DOES_NOT_EXISTS)
     end
@@ -211,5 +242,21 @@ function gsreg(
     depvar = equation[1]
     expvars = equation[2:end]
 
-    return result
+    nobs = size(data, 1)
+    if intercept
+        data = Array{datatype}(hcat(data, ones(nobs)))
+        push!(expvars, :_cons)
+        push!(datanames, :_cons)
+    end
+
+    return GSRegData(
+        depvar,
+        expvars,
+        data,
+        intercept,
+        time,
+        datanames,
+        datatype,
+        nobs
+    )
 end
