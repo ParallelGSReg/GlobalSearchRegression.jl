@@ -23,6 +23,26 @@ function equation_strarr_to_symarr(equation, datanames)
     return map(Symbol, unique(n_equation))
 end
 
+function get_datanames_from_data(data, datanames)
+    if isa(data, DataFrames.DataFrame)
+        datanames = names(data)
+    elseif isa(data, Tuple)
+        datanames = data[2]
+    elseif (datanames == nothing)
+        error(DATANAMES_REQUIRED)
+    end
+    return datanames
+end
+
+function datanames_strarr_to_symarr!(datanames)
+    dn = datanames
+    datanames = []
+    for name in dn
+        push!(datanames, Symbol(name))
+    end
+    return datanames
+end
+
 """
 Returns the position of the header value based on this structure.
     - Index
@@ -186,26 +206,6 @@ end
 
 function get_data_column_pos(name, datanames)
     return findfirst(x -> name==x, datanames)
-end
-
-function get_datanames(data, datanames)
-    if isa(data, DataFrames.DataFrame)
-        datanames = names(data)
-    elseif isa(data, Tuple)
-        datanames = data[2]
-    elseif (datanames == nothing)
-        error(DATANAMES_REQUIRED)
-    end
-    return datanames
-end
-
-function datanames_strarr_to_symarr!(datanames)
-    dn = datanames
-    datanames = []
-    for name in dn
-        push!(datanames, Symbol(name))
-    end
-    return datanames
 end
 
 function convert_if_is_tuple_to_array(data, datanames)

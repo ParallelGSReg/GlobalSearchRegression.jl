@@ -1,11 +1,17 @@
 module GlobalSearchRegression
-using DataFrames, Distributions, Distributed, Printf, SharedArrays, LinearAlgebra, DelimitedFiles
+using DataFrames#, Distributions, Distributed, Printf, SharedArrays, LinearAlgebra, DelimitedFiles
 
+# datatransformation constants
 const INTERCEPT_DEFAULT = true
+const METHOD_DEFAULT = "fast"
+const TIME_DEFAULT = nothing
+
+
+
+
 const INSAMPLE_MIN_SIZE = 20
 const OUTSAMPLE_DEFAULT = 0
 const TTEST_DEFAULT = false
-const METHOD_DEFAULT = "fast"
 const CRITERIA_DEFAULT = []
 const CRITERIA_DEFAULT_OUTSAMPLE = [:rmseout]
 const CRITERIA_DEFAULT_INSAMPLE = [ ]
@@ -14,7 +20,6 @@ const ORDER_RESULTS_DEFAULT = false
 const VECTOR_OPERATION_DEFAULT = false
 const MODEL_AVG_DEFAULT = false
 const RESIDUAL_TEST_DEFAULT = nothing
-const TIME_DEFAULT = nothing
 const SUMMARY_DEFAULT = nothing
 const ON_MESSAGE_DEFAULT = message -> ()
 const PARALLEL_DEFAULT = nothing
@@ -72,6 +77,9 @@ AVAILABLE_CRITERIA = Dict(
     )
 )
 
+include("datatransformation.jl")
+
+"""
 include("gsreg_result.jl")
 include("strings.jl")
 include("utils.jl")
@@ -79,5 +87,7 @@ include("interface.jl")
 include("core.jl")
 
 export gsreg, export_csv, to_dict, to_string
+"""
+#export datatransformation
 
 end # module GlobalSearchRegression
