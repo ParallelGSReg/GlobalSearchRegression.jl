@@ -73,7 +73,12 @@ function datatransformation(
     time=TIME_DEFAULT
     )
 
+
+    if datanames == nothing
+        datanames = get_datanames_from_data(data, datanames)
+    end
     datanames = datanames_strarr_to_symarr!(datanames)
+    
     if time != nothing && time ∉ datanames
         error(TIME_VARIABLE_INEXISTENT)
     end
@@ -141,13 +146,16 @@ function datatransformation(
         push!(datanames, :_cons)
     end
 
+    depvar_data = @view(data[1:end, 1])
+    expvars_data = @view(data[1:end, 2:end])
+
     return GSRegData(
         depvar,
         expvars,
-        data,
+        depvar_data,
+        expvars_data,
         intercept,
         time,
-        datanames,
         datatype,
         nobs
     )
