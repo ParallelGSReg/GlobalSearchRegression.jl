@@ -74,8 +74,7 @@ julia> datatransformation("y x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13 x14 x15", d
 ```julia
 # The response is a GSRegData datatype
 julia> response.
-        data      datanames  datatype   depvar     expvars    intercept  nobs       time
-
+        datanames  datatype   depvar    depvar_data     expvars     expvars_data    intercept  nobs       time
 ```
 
 ## Credits
