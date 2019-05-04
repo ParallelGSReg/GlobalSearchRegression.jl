@@ -51,7 +51,9 @@ julia> datatransformation("y x1 x2 x3", (data, header))
 
 ### Advanced usage
 * intercept: by default the GUM includes an intercept as a fixed covariate (e.g. it's included in every model). Alternatively, users can erase it by selecting the intercept=false boolean option.
-* method: this option can be used to alternatively run estimations with Float32 of Float64 datatype. The default is Float32 (to speed-up calculations) but users can modify it through the method="precise" string option.
+* method: this option can be used to alternatively run estimations with Float32 of Float64 datatype. The default is Float32 (to speed-up calculations) but users can modify it through the method="precise" string option. The available options are:
+    - Float32: FAST, :FAST, :fast, "FAST", "fast"
+    - Float64: PRECISE, :PRECISE, :precise, "PRECISE", "precise"
 * time: this option determines which variable will be used to date (and pre-sort) observations. Time variable must be included as a symbol (e.g. time=:x1). Neither, gaps nor missing observations are allowed in this variable (missing observations are allowed in any other variable). By using this option, additional residuals tests are enabled.
 
 ### Full-syntax example

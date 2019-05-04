@@ -1,4 +1,4 @@
-using Test, DataFrames, GlobalSearchRegression, GlobalSearchRegression.DataTransformation
+using Test, DataFrames, GlobalSearchRegression.DataTransformation
 
 data = DataFrame(Array{Union{Missing,Float64}}(randn(5,5)))
 data[1] = [11, missing, 13, 14, 15]
