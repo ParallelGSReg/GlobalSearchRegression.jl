@@ -183,18 +183,17 @@ function datatransformation(
         fe_lag = parse_fe_variables(fe_lag, expvars, is_pair=true)
         data, expvars = data_add_fe_lag(data, fe_lag, expvars, datanames)
     end
-    println(expvars)
-
-    return data
 
     data = filter_data_by_empty_values(data)
 
-    if method == "precise"
+    method = Symbol(lowercase(string(method)))
+
+    if method == :precise
         datatype = Float64
-    elseif method == "fast"
+    elseif method == :fast
         datatype = Float32
     else
-        error(METHOD_INVALID)
+        error(INVALID_METHOD)
     end
     
     if !isa(data, Array{datatype})
@@ -208,7 +207,7 @@ function datatransformation(
     depvar_data = data[1:end, 1]
     expvars_data = data[1:end, 2:end]
 
-    return GSRegData(
+    return GlobalSearchRegression.GSRegData(
         depvar,
         expvars,
         depvar_data,
@@ -218,24 +217,4 @@ function datatransformation(
         datatype,
         nobs
     )
-end
-
-function print_array(data)
-    out = "──────────────────────────────────────────────────────────\n"
-    nrows, ncols = size(data)
-    for nrow in 1:nrows
-        out *= "│ "
-        for ncol in 1:ncols
-            if isa(data[nrow, ncol], Float64)
-                #out *= @sprintf("%-10f", data[nrow, ncol])
-            else
-                out *= " missing  "
-            end
-            out *= " │"
-        end
-        out *= "\n"
-    end
-    out*= "──────────────────────────────────────────────────────────\n"
-
-    print(out)
 end

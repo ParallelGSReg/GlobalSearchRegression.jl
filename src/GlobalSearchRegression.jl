@@ -74,7 +74,7 @@ include("gsreg_result.jl")
 include("strings.jl")
 include("utils.jl")
 include("interface.jl")
-include("datatransformation/datatransformation.jl")
+include("./DataTransformation/DataTransformation.jl")
 include("core.jl")
 
 export gsreg, export_csv, to_dict, to_string, datatransformation
