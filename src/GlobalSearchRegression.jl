@@ -1,11 +1,6 @@
 module GlobalSearchRegression
 using DataFrames, Distributions, Distributed, Printf, SharedArrays, LinearAlgebra, DelimitedFiles
 
-# datatransformation constants
-const INTERCEPT_DEFAULT = true
-const METHOD_DEFAULT = "fast"
-const TIME_DEFAULT = nothing
-
 const INSAMPLE_MIN_SIZE = 20
 const OUTSAMPLE_DEFAULT = 0
 const TTEST_DEFAULT = false
@@ -79,7 +74,7 @@ include("gsreg_result.jl")
 include("strings.jl")
 include("utils.jl")
 include("interface.jl")
-include("datatransformation.jl")
+include("datatransformation/datatransformation.jl")
 include("core.jl")
 
 export gsreg, export_csv, to_dict, to_string, datatransformation

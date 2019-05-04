@@ -1,24 +1,31 @@
-using Test, GlobalSearchRegression, DataFrames
+using Test, DataFrames, GlobalSearchRegression, GlobalSearchRegression.DataTransformation
 
 data = DataFrame(Array{Union{Missing,Float64}}(randn(5,5)))
-data[1] = [11, 12, 13, 14, 15]
-data[2] = [21, 22, 23, 24, 25]
+data[1] = [11, missing, 13, 14, 15]
+data[2] = [missing, 22, 23, 24, 25]
 data[3] = [31, 32, 33, 34, 35]
 data[4] = [41, 42, 43, 44, 45]
 data[5] = [51, 52, 53, 54, 55]
 headers = [ :y ; [ Symbol("x$i") for i = 1:size(data,2) - 1 ] ]
-names!(data, headers )
+names!(data, headers)
 rename!(data, :x4 => Symbol("weird_name"))
 
-res = datatransformation([:x2, :x1, :y], data)
+println(data)
 
-println(res.depvar_data)
+res = DataTransformation.datatransformation("x2 x1 y", data=data, time=:x3, fe_lag=["x1"=>1, "y"=>2])
+println(res)
+# fd  TIME (first diffence)
+# fe  TIME (fixed effect)  => x1 - (mean x1)
+# lag TIME (el anterior)
+"""
+d = convert(DataFrame, res.expvars_data)
+names!(d, res.expvars)
+
+println(d)
+"""
 
 """
 
-
-data[1, 2] = missing
-data[4, 5] = missing
 
 ############# EQUATION #################
 

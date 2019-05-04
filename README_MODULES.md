@@ -10,7 +10,8 @@ The module converts from many datatypes and formats to a GlobalSearchRegression 
 - Reduce the database based on the equation (Including time if is not included)
 - Order the database by time and panel variables then remove time if is not used as covariate
 - Transforms data representation for faster compute (Float64, Float32)
-- [TODO: Explain better] Feature extraction. Optional creation of non-linear realtionships (sqaure, lag, log, inv)
+- Feature extraction. Optional creation of non-linear realtionships: sqrt, log, inv, [lag]
+
 - [TODO: Explain better] Fixed effect. First differences
 - Excludes observations with missing or null values
 - Adds the intercept if it was expecified
