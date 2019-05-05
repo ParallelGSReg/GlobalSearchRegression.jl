@@ -10,7 +10,8 @@ function datatransformation(
     fe_log=nothing,
     fe_inv=nothing,
     fe_lag=nothing,
-    fixedeffect=FIXED_EFFECT_DEFAULT
+    fixedeffect=FIXED_EFFECT_DEFAULT,
+    interaction=INTERACTION_DEFAULT
     )
 
     return datatransformation(
@@ -25,7 +26,8 @@ function datatransformation(
         fe_log=fe_log,
         fe_inv=fe_inv,
         fe_lag=fe_lag,
-        fixedeffect=fixedeffect
+        fixedeffect=fixedeffect,
+        interaction=interaction
     )
 end
 
@@ -41,7 +43,8 @@ function datatransformation(
     fe_log=nothing,
     fe_inv=nothing,
     fe_lag=nothing,
-    fixedeffect=FIXED_EFFECT_DEFAULT
+    fixedeffect=FIXED_EFFECT_DEFAULT,
+    interaction=INTERACTION_DEFAULT
     )
 
     equation = equation_converts_str_to_strarr!(equation)
@@ -58,7 +61,8 @@ function datatransformation(
         fe_log=fe_log,
         fe_inv=fe_inv,
         fe_lag=fe_lag,
-        fixedeffect=fixedeffect
+        fixedeffect=fixedeffect,
+        interaction=interaction
     )
 end
 
@@ -74,7 +78,8 @@ function datatransformation(
     fe_log=nothing,
     fe_inv=nothing,
     fe_lag=nothing,
-    fixedeffect=FIXED_EFFECT_DEFAULT
+    fixedeffect=FIXED_EFFECT_DEFAULT,
+    interaction=INTERACTION_DEFAULT
     )
 
     datanames = get_datanames_from_data(data, datanames)
@@ -96,7 +101,8 @@ function datatransformation(
         fe_log=fe_log,
         fe_inv=fe_inv,
         fe_lag=fe_lag,
-        fixedeffect=fixedeffect
+        fixedeffect=fixedeffect,
+        interaction=interaction
     )
 end
 
@@ -112,7 +118,8 @@ function datatransformation(
     fe_log=nothing,
     fe_inv=nothing,
     fe_lag=nothing,
-    fixedeffect=FIXED_EFFECT_DEFAULT
+    fixedeffect=FIXED_EFFECT_DEFAULT,
+    interaction=INTERACTION_DEFAULT
     )
     
     if datanames == nothing
@@ -150,7 +157,8 @@ function datatransformation(
         fe_log=fe_log,
         fe_inv=fe_inv,
         fe_lag=fe_lag,
-        fixedeffect=fixedeffect
+        fixedeffect=fixedeffect,
+        interaction=interaction
     )
 end
 
@@ -166,7 +174,8 @@ function datatransformation(
     fe_log=nothing,
     fe_inv=nothing,
     fe_lag=nothing,
-    fixedeffect=FIXED_EFFECT_DEFAULT
+    fixedeffect=FIXED_EFFECT_DEFAULT,
+    interaction=INTERACTION_DEFAULT
     )
 
     depvar = equation[1]
@@ -182,6 +191,10 @@ function datatransformation(
         datatype = Float32
     else
         error(INVALID_METHOD)
+    end
+
+    if panel == nothing && fixedeffect
+        error(PANEL_VARIABLE_NON_SELECTED)
     end
 
     if !isa(data, Array{datatype})
@@ -210,15 +223,19 @@ function datatransformation(
         fe_inv = parse_fe_variables(fe_inv, expvars, datanames)
         data, expvars, datanames = data_add_fe_inv(data, fe_inv, expvars, datanames)
     end
+    
+    if fe_lag != nothing
+        fe_lag = parse_fe_variables(fe_lag, expvars, datanames, include_depvar=true, is_pair=true)
+        data, expvars, datanames = data_add_fe_lag(data, fe_lag, expvars, datanames, panel=panel)
+    end
+
+    if interaction != nothing
+        data, expvars, datanames = data_add_interaction(data, interaction, depvar, expvars, datanames, equation)
+    end
 
     if panel != nothing && fixedeffect
         data = data_convert_fixedeffect(data, panel, datanames)
     end
-    
-    #if fe_lag != nothing
-    #    fe_lag = parse_fe_variables(fe_lag, expvars, datanames, include_depvar=true, is_pair=true)
-    #    data, expvars, datanames = data_add_fe_lag(data, fe_lag, expvars, datanames)
-    #end
 
     (data, datanames) = filter_data_by_selected_columns(data, vcat([depvar], expvars), datanames)
 
@@ -231,9 +248,11 @@ function datatransformation(
     depvar_data = data[1:end, 1]
     expvars_data = data[1:end, 2:end]
 
+    original_nobs = nobs
     nobs = size(data, 1)
 
     return GlobalSearchRegression.GSRegData(
+        equation, 
         depvar,
         expvars,
         depvar_data,
@@ -243,9 +262,12 @@ function datatransformation(
         panel,
         datatype,
         nobs,
+        original_nobs,
         fe_sqr,
         fe_log,
         fe_inv,
-        fe_lag
+        fe_lag,
+        fixedeffect,
+        interaction
     )
 end

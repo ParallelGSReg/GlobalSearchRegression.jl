@@ -200,18 +200,74 @@ end
 """
 Adds lag feature extraction to data
 """
-function data_add_fe_lag(data, fe_vars, expvars, datanames)
+function data_add_fe_lag(data, fe_vars, expvars, datanames; panel=nothing)
     nobs = size(data, 1)
-    for var in fe_vars
-        col = get_column_index(var[1], datanames)
-        var_data = Array{Union{Missing, Float64}}(missing, nobs, var[2])       
-        for i = 1:var[2]
-            var_data[i+1:end, i] = data[1:end-i,col]
-            expvars = vcat(expvars, [Symbol(string(var[1], "_l", i))])
-            datanames = vcat(datanames, [Symbol(string(var[1], "_l", i))])
+
+    # TODO: Merge solutions
+    if panel == nothing
+        for var in fe_vars
+            col = get_column_index(var[1], datanames)
+            var_data = Array{Union{Missing, Float64}}(missing, nobs, var[2])       
+            for i = 1:var[2]
+                var_data[:, i] = lag(data[:, col], i)
+                expvars = vcat(expvars, [Symbol(string(var[1], "_l", i))])
+                datanames = vcat(datanames, [Symbol(string(var[1], "_l", i))])
+            end
+            data = hcat(data, var_data)
         end
-        data = hcat(data, var_data)
+    else 
+        panel_index = get_column_index(panel, datanames)
+        if panel == nothing
+            csis = 0
+        else
+            csis = unique(data[:, panel_index])
+        end
+        for var in fe_vars
+            col = get_column_index(var[1], datanames)
+            var_data = Array{Union{Missing, Float64}}(missing, nobs, var[2])
+            for i = 1:var[2]
+                for csi in csis
+                    rows = findall(x->x == csi, data[:,panel_index])
+                    num_rows = size(rows, 1)
+                    var_data[rows[1]:rows[1]+num_rows-1, i] = lag(data[rows[1]:rows[1]+num_rows-1, col], i)
+                end
+                expvars = vcat(expvars, [Symbol(string(var[1], "_l", i))])
+                datanames = vcat(datanames, [Symbol(string(var[1], "_l", i))])
+            end
+            data = hcat(data, var_data)
+        end
     end
+    return (data, expvars, datanames)
+end
+
+"""
+Adds interaction between variables
+"""
+function data_add_interaction(data, interaction, depvar, expvars, datanames, equation)
+    if get_column_index(depvar, interaction) != nothing
+        error(INTERACTION_DEPVAR_ERROR)
+    end
+    
+    if !in_vector(interaction, equation)
+        error(INTERACTION_EQUATION_ERROR)
+    end
+
+    nobs = size(data, 1)
+    num_variables = size(interaction, 1)
+    comb = binomial(num_variables, 2)
+    var_data = Array{Union{Missing, Float64}}(missing, nobs, comb)
+    
+    pos = 1
+    for i = 1:num_variables-1
+        for j = i+1:num_variables
+            var_data[:,pos] = data[:, get_column_index(interaction[i], datanames)] .* data[:, get_column_index(interaction[j], datanames)]
+            expvars = vcat(expvars, [Symbol(string(interaction[i], "_", interaction[j]))])
+            datanames = vcat(datanames, [Symbol(string(interaction[i], "_", interaction[j]))])
+            pos = pos + 1
+        end
+    end
+
+    data = hcat(data, var_data)
     return (data, expvars, datanames)
 end
 

@@ -13,11 +13,9 @@
 - [X] Transforms data representation for faster compute (Float64, Float32)
 - [-] Feature extraction. Optional creation of non-linear realtionships (sqaure, lag, log, inv, [interaction])
 - [X] Fixed effect
-- [ ] [TODO: Explain better] First differences
 - [X] Excludes observations with missing or null values
 - [X] Adds the intercept if it was expecified
 - [ ] Time validation
-- [ ] Fixed effect or first differences validation
 
 ### Preliminary selection
 - [ ] Preselection with Lasso.jl based on covariates number

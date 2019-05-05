@@ -12,7 +12,7 @@ rename!(data, :x4 => Symbol("weird_name"))
 
 println(data)
 
-res = DataTransformation.datatransformation("x2 x1 y", data=data, time=:weird_name, panel=:y, fe_sqr=["x1"], fe_log =[:x1], fe_inv=:x1, fe_lag=["x1"=>1, "x2"=>2], fixedeffect=true)
+res = DataTransformation.datatransformation("x2 x1 x3 weird_name", data=data, interaction=[:x1, :x3, :weird_name])
 dt = convert(DataFrame, hcat(res.depvar_data, res.expvars_data))
 names!(dt, vcat([res.depvar], res.expvars))
 println(dt)
