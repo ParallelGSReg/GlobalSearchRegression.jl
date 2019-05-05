@@ -1,19 +1,23 @@
 using Test, DataFrames, GlobalSearchRegression.DataTransformation
 
-data = DataFrame(Array{Union{Missing,Float64}}(randn(5,5)))
-data[1] = [11, missing, 13, 14, 15]
-data[2] = [missing, 22, 23, 24, 25]
-data[3] = [31, 32, 33, 34, 35]
-data[4] = [41, 42, 43, 44, 45]
-data[5] = [51, 52, 53, 54, 55]
+data = DataFrame(Array{Union{Missing,Float64}}(randn(6,5)))
+data[1] = [1, 2, 1, 1, 2, 2]
+data[2] = [21, 22, 23, 24, 25, 12]
+data[3] = [31, 32, 33, 34, 35, 12]
+data[4] = [41, 42, 43, 44, 45, 12]
+data[5] = [51, 51, 52, 53, 53, 52]
 headers = [ :y ; [ Symbol("x$i") for i = 1:size(data,2) - 1 ] ]
 names!(data, headers)
 rename!(data, :x4 => Symbol("weird_name"))
 
 println(data)
 
-res = DataTransformation.datatransformation("x2 x1 y", data=data, time=:x3, fe_lag=["x1"=>1, "y"=>2])
+res = DataTransformation.datatransformation("x2 x1 y", data=data, time=:weird_name, panel=:y, fe_sqr=["x1"], fe_log =[:x1], fe_inv=:x1, fe_lag=["x1"=>1, "x2"=>2], fixedeffect=true)
+dt = convert(DataFrame, hcat(res.depvar_data, res.expvars_data))
+names!(dt, vcat([res.depvar], res.expvars))
+println(dt)
 println(res)
+
 # fd  TIME (first diffence)
 # fe  TIME (fixed effect)  => x1 - (mean x1)
 # lag TIME (el anterior)

@@ -10,9 +10,9 @@ The module converts from many datatypes and formats to a GlobalSearchRegression 
 - Reduce the database based on the equation (Including time if is not included)
 - Order the database by time and panel variables then remove time if is not used as covariate
 - Transforms data representation for faster compute (Float64, Float32)
-- Feature extraction. Optional creation of non-linear realtionships: sqrt, log, inv, [lag]
-
-- [TODO: Explain better] Fixed effect. First differences
+- Feature extraction. Optional creation of non-linear realtionships: sqrt, log, inv, lag
+- Fixed effect
+- First differences
 - Excludes observations with missing or null values
 - Adds the intercept if it was expecified
 
@@ -55,6 +55,11 @@ julia> datatransformation("y x1 x2 x3", (data, header))
     - Float32: FAST, :FAST, :fast, "FAST", "fast"
     - Float64: PRECISE, :PRECISE, :precise, "PRECISE", "precise"
 * time: this option determines which variable will be used to date (and pre-sort) observations. Time variable must be included as a symbol (e.g. time=:x1). Neither, gaps nor missing observations are allowed in this variable (missing observations are allowed in any other variable). By using this option, additional residuals tests are enabled.
+* fe_sqr: this option defines which variables will be process for square feature extraction (e.g. fe_sqr=:x1 or fe_sqr=[:x1, :x2]).
+* fe_log: this option defines which variables will be process for logarithm feature extraction (e.g. fe_log=:x1 or fe_log=[:x1, :x2]).
+* fe_inv: this option defines which variables will be process for inverse feature extraction (e.g. fe_inv=:x1 or fe_inv=[:x1, :x2]).
+* fe_inv: this option defines which variables will be process for lag feature extraction (e.g. fe_lag=:x1=>2 or fe_lag=[:x1=>2, :x2=>5]).
+* fixedeffect: this option will define if fixed effect will be applied (e.g. fixedeffect=true). The default is false.
 
 ### Full-syntax example
 

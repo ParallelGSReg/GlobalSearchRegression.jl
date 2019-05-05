@@ -1,5 +1,5 @@
 """
-Returns if a vector is inside another vector|
+Returns if a vector is inside another vector
 """
 function in_vector(sub_vector, vector)
     for sv in sub_vector
@@ -10,7 +10,12 @@ function in_vector(sub_vector, vector)
     return true
 end
 
-
+"""
+Gets array column index by a name
+"""
+function get_column_index(name, names)
+    return findfirst(isequal(name), names)
+end
 
 # OLD
 
