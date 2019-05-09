@@ -2,7 +2,7 @@
 
 This document should be refactored and merged as an usage and arquitecture documentation. Also explain better if is needed.
 
-## datatransformation
+## feature extraction
 The module converts from many datatypes and formats to a GlobalSearchRegression standard one.
 
 ### Features

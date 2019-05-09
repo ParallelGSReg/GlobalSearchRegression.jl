@@ -6,7 +6,7 @@
 ### Inteface
 - [ ] Do all the next steps in one single call.
 
-### DataTransformation
+### FeatureExtraction
 - [X] Parse a given equation from multiple formats, including R, Stata and DataFrames
 - [X] Reduce the database based on the equation (Including time if it is not included)
 - [X] Order the database by time and panel variables then remove time if is not used as covariate
