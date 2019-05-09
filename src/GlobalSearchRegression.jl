@@ -74,9 +74,9 @@ include("gsreg_result.jl")
 include("strings.jl")
 include("utils.jl")
 include("interface.jl")
-include("./DataTransformation/DataTransformation.jl")
+include("./FeatureExtraction/FeatureExtraction.jl")
 include("core.jl")
 
-export gsreg, export_csv, to_dict, to_string, datatransformation
+export gsreg, export_csv, to_dict, to_string, featureextration
 
 end # module GlobalSearchRegression

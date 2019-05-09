@@ -1,4 +1,4 @@
-module DataTransformation
+module FeatureExtraction
 
 using DataFrames
 using Statistics

@@ -60,6 +60,7 @@ julia> datatransformation("y x1 x2 x3", (data, header))
 * fe_inv: this option defines which variables will be process for inverse feature extraction (e.g. fe_inv=:x1 or fe_inv=[:x1, :x2]).
 * fe_inv: this option defines which variables will be process for lag feature extraction (e.g. fe_lag=:x1=>2 or fe_lag=[:x1=>2, :x2=>5]).
 * fixedeffect: this option will define if fixed effect will be applied (e.g. fixedeffect=true). The default is false.
+* panel: this option will defien which variable is defined as panel (e.g. panel=:x1). 
 
 ### Full-syntax example
 
@@ -72,9 +73,15 @@ julia> names!(data, headers)
 julia> using GlobalSearchRegression
 julia> datatransformation("y x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13 x14 x15", data, 
     intercept=true, 
-    ttest=true, 
-    method="precise", 
-    time=:x1)
+    method=FAST, 
+    time=:x1,
+    fe_sqr=[:x1, :x2],
+    fe_log=[:x1, :x2],
+    fe_inv=[:x1, :x2],
+    fe_lag=[:x1=>2, :x2=>5],
+    fixedeffect=true,
+    panel=:y
+    )
 ```
 
 ## Response
@@ -82,7 +89,8 @@ julia> datatransformation("y x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13 x14 x15", d
 ```julia
 # The response is a GSRegData datatype
 julia> response.
-        datanames  datatype   depvar    depvar_data     expvars     expvars_data    intercept  nobs       time
+        equation    depvar    expvars    depvar_data    expvars_data    intercept    time    panel    datatype
+        nobs    original_nobs    fe_sqr    fe_log    fe_inv    fe_lag    fixedeffect    interaction
 ```
 
 ## Credits

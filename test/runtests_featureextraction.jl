@@ -1,8 +1,8 @@
-using Test, DataFrames, GlobalSearchRegression.DataTransformation
+using Test, DataFrames, GlobalSearchRegression.FeatureExtraction
 
 data = DataFrame(Array{Union{Missing,Float64}}(randn(6,5)))
-data[1] = [1, 2, 1, 1, 2, 2]
-data[2] = [21, 22, 23, 24, 25, 12]
+data[1] = [1, 1, 1, 2, 2, 2]
+data[2] = [21, 22, 23, 21, 22, 26]
 data[3] = [31, 32, 33, 34, 35, 12]
 data[4] = [41, 42, 43, 44, 45, 12]
 data[5] = [51, 51, 52, 53, 53, 52]
@@ -12,7 +12,7 @@ rename!(data, :x4 => Symbol("weird_name"))
 
 println(data)
 
-res = DataTransformation.datatransformation("x2 x1 x3 weird_name", data=data, interaction=[:x1, :x3, :weird_name])
+res = FeatureExtraction.featureextraction("x2 x1 x3 weird_name", data=data, interaction=[:x1, :x3, :weird_name], time=:x1, panel=:y)
 dt = convert(DataFrame, hcat(res.depvar_data, res.expvars_data))
 names!(dt, vcat([res.depvar], res.expvars))
 println(dt)

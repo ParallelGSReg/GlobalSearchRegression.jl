@@ -288,3 +288,36 @@ function data_convert_fixedeffect(data, panel, datanames)
     end
     return data
 end
+
+"""
+Validates if there are time gaps
+"""
+function validate_time(data, datanames; panel=nothing, time=nothing)
+    nobs = size(data, 1)
+
+    # TODO: Merge solutions
+    if panel == nothing
+        previous_value = data[1, get_column_index(time, datanames)]
+        for value in data[2:end, get_column_index(time, datanames)]
+            if previous_value + 1 != value
+                return false
+            end
+            previous_value = value
+        end
+    else 
+        panel_index = get_column_index(panel, datanames)
+        csis = unique(data[:, panel_index])
+        for csi in csis
+            rows = findall(x->x == csi, data[:,panel_index])
+            previous_value = data[rows[1], get_column_index(time, datanames)]
+            for row in rows[2:end]
+                value = data[row, get_column_index(time, datanames)]
+                if previous_value + 1 != value
+                    return false
+                end
+                previous_value = value
+            end
+        end
+    end
+    return true
+end

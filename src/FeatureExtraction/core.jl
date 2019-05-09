@@ -1,4 +1,4 @@
-function datatransformation(
+function featureextraction(
     equation::String;
     data=nothing,
     datanames=nothing,
@@ -14,7 +14,7 @@ function datatransformation(
     interaction=INTERACTION_DEFAULT
     )
 
-    return datatransformation(
+    return featureextraction(
         equation,
         data,
         datanames=datanames,
@@ -31,7 +31,7 @@ function datatransformation(
     )
 end
 
-function datatransformation(
+function featureextraction(
     equation::String,
     data;
     datanames=nothing,
@@ -49,7 +49,7 @@ function datatransformation(
 
     equation = equation_converts_str_to_strarr!(equation)
 
-    return datatransformation(
+    return featureextraction(
         equation,
         data,
         datanames=datanames,
@@ -66,7 +66,7 @@ function datatransformation(
     )
 end
 
-function datatransformation(
+function featureextraction(
     equation::Array{String},
     data;
     datanames=nothing,
@@ -89,7 +89,7 @@ function datatransformation(
         error(VARIABLES_NOT_DEFINED)
     end
     
-    return datatransformation(
+    return featureextraction(
         equation,
         data,
         datanames=datanames,
@@ -106,7 +106,7 @@ function datatransformation(
     )
 end
 
-function datatransformation(
+function featureextraction(
     equation::Array{Symbol},
     data;
     datanames=nothing,
@@ -145,7 +145,7 @@ function datatransformation(
 
     data = sort_data(data, datanames, panel=panel, time=time)
 
-    return datatransformation(
+    return featureextraction(
         equation,
         data,
         datanames;
@@ -162,7 +162,7 @@ function datatransformation(
     )
 end
 
-function datatransformation(
+function featureextraction(
     equation::Array{Symbol},
     data,
     datanames::Array;
@@ -202,6 +202,12 @@ function datatransformation(
     end
     
     nobs = size(data, 1)  
+
+    if time != nothing
+        if !validate_time(data, datanames, panel=panel, time=time)
+            @warn TIME_ERROR
+        end
+    end
 
     if intercept
         data = hcat(data, ones(nobs))
