@@ -17,21 +17,26 @@
 - [X] Adds the intercept if it was expecified
 - [X] Time validation
 - [X] Update readme
+- [ ] Allows to receive GSRegResult
+- [ ] Fix parameters datatypes
 
 ### Preliminary selection
-- [ ] Preselection with Lasso.jl based on covariates number
+- [ ] Preselection with GLM.jl based on covariates number
  
 ### Selection
-- [ ] Parallel processing
+- [-] Parallel processing (Test)
 - [ ] Iterative estimators (LOGIT, PROBIT) *****
-- [ ] OLS
-- [ ] Adjust selection to interact with feature extraction
-- [ ] Compute t-test/z value
-- [ ] Outsample
-- [ ] Compute selection criteria (aic, cic, bic, r2, r2adj, rmse, rmsout, cp)
+- [X] OLS
+- [X] Adjust selection to interact with feature extraction
+- [-] Compute t-test/z value
+- [X] Outsample
+- [X] Compute selection criteria (aic, cic, bic, r2, r2adj, rmse, rmsout, cp)
 - [ ] Model averaging
 - [ ] Residual tests
 - [ ] Sort by selection criteria
+- [ ] Fix parameters datatypes
+- [ ] Fix GSRegData datatypes
+- [ ] Fix GSRegResult datatypes
  
 ### Output decoration
 - [ ] CSV

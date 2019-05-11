@@ -76,52 +76,6 @@ function get_data_position(name, expvars, intercept, ttest, residualtest, time, 
     end
 end
 
-"""
-Constructs the header for results based in get_data_position orders.
-"""
-function get_result_header(expvars, intercept, ttest, residualtest, time, criteria, modelavg)
-    header = Dict{Symbol,Int64}()
-    header[:index] = get_data_position(:index, expvars, intercept, ttest, residualtest, time, criteria)
-    for expvar in expvars
-        header[Symbol(string(expvar,"_b"))] = get_data_position(Symbol(string(expvar,"_b")), expvars, intercept, ttest, residualtest, time, criteria)
-        if ttest
-            header[Symbol(string(expvar,"_bstd"))] = get_data_position(Symbol(string(expvar,"_bstd")), expvars, intercept, ttest, residualtest, time, criteria)
-            header[Symbol(string(expvar,"_t"))] = get_data_position(Symbol(string(expvar,"_t")), expvars, intercept, ttest, residualtest, time, criteria)
-        end
-    end
-
-    keys = unique([ EQUATION_GENERAL_INFORMATION; criteria ])
-
-    if residualtest != nothing && residualtest
-        keys = unique([ keys; (time != nothing) ? RESIDUAL_TESTS_TIME : RESIDUAL_TESTS_CROSS ])
-    end
-
-    for key in keys
-        header[key] = get_data_position(key, expvars, intercept, ttest, residualtest, time, criteria)
-    end
-
-    header[:order] = get_data_position(:order, expvars, intercept, ttest, residualtest, time, criteria)
-    if modelavg
-        header[:weight] = get_data_position(:weight, expvars, intercept, ttest, residualtest, time, criteria)
-    end
-    return header
-end
-
-"""
-Returns selected appropiate covariates for each iteration
-"""
-function get_selected_cols(i)
-    cols = zeros(Int64, 0)
-    binary = string(i, base = 2)
-    k = 2
-    for i = 1:length(binary)
-        if binary[length(binary) - i + 1] == '1'
-            append!(cols, k)
-        end
-        k = k + 1
-    end
-    return cols
-end
 
 function gsregsortrows(B::AbstractMatrix,cols::Array; kws...)
     for i = 1:length(cols)

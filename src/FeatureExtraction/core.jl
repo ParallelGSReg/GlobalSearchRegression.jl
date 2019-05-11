@@ -128,16 +128,16 @@ function featureextraction(
 
     datanames = strarr_to_symarr!(datanames)
     
-    if time != nothing && get_column_index(time, datanames) == nothing
+    if time != nothing && GlobalSearchRegression.get_column_index(time, datanames) == nothing
         error(TIME_VARIABLE_INEXISTENT)
     end
 
     temp_equation = equation
-    if time != nothing && get_column_index(time, temp_equation) == nothing
+    if time != nothing && GlobalSearchRegression.get_column_index(time, temp_equation) == nothing
         temp_equation = vcat(temp_equation, time)
     end
 
-    if panel != nothing && get_column_index(panel, temp_equation) == nothing
+    if panel != nothing && GlobalSearchRegression.get_column_index(panel, temp_equation) == nothing
         temp_equation = vcat(temp_equation, panel)
     end
 
@@ -198,7 +198,7 @@ function featureextraction(
     end
 
     if !isa(data, Array{datatype})
-        data = convert(Array{datatype}, data)
+        data = convert(Array{Union{Missing, Float64}}, data)
     end
     
     nobs = size(data, 1)  
@@ -247,6 +247,8 @@ function featureextraction(
 
     data = filter_data_by_empty_values(data)
 
+    data = convert(Array{datatype}, data)
+
     if !in_vector(equation, datanames)
         error(SELECTED_VARIABLES_DOES_NOT_EXISTS)
     end
@@ -257,8 +259,8 @@ function featureextraction(
     original_nobs = nobs
     nobs = size(data, 1)
 
-    return GlobalSearchRegression.GSRegData(
-        equation, 
+    return GSRegData(
+        equation,
         depvar,
         expvars,
         depvar_data,

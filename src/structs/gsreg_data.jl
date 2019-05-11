@@ -16,6 +16,7 @@ mutable struct GSRegData
     fe_lag                  # Lag feature extraction
     fixedeffect
     interaction
+    results
 
     function GSRegData(
             equation,
@@ -36,7 +37,7 @@ mutable struct GSRegData
             fixedeffect,
             interaction
         )
-
-        new(equation, depvar, expvars, depvar_data, expvars_data, intercept, time, panel, datatype, nobs, original_nobs, fe_sqr, fe_log, fe_inv, fe_lag, fixedeffect, interaction)
+        results = Array{GlobalSearchRegression.GSRegResult}(undef, 0)
+        new(equation, depvar, expvars, depvar_data, expvars_data, intercept, time, panel, datatype, nobs, original_nobs, fe_sqr, fe_log, fe_inv, fe_lag, fixedeffect, interaction, results)
     end
 end
