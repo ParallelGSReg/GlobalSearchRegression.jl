@@ -5,8 +5,8 @@ Constructs the datanames array for results based on this structure.
         * b
         * bstd
         * T-test
-    - Equation general information merged with criteria user-defined options.
-    - Order from user combined criteria
+    - Equation general information merged with criteria user-defined options
+    - Order index from user combined criteria
     - Weight
 """
 function create_datanames(expvars, criteria, ttest, residualtest, time, modelavg)
@@ -61,4 +61,37 @@ function create_header(datanames)
         header[name] = index
     end
     return header
+end
+
+"""
+Sort rows
+"""
+function sortrows(B::AbstractMatrix,cols::Array; kws...)
+    for i = 1:length(cols)
+        if i == 1
+            p = sortperm(B[:,cols[i]]; kws...)
+            B = B[p,:]
+        else
+            i0_old = 0
+            i1_old = 0
+            i0_new = 0
+            i1_new = 0
+            for j = 1:size(B,1)-1
+                if B[j,cols[1:i-1]] == B[j+1,cols[1:i-1]] && i0_old == i0_new
+                    i0_new = j
+                elseif B[j,cols[1:i-1]] != B[j+1,cols[1:i-1]] && i0_old != i0_new && i1_new == i1_old
+                    i1_new = j
+                elseif i0_old != i0_new && j == size(B,1)-1
+                    i1_new = j+1
+                end
+                if i0_new != i0_old && i1_new != i1_old
+                    p = sortperm(B[i0_new:i1_new,cols[i]]; kws...)
+                    B[i0_new:i1_new,:] = B[i0_new:i1_new,:][p,:]
+                    i0_old = i0_new
+                    i1_old = i1_new
+                end
+            end
+        end
+    end
+    return B
 end

@@ -9,10 +9,10 @@ include("utils.jl")
 #include("interface.jl")
 #include("core.jl")
 include("FeatureExtraction/FeatureExtraction.jl")
-include("Regression/Regression.jl")
+include("AllSubsetRegression/AllSubsetRegression.jl")
 
 using ..FeatureExtraction
-using ..Regression
+using ..AllSubsetRegression
 
 export gsreg, export_csv, to_dict, to_string, GSRegData, GSRegResult, featureextration, ols
 

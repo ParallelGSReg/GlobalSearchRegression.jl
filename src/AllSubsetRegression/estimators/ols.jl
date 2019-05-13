@@ -5,7 +5,7 @@ function ols(
         ttest=nothing,
         modelavg=MODELAVG_DEFAULT,
         residualtest=RESIDUALTEST_DEFAULT,
-        orderresults=nothing
+        orderresults=ORDERRESULTS_DEFAULT
     )
 
     result = GSRegResult(
@@ -48,12 +48,6 @@ function gsreg_single_proc_result!(
     dep_data = @view(depvar_data[1:end-outsample])
     exp_data = @view(expvars_data[1:end-outsample, cols])
 
-    println(size(depvar_data))
-    println(size(expvars_data))
-
-    println(size(dep_data))
-    println(size(exp_data))
-
     nobs = size(dep_data, 1)
     ncoef = size(exp_data, 2)
     qrf = qr(exp_data)
@@ -84,7 +78,6 @@ function gsreg_single_proc_result!(
         result_data[ order, header[Symbol(string(expvars[col], "_b"))] ] = datatype(b[index])
         if ttest
             result_data[ order, header[Symbol(string(expvars[col], "_bstd"))] ] = datatype(bstd[index])
-            #result_data[ order, header[Symbol(string(expvars[col], "_t"))] ] = datatype(bstd[index] / b[index])
             result_data[ order, header[Symbol(string(expvars[col], "_t"))] ] = result_data[order, header[Symbol(string(expvars[col], "_b"))]] / result_data[order, header[Symbol(string(expvars[col], "_bstd"))]]
         end
     end
@@ -148,7 +141,7 @@ function gsreg_single_proc_result!(
 
             n = size(e,1)
             elag = zeros(Float64,n,lag)
-            for ii = 1:lag  # construct lagged residuals
+            for ii = 1:lag
                 elag[ii+1:end, ii] = e[1:end-ii]
             end
 
@@ -165,11 +158,9 @@ function gsreg_single_proc_result!(
     end
 end
 
-
 function gsreg_proc_result!(num_job, num_jobs, ops_by_worker, opts...)
     for j = 1:ops_by_worker
-        order = (j-1) * num_jobs + num_job
-        gsreg_single_proc_result!(order, opts...)
+        gsreg_single_proc_result!( (j-1) * num_jobs + num_job, opts...)
     end
 end
 
@@ -222,58 +213,24 @@ function proc!(data::GlobalSearchRegression.GSRegData, result::GlobalSearchRegre
     for criteria in result.criteria
         result.data[ :, header[:order] ] += AVAILABLE_CRITERIA[criteria]["index"] * (1 / len_criteria) * ( (result.data[ :, header[criteria] ] .- mean(result.data[ :, header[criteria] ]) ) ./ std(result.data[ :, header[criteria] ]) )
     end
+    
+    if result.modelavg
+        delta = maximum(result.data[ :, header[:order]]) .- result.data[ :, header[:order] ]
+        w1 = exp.(-delta/2)
+        result.data[ :, header[:weight] ] = w1./sum(w1)
+        result.modelavg_datanames = filter(x->(!x in [:index, :weight]), result.datanames)       
+        result.modelavg_data = Array{Float64}(undef, 1, length( result.modelavg_datanames ))
+        modelavg_header = create_header(result.datanames)
+        for key in header
+            result.modelavg_data[ modelavg_header[key] ] = sum( result.data[:, key] .* result.data[ :, :weight] )
+        end
+    end
 
     if result.orderresults
-        #result.results = gsregsortrows(result.results, [result.header[:order]]; rev=true)
-        #result.bestresult = result.results[1,:]
+        result.data = sortrows(result.data, [header[:order]]; rev=true)
+        result.bestresult_data = result.results[1,:]
     else
-        max_order = result.data[ 1, header[:order] ]
-        best_result_index = 1
-        for i = 1:num_operations
-            if result.results[ i, header[:order] ] > max_order
-                max_order = result.data[ i, header[:order] ]
-                best_result_index = i
-            end
-        end
-        result.bestresult = result.data[ best_result_index, : ]
+        max_order = argmax(result.data[ 1, header[:order] ])
+        result.bestresult_data = result.data[ max_order, : ]
     end
-
-    """
-    if result.modelavg
-        result.onmessage("Generating model averaging results")
-        # usar order para weight
-        delta = maximum(result.results[:,result.header[:order]]) .- result.results[:,result.header[:order]]
-        w1 = exp.(-delta/2)
-        result.results[:,result.header[:weight]] = w1./sum(w1)
-        result.average = Array{Float64}(undef, 1, length(keys(result.header)))
-        weight_pos = (result.ttest) ? 4 : 2
-        for expvar in result.expvars
-            obs = result.results[:,result.header[Symbol(string(expvar, "_b"))]]
-            if result.ttest
-                obs = hcat(obs, result.results[:,result.header[Symbol(string(expvar, "_bstd"))]])
-                obs = hcat(obs, result.results[:,result.header[Symbol(string(expvar, "_t"))]])
-            end
-            obs = hcat(obs, result.results[:,result.header[:weight]])
-
-            #filter NaN values from selection
-            obs = obs[findall(x -> !isnan(obs[x,1]), 1:size(obs,1)),:]
-
-            #weight resizing
-            obs[:, weight_pos] /= sum(obs[:, weight_pos])
-
-            result.average[result.header[Symbol(string(expvar, "_b"))]] = sum(obs[:, 1] .* obs[:, weight_pos])
-            if result.ttest
-                result.average[result.header[Symbol(string(expvar, "_bstd"))]] = sum(obs[:, 2] .* obs[:, weight_pos])
-                result.average[result.header[Symbol(string(expvar, "_t"))]] = sum(obs[:, 3] .* obs[:, weight_pos])
-            end
-        end
-
-        for criteria in [:nobs, :r2adj, :F, :order]
-            result.average[result.header[criteria]] = sum(result.results[:, result.header[criteria]] .* result.results[:, result.header[:weight]])
-        end
-    end
-
-    
-
-    """
 end

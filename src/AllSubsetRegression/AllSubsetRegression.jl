@@ -1,4 +1,4 @@
-module Regression
+module AllSubsetRegression
 
     using Distributed
     using Distributions

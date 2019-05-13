@@ -1,6 +1,6 @@
 The GlobalSearchRegression.jl package is licensed under the MIT "Expat" License:
 
-> Copyright (c) 2018 Demian Panigo, Valentín Mari, Adán Mauri Ungaro, Esteban Mocskos y Pablo Gluzmann. CONICET y Fundación YPF
+> Copyright (c) 2018 Demian Panigo, Esteban Mocskos, Adán Mauri Ungaro, Pablo Gluzmann and Valentín Mari. CONICET and Fundación YPF
 >
 > Permission is hereby granted, free of charge, to any person obtaining a copy
 > of this software and associated documentation files (the "Software"), to deal

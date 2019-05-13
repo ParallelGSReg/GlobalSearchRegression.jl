@@ -7,8 +7,9 @@ mutable struct GSRegResult
     modelavg                # Generate model averaging report
     residualtest            # Estimate white noise residual tests
     orderresults            # Order or not the results
-    bestresult              # Best result
-    average                 # Model averaging array data
+    bestresult_data         # Best result
+    modelavg_datanames      
+    modelavg_data           # Model averaging array data
     nobs                    # Number of observations
 
     function GSRegResult(

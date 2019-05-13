@@ -18,26 +18,30 @@
 - [X] Time validation
 - [X] Update readme
 - [ ] Allows to receive GSRegResult
-- [ ] Fix parameters datatypes
+- [X] Fix documentation
+- [ ] Check documentation
 
 ### Preliminary selection
 - [ ] Preselection with GLM.jl based on covariates number
  
 ### Selection
-- [-] Parallel processing (Test)
+- [-] Parallel processing [TEST]
 - [ ] Iterative estimators (LOGIT, PROBIT) *****
-- [X] OLS
-- [X] Adjust selection to interact with feature extraction
-- [-] Compute t-test/z value
-- [X] Outsample
+- [X] OLS [TEST]
+- [X] Adjust selection to interact with feature extraction [TEST]
+- [X] Compute t-test [TEST]
+- [ ] Compure z value
+- [X] Outsample [TEST]
 - [X] Compute selection criteria (aic, cic, bic, r2, r2adj, rmse, rmsout, cp)
-- [ ] Model averaging
-- [ ] Residual tests
-- [ ] Sort by selection criteria
+- [X] Model averaging [TEST]
+- [X] Residual tests [TEST]
+- [X] Sort by selection criteria
 - [ ] Fix parameters datatypes
 - [ ] Fix GSRegData datatypes
 - [ ] Fix GSRegResult datatypes
- 
+- [ ] Fix documentation
+- [ ] Change module name
+
 ### Output decoration
 - [ ] CSV
 - [ ] JSON
