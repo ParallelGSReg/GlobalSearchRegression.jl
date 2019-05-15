@@ -1,114 +1,97 @@
-using Test, DataFrames, GlobalSearchRegression.FeatureExtraction
+using Test, GlobalSearchRegression.FeatureExtraction
 
-data = DataFrame(Array{Union{Missing,Float64}}(randn(6,5)))
-data[1] = [1, 1, 1, 2, 2, 2]
-data[2] = [21, 22, 23, 21, 22, 23]
-data[3] = [31, 32, 33, 34, 35, 12]
-data[4] = [41, 42, 43, 44, 45, 12]
-data[5] = [51, 51, 52, 53, 53, 52]
-headers = [ :y ; [ Symbol("x$i") for i = 1:size(data,2) - 1 ] ]
-names!(data, headers)
-rename!(data, :x4 => Symbol("weird_name"))
+using DataFrames, DelimitedFiles, CSV
 
-println(data)
+filename = "panel_database.csv"
 
-res = FeatureExtraction.featureextraction("x2 x1 x3 weird_name", data=data, interaction=[:x1, :x3, :weird_name], time=:x1, panel=:y)
-dt = convert(DataFrame, hcat(res.depvar_data, res.expvars_data))
-names!(dt, vcat([res.depvar], res.expvars))
-println(dt)
-println(res)
+function load_from_dataframe()
+    # Loading data from DataFrame variable
+    data = DataFrame(Array{Union{Missing,Float64}}(rand(1:1000, 1000, 6)))
+    headers = [ :y ; [ Symbol("x$i") for i = 1:size(data,2) - 1 ] ]
+    names!(data, headers)
+    return FeatureExtraction.featureextraction(
+        "*",
+        data=data,
+        intercept=true, 
+        method=:fast, 
+        time=:x1,
+        fe_sqr=[:x1, :x2],
+        fe_log=[:x1, :x2],
+        fe_inv=[:x1, :x2],
+        fe_lag=[:x1=>2, :x2=>5],
+        fixedeffect=true,
+        panel=:y,
+        interaction=[:x1, :x2, :x3]
+    )
+end
 
-# fd  TIME (first diffence)
-# fe  TIME (fixed effect)  => x1 - (mean x1)
-# lag TIME (el anterior)
-"""
-d = convert(DataFrame, res.expvars_data)
-names!(d, res.expvars)
+function load_from_array()
+    # Loading data from array variable
+    data = rand(1:1000, 1000, 6)
+    datanames = [ :y ; [ Symbol("x$i") for i = 1:size(data,2) - 1 ] ]
+    gsreg_data = FeatureExtraction.featureextraction(
+        "*",
+        data=data,
+        datanames=datanames,
+        intercept=true, 
+        method=:fast, 
+        time=:x1,
+        fe_sqr=[:x1, :x2],
+        fe_log=[:x1, :x2],
+        fe_inv=[:x1, :x2],
+        fe_lag=[:x1=>2, :x2=>5],
+        fixedeffect=true,
+        panel=:y,
+        interaction=[:x1, :x2, :x3]
+    )
+end
 
-println(d)
-"""
+function load_from_csv(filename)
+    # Loading data from csv file using CSV package and DataFrames
+    data = CSV.read(filename)
+    return FeatureExtraction.featureextraction(
+        "*",
+        data=data,
+        intercept=true, 
+        method=:fast, 
+        time=:time,
+        fe_sqr=[:x1, :x2],
+        fe_log=[:x1, :x2],
+        fe_inv=[:x1, :x2],
+        fe_lag=[:x1=>2, :x2=>5],
+        fixedeffect=true,
+        panel=:panel,
+        interaction=[:x1, :x2, :x3]
+    )
+end
 
-"""
+function load_from_readdlm(filename)
+    # Loading data from csv file using readdlm
+    data = readdlm(filename, ',', header=true)
+    return FeatureExtraction.featureextraction(
+        "*",
+        data=data,
+        intercept=true, 
+        method="fast", 
+        time="time",
+        fe_sqr=["x1", "x2"],
+        fe_log=["x1", "x2"],
+        fe_inv=["x1", "x2"],
+        fe_lag=["x1"=>2, "x2"=>5],
+        fixedeffect=true,
+        panel=:panel,
+        interaction=["x1", "x2", "x3"]
+    )
+end
 
+#println("load_from_dataframe")
+#load_from_dataframe()
 
-############# EQUATION #################
+#println("load_from_array")
+#load_from_array()
 
-# unsorted (x2 -the firstone- is the depvar)
-gsreg("x2 x1 y", data)
+#println("load_from_csv")
+#println(load_from_csv(filename))
 
-# Stata like
-gsreg("y x1 x2 x3", data)
-
-# Stata like with comma
-gsreg("y,x1,x2,x3", data)
-
-# Unconventional varname
-gsreg("y x1 weird_name", data)
-
-# R like
-gsreg("y ~ x1 + x2 + x3", data)
-gsreg("y ~ x1 + x2 + x3", data = data)
-
-# Array of strings
-gsreg(["y", "x1", "x2", "x3"], data)
-
-# Also, with wildcard
-gsreg("y *", data)
-
-gsreg("y x*", data)
-
-gsreg("y ~ x*", data)
-gsreg("y ~ .", data)
-
-################ DATA #################
-
-# dataframe with implicit datanames
-gsreg("x2 x1 y", data)
-
-
-headers = map(e->string(e),headers)
-
-# array with explicit datanames
-gsreg("x2 x1 y", convert(Array,data); datanames=headers)
-
-
-# tuple with explcit datanames
-gsreg("x2 x1 y", (convert(Array,data), headers) )
-
-
-############### ARGUMENTS ##############
-
-gsreg("x2 x1 y", data; intercept=false) # without constant
-
-gsreg("x2 x1 y", data; outsample=10) # expect 88 obs
-
-gsreg("x2 x1 y", data; outsample=10, criteria=[:r2adj, :bic, :aic, :aicc, :cp, :rmse, :rmseout, :sse])
-
-gsreg("x2 x1 y", data; ttest=true)
-
-gsreg("x2 x1 y", data; vectoroperation=true)
-
-gsreg("x2 x1 y", data; modelavg=true)
-
-gsreg("x2 x1 y", data; residualtest=true)
-
-gsreg("x2 x1 y", data; time=:x4)
-gsreg("x2 x1 y", convert(Array,data); datanames=headers, time=:x4)
-gsreg("x2 x1 y", (convert(Array,data), headers); time=:x4)
-
-gsreg("x2 x1 y", data; summary="summary.txt")
-
-gsreg("x2 x1 y", data; orderresults=true)
-
-gsreg("x2 x1 y", data; onmessage= message -> (println(message)))
-
-gsreg("x2 x1 y", data; method="fast")
-
-gsreg("x2 x1 y", data; method="precise")
-
-gsreg("x2 x1 y", data; csv="results.csv")
-
-res = gsreg("x2 x1 y", data; resultscsv="results.csv")
-
-@test size(res.results,1) == 3
-"""
+#println("load_from_readdlm")
+println(load_from_readdlm(filename))

@@ -8,9 +8,11 @@ include("utils.jl")
 #include("strings.jl")
 #include("interface.jl")
 #include("core.jl")
+include("Preprocessing/Preprocessing.jl")
 include("FeatureExtraction/FeatureExtraction.jl")
 include("AllSubsetRegression/AllSubsetRegression.jl")
 
+using ..Preprocessing
 using ..FeatureExtraction
 using ..AllSubsetRegression
 

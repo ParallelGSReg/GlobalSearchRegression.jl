@@ -10,8 +10,8 @@ function featureextraction(
     fe_log=nothing,
     fe_inv=nothing,
     fe_lag=nothing,
-    fixedeffect=FIXED_EFFECT_DEFAULT,
-    interaction=INTERACTION_DEFAULT
+    interaction=INTERACTION_DEFAULT,
+    fixedeffect=FIXED_EFFECT_DEFAULT
     )
 
     return featureextraction(
@@ -43,8 +43,8 @@ function featureextraction(
     fe_log=nothing,
     fe_inv=nothing,
     fe_lag=nothing,
-    fixedeffect=FIXED_EFFECT_DEFAULT,
-    interaction=INTERACTION_DEFAULT
+    interaction=INTERACTION_DEFAULT,
+    fixedeffect=FIXED_EFFECT_DEFAULT
     )
 
     equation = equation_converts_str_to_strarr!(equation)
@@ -78,8 +78,8 @@ function featureextraction(
     fe_log=nothing,
     fe_inv=nothing,
     fe_lag=nothing,
-    fixedeffect=FIXED_EFFECT_DEFAULT,
-    interaction=INTERACTION_DEFAULT
+    interaction=INTERACTION_DEFAULT,
+    fixedeffect=FIXED_EFFECT_DEFAULT
     )
 
     datanames = get_datanames_from_data(data, datanames)
@@ -101,8 +101,8 @@ function featureextraction(
         fe_log=fe_log,
         fe_inv=fe_inv,
         fe_lag=fe_lag,
-        fixedeffect=fixedeffect,
-        interaction=interaction
+        interaction=interaction,
+        fixedeffect=fixedeffect
     )
 end
 
@@ -118,10 +118,10 @@ function featureextraction(
     fe_log=nothing,
     fe_inv=nothing,
     fe_lag=nothing,
-    fixedeffect=FIXED_EFFECT_DEFAULT,
-    interaction=INTERACTION_DEFAULT
+    interaction=INTERACTION_DEFAULT,
+    fixedeffect=FIXED_EFFECT_DEFAULT
     )
-    
+
     if datanames == nothing
         datanames = get_datanames_from_data(data, datanames)
     end
@@ -157,8 +157,8 @@ function featureextraction(
         fe_log=fe_log,
         fe_inv=fe_inv,
         fe_lag=fe_lag,
-        fixedeffect=fixedeffect,
-        interaction=interaction
+        interaction=interaction,
+        fixedeffect=fixedeffect
     )
 end
 
@@ -174,8 +174,8 @@ function featureextraction(
     fe_log=nothing,
     fe_inv=nothing,
     fe_lag=nothing,
-    fixedeffect=FIXED_EFFECT_DEFAULT,
-    interaction=INTERACTION_DEFAULT
+    interaction=INTERACTION_DEFAULT,
+    fixedeffect=FIXED_EFFECT_DEFAULT
     )
 
     depvar = equation[1]
@@ -195,6 +195,10 @@ function featureextraction(
 
     if panel == nothing && fixedeffect
         error(PANEL_VARIABLE_NON_SELECTED)
+    end
+
+    if panel != nothing 
+        fixedeffect = true
     end
 
     if !isa(data, Array{datatype})
@@ -275,7 +279,7 @@ function featureextraction(
         fe_log,
         fe_inv,
         fe_lag,
-        fixedeffect,
-        interaction
+        interaction,
+        fixedeffect
     )
 end

@@ -6,20 +6,26 @@
 ### Inteface
 - [ ] Do all the next steps in one single call.
 
+### Preprocessing
+ - [X] Parse a given equation from multiple formats, including R, Stata and DataFrames
+ - [X] Reduce the database based on the equation (Including time if it is not included)
+ - [X] Order the database by time and panel variables then remove time if is not used as covariate
+ - [X] Time validation
+ - [X] Transforms data representation for faster compute (Float64, Float32)
+ - [X] Adds the intercept if it was expecified
+ - [ ] Sort by time and panel
+ - [ ] Remove outliers
+ - [ ] Seasonal adjustament
+ - [X] Fixed effect
+
 ### FeatureExtraction
-- [X] Parse a given equation from multiple formats, including R, Stata and DataFrames
-- [X] Reduce the database based on the equation (Including time if it is not included)
-- [X] Order the database by time and panel variables then remove time if is not used as covariate
-- [X] Transforms data representation for faster compute (Float64, Float32)
 - [X] Feature extraction. Optional creation of non-linear realtionships (sqaure, lag, log, inv, interaction)
-- [X] Fixed effect
 - [X] Excludes observations with missing or null values
-- [X] Adds the intercept if it was expecified
-- [X] Time validation
 - [X] Update readme
-- [ ] Allows to receive GSRegResult
 - [X] Fix documentation
 - [ ] Check documentation
+- [ ] Convert every string variable in symbol
+- [ ] Allows to receive GSRegResult
 
 ### Preliminary selection
 - [ ] Preselection with GLM.jl based on covariates number

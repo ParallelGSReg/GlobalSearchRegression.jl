@@ -1,38 +1,35 @@
 # GlobalSearchRegression Modules
 
-This document should be refactored and merged as an usage and arquitecture documentation. Also explain better if is needed.
-
 ## FeatureExtraction
-The module converts from many datatypes and formats to a GlobalSearchRegression standard one.
+This module has multiple objetives. First, it performs required transformation on equation definitions and database formats in order to homogenize inputs. Second, it allows users to define aditional data tranformation to improve model accuracy and feature selection in the following steps. 
 
 ### Features
-- Parse a given equation from multiple formats, including R, Stata and DataFrames
-- Reduce the database based on the equation (Including time if is not included)
-- Order the database by time and panel variables then remove time if is not used as covariate
-- Transforms data representation for faster compute (Float64, Float32)
-- Feature extraction. Optional creation of non-linear realtionships: sqrt, log, inv, lag, interaction
-- Fixed effect
-- First differences
-- Excludes observations with missing or null values
-- Adds the intercept if it was expecified
+- Parses a given equation from multiple formats, including R and Stata
+- Reduces database size based on user selected variables
+- Sorts observations by time and panel variables
+- Transforms data format for faster or precise compute (Float32, Float64)
+- Creation of lags, interactions and non-linear representations
+- Computes within tranformations for fixed effect estimators 
+- Excludes observations/rows with missing or null values in any selected variable
 
-### Basic usage
+### Basic usage (equation definition)
 
 ```julia
-# String as Stata like
+# Stata like
 julia> featureextraction("y x1 x2 x3", data)
 
-# String as R like
+# R like
 julia> featureextraction("y ~ x1 + x2 + x3", data)
-julia> featureextraction("y ~ x1 + x2 + x3", data=data)
 
-# Strings separated with comma
+# String separated by comma
 julia> featureextraction("y,x1,x2,x3", data)
+julia> featureextraction("y, x1, x2, x3", data)
 
 # Array of strings
 julia> featureextraction(["y", "x1", "x2", "x3"], data)
+julia> featureextraction(["y"  "x1"  "x2" "x3"], data)
 
-# Using wildcards
+# Using Stata, R and general wildcards
 julia> featureextraction("y *", data)
 julia> featureextraction("y x*", data)
 julia> featureextraction("y x1 z*", data)
@@ -42,26 +39,29 @@ julia> featureextraction("y ~ .", data)
 # Using symbols
 julia> featureextraction([:y, :x1, :x2, :x3], data)
 
-# if the database is an array you should set the header independently
+# Using data key parameter
+julia> featureextraction("y x1 x2 x3", data=data)
+
+# If database is an array you should set the header independently
 julia> featureextraction("y x1 x2 x3", data, datanames=header)
 
-# if the database is a Tuble you should set the tuple with the first element as the data and the second element as the header
+# If database is a Tuble you should define it using the first element as data and the second as headers
 julia> featureextraction("y x1 x2 x3", (data, header))
 ```
 
 ### Advanced usage
-* **`intercept`:** by default the GUM includes an intercept as a fixed covariate (e.g. it's included in every model). The default is `true`
+* **`intercept`:** by default the GUM includes an intercept as a fixed covariate (it's included in every model). The default is `true`.
 * **`method`:** this option can be used to alternatively run estimations with Float32 of Float64 datatype. The default is `FAST` (Float32), to speed-up calculations. The available options are:
-    - Float32: `FAST`, `:FAST`, `:fast`, `"FAST"`, `"fast"`
-    - Float64: `PRECISE`, `:PRECISE`, `:precise`, `"PRECISE"`, `"precise"`
-* **`time`:** determines which variable will be used to date (and pre-sort) observations. Time variable must be included as a symbol (e.g. `time=:x1`). Neither, gaps nor missing observations are allowed in this variable (missing observations are allowed in any other variable). By using this option, additional residuals tests are enabled.
-* **`fe_sqr`:** defines which variables will be process for square feature extraction (e.g. `fe_sqr=:x1` or `fe_sqr=[:x1, :x2]`).
-* **`fe_log`:** defines which variables will be process for logarithm feature extraction (e.g. `fe_log=:x1` or `fe_log=[:x1, :x2]`).
-* **`fe_inv`:** defines which variables will be process for inverse feature extraction (e.g. `fe_inv=:x1` or `fe_inv=[:x1, :x2]`).
-* **`fe_inv`:** defines which variables will be process for lag feature extraction (e.g. `fe_lag=:x1=>2` or `fe_lag=[:x1=>2, :x2=>5]`).
-* **`fixedeffect`:** defines if fixed effect will be applied (e.g. fixedeffect=true). The default is `false`.
-* **`panel`:** defines which variable is defined as panel (e.g. `panel=:x1`). 
-* **`interaction`**: defines the product of two or more independent variables (e.g. `interaction=[x1, :x2, :x3]`).
+    - Float32: `:FAST`, `:fast`, `"FAST"`, `"fast"`
+    - Float64: `:PRECISE`, `:precise`, `"PRECISE"`, `"precise"`
+* **`time`:** determines which variable will be used to date (and pre-sort) observations. Time variable must be included as a symbol or string (i.e. `time=:x1` or `time="x1"`). Neither, gaps nor missing observations should be allowed in this variable. Calculations will be made assuming no gaps. By using this option, additional residuals tests are enabled.
+* **`fe_sqr`:** defines which variables will be squared (i.e. `fe_sqr=:x1` or `fe_sqr=[:x1, :x2]`).
+* **`fe_log`:** defines which variables will also be included in logarithms (i.e. `fe_log=:x1` or `fe_log=[:x1, :x2]`).
+* **`fe_inv`:** defines which variables will be inversed (i.e. `fe_inv=:x1` or `fe_inv=[:x1, :x2]`).
+* **`fe_lag`:** defines which variables will be included for the lag structure (i.e. `fe_lag=:x1=>2` or `fe_lag=[:x1=>2, :x2=>5]`).
+* **`panel`:** defines which variable will be used as group/cross-section identifier (i.e. `panel=:x1`). Valid panel variables must be numeric without missing values and with the same value for each group observation.
+* **`fixedeffect`:** applies the within transformation for fixed effectimations (i.e. fixedeffect=true). The default is `false` but it automaticaly changes to true when a valid panel variable is defined.
+* **`interaction`**: creates every possible multiplication between each pair of selected variables (i.e. `interaction=[x1, :x2, :x3]`).
 
 ### Full-syntax example
 
@@ -72,16 +72,18 @@ julia> data = DataFrame(Array{Union{Missing,Float64}}(randn(100,16)))
 julia> headers = [ :y ; [ Symbol("x$i") for i = 1:size(data,2) - 1 ] ]
 julia> names!(data, headers)
 julia> using GlobalSearchRegression.FeatureExtraction
-julia> FeatureExtraction.featureextraction("y x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13 x14 x15", data, 
+julia> FeatureExtraction.featureextraction(
+    "y x1 x2 x3 x4 x5 x6 x7 x11 x12 x13 x14 x15",
+    data, 
     intercept=true, 
-    method=FAST, 
-    time=:x1,
+    method=:FAST,
+    time=:time,
     fe_sqr=[:x1, :x2],
     fe_log=[:x1, :x2],
     fe_inv=[:x1, :x2],
     fe_lag=[:x1=>2, :x2=>5],
     fixedeffect=true,
-    panel=:y,
+    panel=:panel,
     interaction=[x1, :x2, :x3]
     )
 ```

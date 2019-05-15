@@ -44,6 +44,9 @@ function get_datanames_from_data(data, datanames)
         datanames = names(data)
     elseif isa(data, Tuple)
         datanames = data[2]
+        if !isa(datanames, Vector)
+            datanames = vec(datanames)
+        end
     elseif (datanames == nothing)
         error(DATANAMES_REQUIRED)
     end
@@ -181,10 +184,15 @@ end
 Adds log feature extraction to data
 """
 function data_add_fe_log(data, fe_vars, expvars, datanames)
-    data = hcat(data, log.(data[:, [ get_column_index(var, datanames) for var in fe_vars ]]))
-    expvars = vcat(expvars, [Symbol(string(var, "_log")) for var in fe_vars ])
-    datanames = vcat(datanames, [Symbol(string(var, "_log")) for var in fe_vars ])
-    return (data, expvars, datanames)
+    try
+        data = hcat(data, log.(data[:, [ get_column_index(var, datanames) for var in fe_vars ]]))
+        expvars = vcat(expvars, [Symbol(string(var, "_log")) for var in fe_vars ])
+        datanames = vcat(datanames, [Symbol(string(var, "_log")) for var in fe_vars ])
+        return (data, expvars, datanames)
+    catch
+        error(LOG_FUNCTION_ERROR)
+    end
+    
 end
 
 """
@@ -307,11 +315,12 @@ function validate_time(data, datanames; panel=nothing, time=nothing)
     else 
         panel_index = get_column_index(panel, datanames)
         csis = unique(data[:, panel_index])
+        time_index = get_column_index(time, datanames)
         for csi in csis
             rows = findall(x->x == csi, data[:,panel_index])
-            previous_value = data[rows[1], get_column_index(time, datanames)]
+            previous_value = data[rows[1], time_index]
             for row in rows[2:end]
-                value = data[row, get_column_index(time, datanames)]
+                value = data[row, time_index]
                 if previous_value + 1 != value
                     return false
                 end
