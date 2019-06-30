@@ -5,7 +5,8 @@ function input(
     method::Union{Symbol, String}=METHOD_DEFAULT,
     intercept::Bool=INTERCEPT_DEFAULT,
     time::Union{Symbol, String, Nothing}=TIME_DEFAULT,
-    panel::Union{Symbol, String, Nothing}=PANEL_DEFAULT
+    panel::Union{Symbol, String, Nothing}=PANEL_DEFAULT,
+    removemissings::Bool=REMOVEMISSINGS_DEFAULT
     )
 
     return input(
@@ -15,7 +16,8 @@ function input(
         method=method,
         intercept=intercept,
         time=time,
-        panel=panel
+        panel=panel,
+        removemissings=removemissings
     )
 end
 
@@ -26,7 +28,8 @@ function input(
     method::Union{Symbol, String}=METHOD_DEFAULT,
     intercept::Bool=INTERCEPT_DEFAULT,
     time::Union{Symbol, String, Nothing}=TIME_DEFAULT,
-    panel::Union{Symbol, String, Nothing}=PANEL_DEFAULT
+    panel::Union{Symbol, String, Nothing}=PANEL_DEFAULT,
+    removemissings::Bool=REMOVEMISSINGS_DEFAULT
     )
 
     return input(
@@ -36,7 +39,8 @@ function input(
         method=method,
         intercept=intercept,
         time=time,
-        panel=panel
+        panel=panel,
+        removemissings=removemissings
     )
 end
 
@@ -47,7 +51,8 @@ function input(
     method::Union{Symbol, String}=METHOD_DEFAULT,
     intercept::Bool=INTERCEPT_DEFAULT,
     time::Union{Symbol, String, Nothing}=TIME_DEFAULT,
-    panel::Union{Symbol, String, Nothing}=PANEL_DEFAULT
+    panel::Union{Symbol, String, Nothing}=PANEL_DEFAULT,
+    removemissings::Bool=REMOVEMISSINGS_DEFAULT
     )
 
     return input(
@@ -57,7 +62,8 @@ function input(
         method=method,
         intercept=intercept,
         time=time,
-        panel=panel
+        panel=panel,
+        removemissings=removemissings
     )
 end
 
@@ -68,7 +74,8 @@ function input(
     method::Union{Symbol, String}=METHOD_DEFAULT,
     intercept::Bool=INTERCEPT_DEFAULT,
     time::Union{Symbol, String, Nothing}=TIME_DEFAULT,
-    panel::Union{Symbol, String, Nothing}=PANEL_DEFAULT
+    panel::Union{Symbol, String, Nothing}=PANEL_DEFAULT,
+    removemissings::Bool=REMOVEMISSINGS_DEFAULT
     )
 
     return input(
@@ -78,10 +85,10 @@ function input(
         intercept=intercept,
         method=method,
         time=time,
-        panel=panel
+        panel=panel,
+        removemissings=removemissings
     )
 end
-
 
 function input(
     equation::Array{String},
@@ -90,7 +97,8 @@ function input(
     method::Union{Symbol, String}=METHOD_DEFAULT,
     intercept::Bool=INTERCEPT_DEFAULT,
     time::Union{Symbol, String, Nothing}=TIME_DEFAULT,
-    panel::Union{Symbol, String, Nothing}=PANEL_DEFAULT
+    panel::Union{Symbol, String, Nothing}=PANEL_DEFAULT,
+    removemissings::Bool=REMOVEMISSINGS_DEFAULT
     )
 
     datanames = get_datanames_from_data(data, datanames)
@@ -123,7 +131,8 @@ function input(
     method::Union{Symbol, String}=METHOD_DEFAULT,
     intercept::Bool=INTERCEPT_DEFAULT,
     time::Union{Symbol, String, Nothing}=TIME_DEFAULT,
-    panel::Union{Symbol, String, Nothing}=PANEL_DEFAULT
+    panel::Union{Symbol, String, Nothing}=PANEL_DEFAULT,
+    removemissings::Bool=REMOVEMISSINGS_DEFAULT
     )
 
     if length(equation) != size(equation, 1)
@@ -155,7 +164,7 @@ function input(
     end
 
     if !isa(data, Array{Union{Missing, datatype}}) || !isa(data, Array{Union{datatype}})
-        data = convert(Array{Union{Missing, datatype}}, data)
+        data = convert(Matrix{Union{Missing, datatype}}, data)
     end
 
     if time != nothing
@@ -194,7 +203,8 @@ function processinput(
     method::Symbol,
     intercept::Bool;
     time::Union{Symbol, Nothing}=TIME_DEFAULT,
-    panel::Union{Symbol, Nothing}=PANEL_DEFAULT
+    panel::Union{Symbol, Nothing}=PANEL_DEFAULT,
+    removemissings::Bool=REMOVEMISSINGS_DEFAULT
     )
     
     if method == :precise
@@ -215,11 +225,13 @@ function processinput(
 
     (data, datanames) = filter_data_by_selected_columns(data, temp_equation, datanames)
     data = sort_data(data, datanames, panel=panel, time=time)
-        
-    if time != nothing
-        if !validate_time(data, datanames, panel=panel, time=time)
-            #@warn TIME_ERROR
-        end
+    
+    if panel != nothing && !validate_panel(data, datanames, panel=panel)
+        error(PANEL_ERROR)
+    end
+
+    if time != nothing && !validate_time(data, datanames, panel=panel, time=time)
+        error(TIME_ERROR)
     end
 
     (data, datanames) = filter_data_by_selected_columns(data, equation, datanames)
@@ -251,6 +263,7 @@ function processinput(
         time,
         panel,
         datatype,
+        removemissings,
         nobs
     )
 end

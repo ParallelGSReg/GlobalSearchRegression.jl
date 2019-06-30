@@ -57,7 +57,7 @@ Gets datanames from data DataFrame or data Tuple
 """
 function get_data_from_data(data)
     if isa(data, DataFrames.DataFrame)
-        data = convert(Array{Union{Missing, Float64}}, data)
+        data = convert(Matrix{Union{Missing, Float64}}, data)
     elseif isa(data, Tuple)
         data = data[1]
     end
@@ -103,6 +103,19 @@ function filter_data_by_empty_values(data)
         data = data[map(b->!b, ismissing.(data[:,i])), :]
     end
     return data
+end
+
+"""
+Validates if there are panel gaps
+"""
+function validate_panel(data, datanames; panel=nothing)
+    if panel != nothing
+        print(get_column_index(panel, datanames))
+        print(datanames)
+        println(data[:,get_column_index(panel, datanames)])
+        return !any(ismissing, data[:,get_column_index(panel, datanames)])
+    end
+    return true
 end
 
 """

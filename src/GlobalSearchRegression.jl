@@ -9,13 +9,13 @@ include("utils.jl")
 #include("interface.jl")
 #include("core.jl")
 include("Preprocessing/Preprocessing.jl")
-include("FeatureExtraction/FeatureExtraction.jl")
-include("AllSubsetRegression/AllSubsetRegression.jl")
+#include("FeatureExtraction/FeatureExtraction.jl")
+#include("AllSubsetRegression/AllSubsetRegression.jl")
 
 using ..Preprocessing
-using ..FeatureExtraction
-using ..AllSubsetRegression
+#using ..FeatureExtraction
+#using ..AllSubsetRegression
 
-export gsreg, export_csv, to_dict, to_string, GSRegData, GSRegResult, featureextration, ols
+export gsreg, export_csv, to_dict, to_string, GSRegData, GSRegResult #, featureextration, ols
 
 end # module GlobalSearchRegression

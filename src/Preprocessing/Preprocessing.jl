@@ -1,5 +1,4 @@
 module Preprocessing
-
     using DataFrames
     using ..GlobalSearchRegression
     using ..GlobalSearchRegression: get_column_index, in_vector
@@ -10,5 +9,4 @@ module Preprocessing
     include("core.jl")
 
     export input
-
 end

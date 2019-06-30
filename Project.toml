@@ -1,7 +1,7 @@
 name = "GlobalSearchRegression"
 uuid = "5b3bc22e-96cb-5e8b-bdf1-153217652f04"
-authors = ["Demian Panigo <panigo@gmail.com>", "Valentin Mari <valentinmari@hotmail.com>", "Adán Mauri Ungaro <adan.mauri@gmail.com>"]
-version = "1.0.1"
+authors = ["Demian Panigo <panigo@gmail.com>", "Adán Mauri Ungaro <adan.mauri@gmail.com>", "Valentin Mari <valentinmari@hotmail.com>"]
+version = "2.0.0"
 
 [deps]
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
@@ -12,3 +12,6 @@ LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 SharedArrays = "1a1011a3-84de-559e-8e89-a11a2f7dc383"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
