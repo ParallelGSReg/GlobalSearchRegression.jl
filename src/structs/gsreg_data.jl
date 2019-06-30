@@ -2,8 +2,8 @@ mutable struct GSRegData
     equation::Array{Symbol}
     depvar::Symbol
     expvars::Array{Symbol}
-    depvar_data::Union{Array{Float32}, Array{Float64}}
-    expvars_data::Union{Array{Float32}, Array{Float64}}
+    depvar_data::Union{Array{Float64}, Array{Float32}, Array{Union{Float32, Missing}}, Array{Union{Float64, Missing}}}
+    expvars_data::Union{Array{Float64}, Array{Float32}, Array{Union{Float32, Missing}}, Array{Union{Float64, Missing}}}
     intercept::Bool
     time::Union{Symbol, Nothing}
     panel::Union{Symbol, Nothing} 
@@ -17,8 +17,8 @@ mutable struct GSRegData
             equation,
             depvar::Symbol,
             expvars::Array{Symbol},
-            depvar_data::Union{Array{Float32}, Array{Float64}},
-            expvars_data::Union{Array{Float32}, Array{Float64}},
+            depvar_data::Union{Array{Float64}, Array{Float32}, Array{Union{Float32, Missing}}, Array{Union{Float64, Missing}}},
+            expvars_data::Union{Array{Float64}, Array{Float32}, Array{Union{Float32, Missing}}, Array{Union{Float64, Missing}}},
             intercept::Bool,
             time::Union{Symbol, Nothing},
             panel::Union{Symbol, Nothing},

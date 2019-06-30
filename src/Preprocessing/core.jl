@@ -1,7 +1,7 @@
 function input(
     equation::String;
     data::Union{Array{Float64}, Array{Float32}, Array{Union{Float32, Missing}}, Array{Union{Float64, Missing}}, Tuple, DataFrame, Nothing} = nothing,
-    datanames::Union{Array, Nothing}=nothing,
+    datanames::Union{Array, Array{Symbol, 1}, Nothing}=nothing,
     method::Union{Symbol, String}=METHOD_DEFAULT,
     intercept::Bool=INTERCEPT_DEFAULT,
     time::Union{Symbol, String, Nothing}=TIME_DEFAULT,
@@ -24,7 +24,7 @@ end
 function input(
     equation::Array{String};
     data::Union{Array{Float64}, Array{Float32}, Array{Union{Float32, Missing}}, Array{Union{Float64, Missing}}, Tuple, DataFrame, Nothing} = nothing,
-    datanames::Union{Array, Nothing}=nothing,
+    datanames::Union{Array, Array{Symbol, 1}, Nothing}=nothing,
     method::Union{Symbol, String}=METHOD_DEFAULT,
     intercept::Bool=INTERCEPT_DEFAULT,
     time::Union{Symbol, String, Nothing}=TIME_DEFAULT,
@@ -47,7 +47,7 @@ end
 function input(
     equation::Array{Symbol};
     data::Union{Array{Float64}, Array{Float32}, Array{Union{Float32, Missing}}, Array{Union{Float64, Missing}}, Tuple, DataFrame, Nothing} = nothing,
-    datanames::Union{Array, Nothing}=nothing,
+    datanames::Union{Array, Array{Symbol, 1}, Nothing}=nothing,
     method::Union{Symbol, String}=METHOD_DEFAULT,
     intercept::Bool=INTERCEPT_DEFAULT,
     time::Union{Symbol, String, Nothing}=TIME_DEFAULT,
@@ -70,7 +70,7 @@ end
 function input(
     equation::String,
     data::Union{Array{Float64}, Array{Float32}, Array{Union{Float32, Missing}}, Array{Union{Float64, Missing}}, Tuple, DataFrame, Nothing};
-    datanames::Union{Array, Nothing}=nothing,
+    datanames::Union{Array, Array{Symbol, 1}, Nothing}=nothing,
     method::Union{Symbol, String}=METHOD_DEFAULT,
     intercept::Bool=INTERCEPT_DEFAULT,
     time::Union{Symbol, String, Nothing}=TIME_DEFAULT,
@@ -93,7 +93,7 @@ end
 function input(
     equation::Array{String},
     data::Union{Array{Float64}, Array{Float32}, Array{Union{Float32, Missing}}, Array{Union{Float64, Missing}}, Tuple, DataFrame, Nothing};
-    datanames::Union{Array, Nothing}=nothing,
+    datanames::Union{Array, Array{Symbol, 1}, Nothing}=nothing,
     method::Union{Symbol, String}=METHOD_DEFAULT,
     intercept::Bool=INTERCEPT_DEFAULT,
     time::Union{Symbol, String, Nothing}=TIME_DEFAULT,
@@ -120,14 +120,15 @@ function input(
         intercept=intercept,
         method=method,
         time=time,
-        panel=panel
+        panel=panel,
+        removemissings=removemissings
     )
 end
 
 function input(
     equation::Array{Symbol},
     data::Union{Array{Float64}, Array{Float32}, Array{Union{Float32, Missing}}, Array{Union{Float64, Missing}}, Tuple, DataFrame, Nothing};
-    datanames::Union{Array, Nothing}=nothing,
+    datanames::Union{Array, Array{Symbol, 1}, Nothing}=nothing,
     method::Union{Symbol, String}=METHOD_DEFAULT,
     intercept::Bool=INTERCEPT_DEFAULT,
     time::Union{Symbol, String, Nothing}=TIME_DEFAULT,
@@ -192,7 +193,8 @@ function input(
         method,
         intercept;
         time=time,
-        panel=panel
+        panel=panel,
+        removemissings=removemissings
     )
 end
 
@@ -247,11 +249,16 @@ function processinput(
         push!(datanames, :_cons)
     end
 
-    data = filter_data_by_empty_values(data)
-    data = convert(Array{datatype}, data)
-
+    if removemissings
+        data = filter_data_by_empty_values(data)
+        data = convert(Array{datatype}, data)
+    else
+        data = convert(Array{Union{Missing, datatype}}, data)
+    end
     depvar_data = data[1:end, 1]
     expvars_data = data[1:end, 2:end]
+
+    nobs = size(depvar_data, 1)
 
     return GSRegData(
         equation,

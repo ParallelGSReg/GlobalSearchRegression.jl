@@ -5,28 +5,41 @@ function replace_string_to_nothing(data)
         for m=1:size(data[1], 2)
             if isa(data[1][n,m], String) || isa(data[1][n,m], SubString)
                 data[1][n,m] = missing
+            else 
+                if !isa(data[1][n,m], Int64) && !isa(data[1][n,m], Float64)
+                    data[1][n,m] = parse(Float64, data[1][n,m])
+                end
             end
         end
     end
     return data
 end
 
+function convert_array_with_missing(data, datatype)
+    return convert(Array{Union{Missing, datatype}}, data)
+end
+
 data_paneltime_without_missings_dataframe = CSV.read(DATABASE_PANELTIME_WITHOUT_MISSINGS_FILENAME)
-data_paneltime_without_missings_tuple = readdlm(DATABASE_PANELTIME_WITHOUT_MISSINGS_FILENAME, ',', header=true)
-data_time_without_missings_tuple = readdlm(DATABASE_TIME_WITHOUT_MISSINGS_FILENAME, ',', header=true)
-data_paneltime_with_missings_tuple = readdlm(DATABASE_PANELTIME_WITH_MISSINGS_FILENAME, ',', header=true)
-data_paneltime_as_missings = readdlm(DATABASE_PANELTIME_AS_MISSINGS_FILENAME, ',', header=true)
+data_paneltime_without_missings_tuple = replace_string_to_nothing(readdlm(DATABASE_PANELTIME_WITHOUT_MISSINGS_FILENAME, ',', header=true))
+data_paneltime_without_missings_tuple = (convert_array_with_missing(data_paneltime_without_missings_tuple[1], Float64), data_paneltime_without_missings_tuple[2])
 
-data_paneltime_without_missings_tuple = replace_string_to_nothing(data_paneltime_without_missings_tuple)
-data_time_without_missings_tuple = replace_string_to_nothing(data_time_without_missings_tuple)
-data_paneltime_with_missings_tuple = replace_string_to_nothing(data_paneltime_with_missings_tuple)
-data_paneltime_as_missings = replace_string_to_nothing(data_paneltime_as_missings)
+data_time_without_missings_tuple = replace_string_to_nothing(readdlm(DATABASE_TIME_WITHOUT_MISSINGS_FILENAME, ',', header=true))
+data_time_without_missings_tuple = (convert_array_with_missing(data_time_without_missings_tuple[1], Float64), data_time_without_missings_tuple[2])
 
-test_time_data = convert(Array{Float32}, readdlm(TEST_TIME_FILENAME, ','))
-test_panel_data = convert(Array{Float32}, readdlm(TEST_PANEL_FILENAME, ','))
-test_paneltime_data = convert(Array{Float32}, readdlm(TEST_PANELTIME_FILENAME, ','))
-test_missing_data = convert(Array{Float32}, readdlm(TEST_MISSING_FILENAME, ','))
+data_paneltime_with_missings_dataframe = CSV.read(DATABASE_PANELTIME_WITH_MISSINGS_FILENAME)
 
+data_paneltime_with_missings_tuple = replace_string_to_nothing(readdlm(DATABASE_PANELTIME_WITH_MISSINGS_FILENAME, ',', header=true))
+data_paneltime_with_missings_tuple = (convert_array_with_missing(data_paneltime_with_missings_tuple[1], Float64), data_paneltime_with_missings_tuple[2])
+
+data_paneltime_as_missings = replace_string_to_nothing(readdlm(DATABASE_PANELTIME_AS_MISSINGS_FILENAME, ',', header=true))
+data_paneltime_as_missings = (convert_array_with_missing(data_paneltime_as_missings[1], Float64), data_paneltime_as_missings[2])
+
+test_time_data = convert_array_with_missing(replace_string_to_nothing( (readdlm(TEST_TIME_FILENAME, ','), nothing) )[1], Float32)
+test_panel_data = convert_array_with_missing(replace_string_to_nothing( (readdlm(TEST_PANEL_FILENAME, ','), nothing) )[1], Float32)
+test_paneltime_data = convert_array_with_missing(replace_string_to_nothing( (readdlm(TEST_PANELTIME_FILENAME, ','), nothing) )[1], Float32)
+test_missing_data = convert_array_with_missing(replace_string_to_nothing( (readdlm(TEST_MISSING_FILENAME, ','), nothing) )[1], Float32)
+test_removedmissing_data = convert_array_with_missing(replace_string_to_nothing( (readdlm(TEST_REMOVEDMISSING_FILENAME, ','), nothing) )[1], Float32)
+test_nonmissing_data = convert_array_with_missing(replace_string_to_nothing( (readdlm(TEST_NONMISSING_FILENAME, ','), nothing) )[1], Float32)
 
 @testset "Equations" begin
     @testset "Stata like" begin
@@ -111,31 +124,31 @@ end
     @testset "Method" begin
         data = Preprocessing.input("y, x2, x1", data_paneltime_without_missings_tuple)
         @test data.datatype == Float32
-        @test isa(data.depvar_data, Array{Float32})
+        @test isa(data.depvar_data, Array{Float32}) || isa(data.depvar_data, Array{Union{Missing, Float32}})
         data = Preprocessing.input("y, x2, x1", data_paneltime_without_missings_tuple, method="fast")
         @test data.datatype == Float32
-        @test isa(data.depvar_data, Array{Float32})
+        @test isa(data.depvar_data, Array{Float32}) || isa(data.depvar_data, Array{Union{Missing, Float32}})
         data = Preprocessing.input("y, x2, x1", data_paneltime_without_missings_tuple, method="FAST")
         @test data.datatype == Float32
-        @test isa(data.depvar_data, Array{Float32})
+        @test isa(data.depvar_data, Array{Float32}) || isa(data.depvar_data, Array{Union{Missing, Float32}})
         data = Preprocessing.input("y, x2, x1", data_paneltime_without_missings_tuple, method=:fast)
         @test data.datatype == Float32
-        @test isa(data.depvar_data, Array{Float32})
+        @test isa(data.depvar_data, Array{Float32}) || isa(data.depvar_data, Array{Union{Missing, Float32}})
         data = Preprocessing.input("y, x2, x1", data_paneltime_without_missings_tuple, method=:FAST)
         @test data.datatype == Float32
-        @test isa(data.depvar_data, Array{Float32})
+        @test isa(data.depvar_data, Array{Float32}) || isa(data.depvar_data, Array{Union{Missing, Float32}})
         data = Preprocessing.input("y, x2, x1", data_paneltime_without_missings_tuple, method="precise")
         @test data.datatype == Float64
-        @test isa(data.depvar_data, Array{Float64})
+        @test isa(data.depvar_data, Array{Float64}) || isa(data.depvar_data, Array{Union{Missing, Float64}})
         data = Preprocessing.input("y, x2, x1", data_paneltime_without_missings_tuple, method="PRECISE")
         @test data.datatype == Float64
-        @test isa(data.depvar_data, Array{Float64})
+        @test isa(data.depvar_data, Array{Float64}) || isa(data.depvar_data, Array{Union{Missing, Float64}})
         data = Preprocessing.input("y, x2, x1", data_paneltime_without_missings_tuple, method=:precise)
         @test data.datatype == Float64
-        @test isa(data.depvar_data, Array{Float64})
+        @test isa(data.depvar_data, Array{Float64}) || isa(data.depvar_data, Array{Union{Missing, Float64}})
         data = Preprocessing.input("y, x2, x1", data_paneltime_without_missings_tuple, method=:PRECISE)
         @test data.datatype == Float64
-        @test isa(data.depvar_data, Array{Float64})
+        @test isa(data.depvar_data, Array{Float64}) || isa(data.depvar_data, Array{Union{Missing, Float64}})
 
         data = nothing
         try
@@ -181,7 +194,7 @@ end
         @test data.panel == :panel
         @test data.depvar_data == test_panel_data[:,1]
         @test data.expvars_data == test_panel_data[:,2:end]
-        println(data)
+        
         data = nothing
         try
             data = Preprocessing.input("y, x2, x1", data_paneltime_without_missings_tuple, panel="invalid")
@@ -198,25 +211,166 @@ end
     end
 
     @testset "Panel Time" begin
-        #data = Preprocessing.input("y, x2, x1", data_paneltime_without_missings_tuple, time=:time, panel=:panel)
-        #@test data.time == :time
-        #@test data.panel == :panel
-        #@test data.depvar_data == test_paneltime_data[:,1]
-        #@test data.expvars_data == test_paneltime_data[:,2:end]
+        data = Preprocessing.input("y, x2, x1", data_paneltime_without_missings_tuple, time=:time, panel=:panel)
+        @test data.time == :time
+        @test data.panel == :panel
+
+        @test data.depvar_data == test_paneltime_data[:,1]
+        @test data.expvars_data == test_paneltime_data[:,2:end]
 
         data = nothing
         try
-            #data = Preprocessing.input("y, x2, x1", data_paneltime_with_missings_tuple, time="invalid", panel="invalid")
+            data = Preprocessing.input("y, x2, x1", data_paneltime_with_missings_tuple, time="invalid", panel="invalid")
         catch e
         end
         @test data == nothing
 
         data = nothing
         try
-            #data = Preprocessing.input("y, x2, x1", data_paneltime_as_missings, time=:time, panel=:panel)
+            data = Preprocessing.input("y, x2, x1", data_paneltime_as_missings, time=:time, panel=:panel)
         catch e
         end
         @test data == nothing
 
+    end
+end
+
+@testset "Data" begin
+    @testset "With missings" begin
+        @testset "DataFrame" begin
+            data = Preprocessing.input("y x2 x1", data_paneltime_without_missings_dataframe)
+            @test data.depvar == :y
+            @test data.expvars == [:x2, :x1, :_cons]
+            @test data.depvar_data == test_nonmissing_data[:,1]
+            @test data.expvars_data == test_nonmissing_data[:,2:end]
+            @test data.nobs == 20
+
+            data = Preprocessing.input("y x2 x1", data=data_paneltime_without_missings_dataframe)
+            @test data.depvar == :y
+            @test data.expvars == [:x2, :x1, :_cons]
+            @test data.depvar_data == test_nonmissing_data[:,1]
+            @test data.expvars_data == test_nonmissing_data[:,2:end]
+            @test data.nobs == 20
+
+            data = Preprocessing.input("y x2 x1", data_paneltime_with_missings_dataframe)
+            @test data.depvar == :y
+            @test data.expvars == [:x2, :x1, :_cons]
+            @test data.depvar_data == test_missing_data[:,1]
+            t = data.expvars_data == test_missing_data[:,2:end]
+            @test isa(t, Missing) || t == true
+            @test data.nobs == 20
+
+            data = Preprocessing.input("y x2 x1", data=data_paneltime_with_missings_dataframe)
+            @test data.depvar == :y
+            @test data.expvars == [:x2, :x1, :_cons]
+            @test data.depvar_data == test_missing_data[:,1]
+            t = data.expvars_data == test_missing_data[:,2:end]
+            @test isa(t, Missing) || t == true
+            @test data.nobs == 20
+
+            data = Preprocessing.input("y x2 x1", data_paneltime_with_missings_dataframe, removemissings=false)
+            @test data.depvar == :y
+            @test data.expvars == [:x2, :x1, :_cons]
+            @test data.depvar_data == test_missing_data[:,1]
+            t = data.expvars_data == test_missing_data[:,2:end]
+            @test isa(t, Missing) || t == true
+            @test data.nobs == 20
+
+            data = Preprocessing.input("y x2 x1", data_paneltime_with_missings_dataframe, removemissings=true)
+            @test data.depvar == :y
+            @test data.expvars == [:x2, :x1, :_cons]
+            @test data.depvar_data == test_removedmissing_data[:,1]
+            t = data.expvars_data == test_removedmissing_data[:,2:end]
+            @test isa(t, Missing) || t == true
+            @test data.nobs == 18
+        end
+
+        @testset "Tuple" begin
+            data = Preprocessing.input("y x2 x1", data_paneltime_without_missings_tuple)
+            @test data.depvar == :y
+            @test data.expvars == [:x2, :x1, :_cons]
+            @test data.depvar_data == test_nonmissing_data[:,1]
+            @test data.expvars_data == test_nonmissing_data[:,2:end]
+            @test data.nobs == 20
+
+            data = Preprocessing.input("y x2 x1", data=data_paneltime_without_missings_tuple)
+            @test data.depvar == :y
+            @test data.expvars == [:x2, :x1, :_cons]
+            @test data.depvar_data == test_nonmissing_data[:,1]
+            @test data.expvars_data == test_nonmissing_data[:,2:end]
+            @test data.nobs == 20
+
+            data = Preprocessing.input("y x2 x1", data_paneltime_with_missings_tuple)
+            @test data.depvar == :y
+            @test data.expvars == [:x2, :x1, :_cons]
+            @test data.depvar_data == test_missing_data[:,1]
+            t = data.expvars_data == test_missing_data[:,2:end]
+            @test isa(t, Missing) || t == true
+            @test data.nobs == 20
+
+            data = Preprocessing.input("y x2 x1", data=data_paneltime_with_missings_tuple)
+            @test data.depvar == :y
+            @test data.expvars == [:x2, :x1, :_cons]
+            @test data.depvar_data == test_missing_data[:,1]
+            t = data.expvars_data == test_missing_data[:,2:end]
+            @test isa(t, Missing) || t == true
+            @test data.nobs == 20
+
+            data = Preprocessing.input("y x2 x1", data_paneltime_with_missings_tuple, removemissings=false)
+            @test data.depvar == :y
+            @test data.expvars == [:x2, :x1, :_cons]
+            @test data.depvar_data == test_missing_data[:,1]
+            t = data.expvars_data == test_missing_data[:,2:end]
+            @test isa(t, Missing) || t == true
+            @test data.nobs == 20
+
+            data = Preprocessing.input("y x2 x1", data_paneltime_with_missings_tuple, removemissings=true)
+            @test data.depvar == :y
+            @test data.expvars == [:x2, :x1, :_cons]
+            @test data.depvar_data == test_removedmissing_data[:,1]
+            @test data.expvars_data == test_removedmissing_data[:,2:end]
+            @test data.nobs == 18
+        end
+
+        @testset "Data" begin
+            data = Preprocessing.input("y x2 x1", data_paneltime_without_missings_tuple[1], datanames=names(data_paneltime_without_missings_dataframe))
+            @test data.depvar == :y
+            @test data.expvars == [:x2, :x1, :_cons]
+            @test data.depvar_data == test_nonmissing_data[:,1]
+            @test data.expvars_data == test_nonmissing_data[:,2:end]
+            @test data.nobs == 20
+
+            data = Preprocessing.input("y x2 x1", data=data_paneltime_without_missings_tuple[1], datanames=names(data_paneltime_without_missings_dataframe))
+            @test data.depvar == :y
+            @test data.expvars == [:x2, :x1, :_cons]
+            @test data.depvar_data == test_nonmissing_data[:,1]
+            @test data.expvars_data == test_nonmissing_data[:,2:end]
+            @test data.nobs == 20
+
+            data = Preprocessing.input("y x2 x1", data=data_paneltime_without_missings_tuple[1], datanames=data_paneltime_without_missings_tuple[2])
+            @test data.depvar == :y
+            @test data.expvars == [:x2, :x1, :_cons]
+            @test data.depvar_data == test_nonmissing_data[:,1]
+            t = data.expvars_data == test_nonmissing_data[:,2:end]
+            @test isa(t, Missing) || t == true
+            @test data.nobs == 20
+
+            data = Preprocessing.input("y x2 x1", data_paneltime_with_missings_tuple[1], datanames=data_paneltime_without_missings_tuple[2], removemissings=false)
+            @test data.depvar == :y
+            @test data.expvars == [:x2, :x1, :_cons]
+            @test data.depvar_data == test_missing_data[:,1]
+            t = data.expvars_data == test_missing_data[:,2:end]
+            @test isa(t, Missing) || t == true
+            @test data.nobs == 20
+
+            data = Preprocessing.input("y x2 x1", data_paneltime_with_missings_tuple[1], datanames=data_paneltime_without_missings_tuple[2], removemissings=true)
+            @test data.depvar == :y
+            @test data.expvars == [:x2, :x1, :_cons]
+            @test data.depvar_data == test_removedmissing_data[:,1]
+            t = data.expvars_data == test_removedmissing_data[:,2:end]
+            @test isa(t, Missing) || t == true
+            @test data.nobs == 18
+
+        end
     end
 end

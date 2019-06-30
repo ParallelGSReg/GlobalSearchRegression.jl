@@ -10,14 +10,16 @@
  - [X] Parse a given equation from multiple formats, including R, Stata and DataFrames
  - [X] Reduce the database based on the equation (Including time if it is not included)
  - [X] Order the database by time and panel variables then remove time if is not used as covariate
- - [-] Time validation *(gaps and string)
+ - [X] Panel validation
+ - [X] Time validation
  - [X] Transforms data representation for faster compute (Float64, Float32)
  - [X] Adds the intercept if it was expecified
- - [ ] Sort by time and panel
- - [ ] Remove outliers (no allows missings?)
- - [ ] Seasonal adjustament (no allows missings?)
+ - [X] Sort by time and panel
+ - [ ] Seasonal adjustament 
+ - [ ] Remove outliers and seasonal adjustament validation (no missings)
  - [X] Fixed effect
- - [ ] MISSING AL FINAL
+ - [ ] Remove missings option
+ - [ ] Update documentation
 
 ### FeatureExtraction
  - [X] Feature extraction. Optional creation of non-linear realtionships (sqaure, lag, log, inv, interaction)

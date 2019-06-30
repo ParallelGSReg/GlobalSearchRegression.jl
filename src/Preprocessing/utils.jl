@@ -110,9 +110,6 @@ Validates if there are panel gaps
 """
 function validate_panel(data, datanames; panel=nothing)
     if panel != nothing
-        print(get_column_index(panel, datanames))
-        print(datanames)
-        println(data[:,get_column_index(panel, datanames)])
         return !any(ismissing, data[:,get_column_index(panel, datanames)])
     end
     return true
