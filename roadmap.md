@@ -15,12 +15,10 @@
  - [X] Transforms data representation for faster compute (Float64, Float32)
  - [X] Adds the intercept if it was expecified
  - [X] Sort by time and panel
- - [ ] Seasonal adjustament
+ - [X] Seasonal adjustament
  - [X] Remove outliers
- - [ ] Remove outliers and seasonal adjustament validation (no missings)
  - [X] Fixed effect
  - [X] Remove missings option
- - [-] Update documentation
 
 ### FeatureExtraction
  - [X] Feature extraction. Optional creation of non-linear realtionships (sqaure, lag, log, inv, interaction)
@@ -32,6 +30,8 @@
  - [ ] Allows to receive GSRegResult
  - [ ] SI HAY LAG TIENE QUE HABER MISSING
  - [ ] MISSING AL FINAL
+ - [ ] Update documentation
+
 
 ### Preliminary selection
 - [ ] Preselection with GLM.jl based on covariates number
