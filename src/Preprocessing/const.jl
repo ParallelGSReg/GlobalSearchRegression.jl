@@ -6,4 +6,6 @@ const TIME_DEFAULT = nothing
 const PANEL_DEFAULT = nothing
 const FIXED_EFFECT_DEFAULT = false
 const INTERACTION_DEFAULT = nothing
+const REMOVEOUTLIERS_DEFAULT = false
 const REMOVEMISSINGS_DEFAULT = false
+const SEASONALADJUSTMENT_DEFAULT = nothing

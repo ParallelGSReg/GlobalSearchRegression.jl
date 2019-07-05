@@ -1,0 +1,62 @@
+z = (Observation — Mean) / Standard Deviation
+
+def detect_outlier(data_1):
+    
+    threshold=3
+    mean_1 = np.mean(data_1)
+    std_1 =np.std(data_1)
+    
+    
+    for y in data_1:
+        z_score= (y - mean_1)/std_1 
+        if np.abs(z_score) > threshold:
+            outliers.append(y)
+    return outliers
+
+
+
+
+using Statistics
+
+data = rand([1, 2], 100, 20)
+data[1,1] = 10
+data[3,1] = 12
+data[3,2] = 7
+
+data = convert(Array{Union{Int64, Missing}}, data)
+data[5,1] = missing
+data[7,2] = missing
+
+function remove_outliers(data)
+    for column in 1:size(data, 2)
+        remove_outlier(data, column)
+    end
+end
+
+function remove_outlier(data, column)
+    threshold = 3
+
+    col = @view(data[:,column])
+    aux_col = Array{Union{Int64, Float64, Missing}}(undef, size(col, 1), 2)
+    for i in keys(col)
+        aux_col[i, 1] = i
+        aux_col[i, 2] = col[i]
+    end
+
+    valid_data = deleteat!(aux_col[:, 2], findall(ismissing, aux_col[:, 2]))
+
+    mean_ = mean(valid_data)
+    std_ = std(valid_data)
+
+    for i in keys(col)
+        if !ismissing(col[i])
+            z_score = (col[i] - mean_) / std_ 
+            if abs(z_score) > threshold
+                col[i] = missing
+            end
+        end
+    end
+    return data
+end
+
+detect_outliers(data)

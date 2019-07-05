@@ -15,11 +15,12 @@
  - [X] Transforms data representation for faster compute (Float64, Float32)
  - [X] Adds the intercept if it was expecified
  - [X] Sort by time and panel
- - [ ] Seasonal adjustament 
+ - [ ] Seasonal adjustament
+ - [X] Remove outliers
  - [ ] Remove outliers and seasonal adjustament validation (no missings)
  - [X] Fixed effect
- - [ ] Remove missings option
- - [ ] Update documentation
+ - [X] Remove missings option
+ - [-] Update documentation
 
 ### FeatureExtraction
  - [X] Feature extraction. Optional creation of non-linear realtionships (sqaure, lag, log, inv, interaction)

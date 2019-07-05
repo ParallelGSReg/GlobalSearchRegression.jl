@@ -40,6 +40,7 @@ test_paneltime_data = convert_array_with_missing(replace_string_to_nothing( (rea
 test_missing_data = convert_array_with_missing(replace_string_to_nothing( (readdlm(TEST_MISSING_FILENAME, ','), nothing) )[1], Float32)
 test_removedmissing_data = convert_array_with_missing(replace_string_to_nothing( (readdlm(TEST_REMOVEDMISSING_FILENAME, ','), nothing) )[1], Float32)
 test_nonmissing_data = convert_array_with_missing(replace_string_to_nothing( (readdlm(TEST_NONMISSING_FILENAME, ','), nothing) )[1], Float32)
+test_removedoutliers_data = convert_array_with_missing(replace_string_to_nothing( (readdlm(TEST_REMOVEDOUTLIERS_FILENAME, ','), nothing) )[1], Float32)
 
 @testset "Equations" begin
     @testset "Stata like" begin
@@ -231,7 +232,15 @@ end
         catch e
         end
         @test data == nothing
+    end
 
+    @testset "Remove outliers" begin
+        data = Preprocessing.input("y, x2, x1", data_paneltime_without_missings_tuple, removeoutliers=true)
+        t = data.depvar_data == test_removedoutliers_data[:,1]
+        @test isa(t, Missing) || t == true
+        t = data.expvars_data == test_removedoutliers_data[:,2:end]
+        @test isa(t, Missing) || t == true
+        
     end
 end
 

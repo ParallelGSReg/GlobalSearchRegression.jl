@@ -6,6 +6,8 @@ function input(
     intercept::Bool=INTERCEPT_DEFAULT,
     time::Union{Symbol, String, Nothing}=TIME_DEFAULT,
     panel::Union{Symbol, String, Nothing}=PANEL_DEFAULT,
+    removeoutliers::Bool=REMOVEOUTLIERS_DEFAULT,
+    seasonaladjustment::Union{Dict, Nothing}=SEASONALADJUSTMENT_DEFAULT,
     removemissings::Bool=REMOVEMISSINGS_DEFAULT
     )
 
@@ -17,6 +19,8 @@ function input(
         intercept=intercept,
         time=time,
         panel=panel,
+        removeoutliers=removeoutliers,
+        seasonaladjustment=seasonaladjustment,
         removemissings=removemissings
     )
 end
@@ -29,6 +33,8 @@ function input(
     intercept::Bool=INTERCEPT_DEFAULT,
     time::Union{Symbol, String, Nothing}=TIME_DEFAULT,
     panel::Union{Symbol, String, Nothing}=PANEL_DEFAULT,
+    removeoutliers::Bool=REMOVEOUTLIERS_DEFAULT,
+    seasonaladjustment::Union{Dict, Nothing}=SEASONALADJUSTMENT_DEFAULT,
     removemissings::Bool=REMOVEMISSINGS_DEFAULT
     )
 
@@ -40,6 +46,8 @@ function input(
         intercept=intercept,
         time=time,
         panel=panel,
+        removeoutliers=removeoutliers,
+        seasonaladjustment=seasonaladjustment,
         removemissings=removemissings
     )
 end
@@ -52,6 +60,8 @@ function input(
     intercept::Bool=INTERCEPT_DEFAULT,
     time::Union{Symbol, String, Nothing}=TIME_DEFAULT,
     panel::Union{Symbol, String, Nothing}=PANEL_DEFAULT,
+    removeoutliers::Bool=REMOVEOUTLIERS_DEFAULT,
+    seasonaladjustment::Union{Dict, Nothing}=SEASONALADJUSTMENT_DEFAULT,
     removemissings::Bool=REMOVEMISSINGS_DEFAULT
     )
 
@@ -63,6 +73,8 @@ function input(
         intercept=intercept,
         time=time,
         panel=panel,
+        removeoutliers=removeoutliers,
+        seasonaladjustment=seasonaladjustment,
         removemissings=removemissings
     )
 end
@@ -75,6 +87,8 @@ function input(
     intercept::Bool=INTERCEPT_DEFAULT,
     time::Union{Symbol, String, Nothing}=TIME_DEFAULT,
     panel::Union{Symbol, String, Nothing}=PANEL_DEFAULT,
+    removeoutliers::Bool=REMOVEOUTLIERS_DEFAULT,
+    seasonaladjustment::Union{Dict, Nothing}=SEASONALADJUSTMENT_DEFAULT,
     removemissings::Bool=REMOVEMISSINGS_DEFAULT
     )
 
@@ -86,6 +100,8 @@ function input(
         method=method,
         time=time,
         panel=panel,
+        removeoutliers=removeoutliers,
+        seasonaladjustment=seasonaladjustment,
         removemissings=removemissings
     )
 end
@@ -98,6 +114,8 @@ function input(
     intercept::Bool=INTERCEPT_DEFAULT,
     time::Union{Symbol, String, Nothing}=TIME_DEFAULT,
     panel::Union{Symbol, String, Nothing}=PANEL_DEFAULT,
+    removeoutliers::Bool=REMOVEOUTLIERS_DEFAULT,
+    seasonaladjustment::Union{Dict, Nothing}=SEASONALADJUSTMENT_DEFAULT,
     removemissings::Bool=REMOVEMISSINGS_DEFAULT
     )
 
@@ -121,6 +139,8 @@ function input(
         method=method,
         time=time,
         panel=panel,
+        removeoutliers=removeoutliers,
+        seasonaladjustment=seasonaladjustment,
         removemissings=removemissings
     )
 end
@@ -133,6 +153,8 @@ function input(
     intercept::Bool=INTERCEPT_DEFAULT,
     time::Union{Symbol, String, Nothing}=TIME_DEFAULT,
     panel::Union{Symbol, String, Nothing}=PANEL_DEFAULT,
+    removeoutliers::Bool=REMOVEOUTLIERS_DEFAULT,
+    seasonaladjustment::Union{Dict, Nothing}=SEASONALADJUSTMENT_DEFAULT,
     removemissings::Bool=REMOVEMISSINGS_DEFAULT
     )
 
@@ -194,6 +216,8 @@ function input(
         intercept;
         time=time,
         panel=panel,
+        removeoutliers=removeoutliers,
+        seasonaladjustment=seasonaladjustment,
         removemissings=removemissings
     )
 end
@@ -206,6 +230,8 @@ function processinput(
     intercept::Bool;
     time::Union{Symbol, Nothing}=TIME_DEFAULT,
     panel::Union{Symbol, Nothing}=PANEL_DEFAULT,
+    removeoutliers::Bool=REMOVEOUTLIERS_DEFAULT,
+    seasonaladjustment::Union{Dict, Nothing}=SEASONALADJUSTMENT_DEFAULT,
     removemissings::Bool=REMOVEMISSINGS_DEFAULT
     )
     
@@ -247,6 +273,14 @@ function processinput(
         data = hcat(data, ones(nobs))
         push!(expvars, :_cons)
         push!(datanames, :_cons)
+    end
+
+    if removeoutliers
+        remove_outliers(data)
+    end
+
+    if seasonaladjustment != nothing
+        seasonal_adjustments(data, seasonaladjustment, datanames)
     end
 
     if removemissings

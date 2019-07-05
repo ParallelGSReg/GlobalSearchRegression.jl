@@ -1,5 +1,7 @@
 module Preprocessing
     using DataFrames
+    using Statistics
+    using SingularSpectrumAnalysis
     using ..GlobalSearchRegression
     using ..GlobalSearchRegression: get_column_index, in_vector
 

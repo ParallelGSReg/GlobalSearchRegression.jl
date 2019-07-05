@@ -148,3 +148,64 @@ function validate_time(data, datanames; panel=nothing, time=nothing)
     end
     return true
 end
+
+"""
+Remove outliers from data
+"""
+function remove_outliers(data)
+    for column in 1:size(data, 2)
+        # remove_outlier(data, column)
+    end
+end
+
+"""
+Remove outliers from a data column 
+"""
+function remove_outlier(data, column)
+    threshold = 3
+
+    col = @view(data[:,column])
+    aux_col = Array{Union{Int64, Float64, Missing}}(undef, size(col, 1), 2)
+    for i in keys(col)
+        aux_col[i, 1] = i
+        aux_col[i, 2] = col[i]
+    end
+
+    valid_data = deleteat!(aux_col[:, 2], findall(ismissing, aux_col[:, 2]))
+
+    mean_ = mean(valid_data)
+    std_ = std(valid_data)
+
+    for i in keys(col)
+        if !ismissing(col[i])
+            z_score = (col[i] - mean_) / std_ 
+            if abs(z_score) > threshold
+                col[i] = missing
+            end
+        end
+    end
+    return data
+end
+
+"""
+Remove outliers from data
+"""
+function seasonal_adjustments(data, factor_dict, datanames)
+    for column in factor_dict
+        seasonal_adjustment(data, column[1], column[2], datanames)
+    end
+end
+
+"""
+Seasonal adjustment from a data column 
+"""
+function seasonal_adjustment(data, name, factor, datanames)
+    column = get_column_index(name, datanames)
+    nobs = size(data, 2)
+    col = @view(data[:, column])
+    L = Int(round(nobs / 2 / factor)) * factor
+    yt, ys = analyze(col, L) 
+    seasonal_component = sum(ys, dims=2)
+    col = col - seasonal_component
+    return data
+end
