@@ -9,11 +9,7 @@ function replace_string_to_nothing(data)
         for m=1:size(data[1], 2)
             if isa(data[1][n,m], String) || isa(data[1][n,m], SubString)
                 data[1][n,m] = missing
-            else 
-                if !isa(data[1][n,m], Int64) && !isa(data[1][n,m], Float64)
-                    data[1][n,m] = parse(Float64, data[1][n,m])
-                end
-            end
+            end 
         end
     end
     return data
