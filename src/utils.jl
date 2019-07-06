@@ -17,6 +17,108 @@ function get_column_index(name, names)
     return findfirst(isequal(name), names)
 end
 
+"""
+Filter rawdata by empty values
+"""
+function filter_raw_data_by_empty_values(depvar_data, expvars_data, panel_data=nothing, time_data=nothing)
+    keep_rows = Array{Bool}(undef, size(depvar_data, 1))
+    keep_rows .= true
+    keep_rows .&= map(b->!b, ismissing.(depvar_data))
+
+    for i = 1:size(expvars_data, 2)
+        keep_rows .&= map(b->!b, ismissing.(expvars_data[:, i]))
+    end
+    
+    depvar_data = depvar_data[keep_rows, 1]
+    expvars_data = expvars_data[keep_rows, :]
+
+    if panel_data != nothing
+        panel_data = panel_data[keep_rows, 1]
+    end
+
+    if time_data != nothing
+        time_data = time_data[keep_rows, 1]
+    end
+
+    return depvar_data, expvars_data, panel_data, time_data
+end
+
+"""
+Filter data by empty values
+"""
+function filter_data_by_empty_values(data)
+    depvar_data, expvars_data, panel_data, time_data = filter_raw_data_by_empty_values(
+        data.depvar_data,
+        data.expvars_data,
+        data.panel_data,
+        data.time_data
+    )
+
+    data.depvar_data = depvar_data
+    data.expvars_data = expvars_data
+    data.panel_data = panel_data
+    data.time_data = time_data
+
+    return data
+end
+
+"""
+Convert column by data content
+"""
+function convert_column(datatype, column)
+    if column != nothing
+        has_missings = false
+        
+        if size(column, 2) == 1
+            has_missings |= findfirst(x -> ismissing(x), column) != nothing
+        else
+            for i in 1:size(column, 2)
+                has_missings |= findfirst(x -> ismissing(x), column[:,i]) != nothing
+            end
+        end
+
+
+        if has_missings
+            return convert(Array{Union{Missing, datatype}}, column)
+        else
+            return convert(Array{datatype}, column)
+        end
+    end
+    return nothing
+end
+
+"""
+Convert rawdata by data content
+"""
+function convert_raw_data(datatype, depvar_data, expvars_data, panel_data=nothing, time_data=nothing)
+    depvar_data = convert_column(datatype, depvar_data)
+    expvars_data = convert_column(datatype, expvars_data)
+    panel_data = convert_column(datatype == Float64 ? Int64 : Int32, panel_data)
+    time_data = convert_column(datatype, time_data)
+
+    return depvar_data, expvars_data, panel_data, time_data
+end
+
+"""
+Convert data by data
+"""
+function convert_data(datatype, data)
+    depvar_data, expvars_data, panel_data, time_data = convert_raw_data(
+        data.datatype,
+        data.depvar_data,
+        data.expvars_data,
+        data.panel_data,
+        data.time_data
+    )
+    data.depvar_data = depvar_data
+    data.expvars_data = expvars_data
+    data.panel_data = panel_data
+    data.time_data = time_data
+
+    return data
+end
+
+
 # OLD
 
 """

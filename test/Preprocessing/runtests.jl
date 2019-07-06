@@ -1,5 +1,9 @@
 using Test, CSV, DelimitedFiles, GlobalSearchRegression.Preprocessing
 
+# TODO: Add Seasonal Adjustament to the tests
+# TODO: Add panel_data to the tests
+# TODO: Add time_data to the tests
+
 function replace_string_to_nothing(data)
     for n=1:size(data[1],1)
         for m=1:size(data[1], 2)

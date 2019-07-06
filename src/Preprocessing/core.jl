@@ -197,6 +197,7 @@ function input(
         if GlobalSearchRegression.get_column_index(time, datanames) == nothing
             error(TIME_VARIABLE_INEXISTENT)
         end
+
     end
 
     if panel != nothing
@@ -235,31 +236,36 @@ function processinput(
     removemissings::Bool=REMOVEMISSINGS_DEFAULT
     )
     
-    if method == :precise
-        datatype = Float64
-    elseif method == :fast
-        datatype = Float32
-    end
-
+    datatype = method == :precise ? Float64 : Float32
     temp_equation = equation
-
-    if time != nothing && GlobalSearchRegression.get_column_index(time, temp_equation) == nothing
-        temp_equation = vcat(temp_equation, time)
-    end
 
     if panel != nothing && GlobalSearchRegression.get_column_index(panel, temp_equation) == nothing
         temp_equation = vcat(temp_equation, panel)
     end
 
+    if time != nothing && GlobalSearchRegression.get_column_index(time, temp_equation) == nothing
+        temp_equation = vcat(temp_equation, time)
+    end
+
     (data, datanames) = filter_data_by_selected_columns(data, temp_equation, datanames)
     data = sort_data(data, datanames, panel=panel, time=time)
     
-    if panel != nothing && !validate_panel(data, datanames, panel=panel)
-        error(PANEL_ERROR)
+    panel_data = nothing
+    if panel != nothing
+        if validate_panel(data, datanames, panel=panel)
+            panel_data = data[:, GlobalSearchRegression.get_column_index(panel, datanames)]
+        else
+            error(PANEL_ERROR)
+        end
     end
-
-    if time != nothing && !validate_time(data, datanames, panel=panel, time=time)
-        error(TIME_ERROR)
+    
+    time_data = nothing
+    if time != nothing
+        if validate_time(data, datanames, panel=panel, time=time)
+            time_data = data[:, GlobalSearchRegression.get_column_index(time, datanames)]
+        else
+            error(TIME_ERROR)
+        end
     end
 
     (data, datanames) = filter_data_by_selected_columns(data, equation, datanames)
@@ -282,15 +288,15 @@ function processinput(
     if seasonaladjustment != nothing
         seasonal_adjustments(data, seasonaladjustment, datanames)
     end
-
-    if removemissings
-        data = filter_data_by_empty_values(data)
-        data = convert(Array{datatype}, data)
-    else
-        data = convert(Array{Union{Missing, datatype}}, data)
-    end
+    
     depvar_data = data[1:end, 1]
     expvars_data = data[1:end, 2:end]
+
+    if removemissings
+        depvar_data, expvars_data, panel_data, time_data = filter_raw_data_by_empty_values(depvar_data, expvars_data, panel_data, time_data)
+    end
+
+    depvar_data, expvars_data, panel_data, time_data = convert_raw_data(datatype, depvar_data, expvars_data, panel_data, time_data)
 
     nobs = size(depvar_data, 1)
 
@@ -298,11 +304,13 @@ function processinput(
         equation,
         depvar,
         expvars,
+        panel,
+        time,
         depvar_data,
         expvars_data,
+        panel_data,
+        time_data,
         intercept,
-        time,
-        panel,
         datatype,
         removemissings,
         nobs

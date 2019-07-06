@@ -96,21 +96,11 @@ function filter_data_by_selected_columns(data, equation, datanames)
 end
 
 """
-Filter data by empty values
-"""
-function filter_data_by_empty_values(data)
-    for i = 1:size(data, 2)
-        data = data[map(b->!b, ismissing.(data[:,i])), :]
-    end
-    return data
-end
-
-"""
 Validates if there are panel gaps
 """
 function validate_panel(data, datanames; panel=nothing)
     if panel != nothing
-        return !any(ismissing, data[:,get_column_index(panel, datanames)])
+        return !any(ismissing, data[:, get_column_index(panel, datanames)])
     end
     return true
 end
