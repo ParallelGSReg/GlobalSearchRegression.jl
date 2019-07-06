@@ -4,7 +4,7 @@ Parse fe variables
 function parse_fe_variables(fe_vars, expvars; depvar=nothing, is_pair=false)
     valid_vars = expvars
 
-    if depvar
+    if depvar != nothing
         append!(valid_vars, depvar)
     end
 

@@ -27,12 +27,17 @@
  - [ ] Allows to receive GSRegData
  - [ ] Feature extraction. Optional creation of non-linear realtionships (sqaure, lag, log, inv, interaction)
  - [ ] Option to excludes observations with missing or null values
+ - [ ] Keep data
  - [ ] Create tests
  - [ ] Update Readme
 
 ### Preliminary selection
 - [ ] Preselection with GLM.jl based on covariates number
- 
+- [ ] Filter data by results
+- [ ] Keep data
+- [ ] Create tests
+- [ ] Update readme
+
 ### Selection
 - [-] Parallel processing [TEST]
 - [ ] Iterative estimators (LOGIT, PROBIT) *****
