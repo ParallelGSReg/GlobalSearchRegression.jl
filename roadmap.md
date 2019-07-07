@@ -32,33 +32,35 @@
  - [ ] Update Readme
 
 ### Preliminary selection
-- [ ] Preselection with GLM.jl based on covariates number
-- [ ] Filter data by results
-- [ ] Keep data
-- [ ] Create tests
-- [ ] Update readme
+ - [X] Preselection with GLM.jl based on covariates number
+ - [X] Filter data by results
+ - [ ] Keep data
+ - [ ] Create tests
+ - [ ] Update readme
 
 ### Selection
-- [-] Parallel processing [TEST]
-- [ ] Iterative estimators (LOGIT, PROBIT) *****
-- [X] OLS [TEST]
-- [X] Adjust selection to interact with feature extraction [TEST]
-- [X] Compute t-test [TEST]
-- [ ] Compure z value
-- [X] Outsample [TEST]
-- [X] Compute selection criteria (aic, cic, bic, r2, r2adj, rmse, rmsout, cp)
-- [X] Model averaging [TEST]
-- [X] Residual tests [TEST]
-- [X] Sort by selection criteria
-- [ ] Fix parameters datatypes
-- [ ] Fix GSRegData datatypes
-- [ ] Fix GSRegResult datatypes
-- [ ] Fix documentation
-- [ ] Change module name
+ - [ ] Parallel processing [TEST]
+ - [ ] Iterative estimators (LOGIT, PROBIT) *****
+ - [X] OLS [TEST]
+ - [X] Adjust selection to interact with feature extraction [TEST]
+ - [X] Compute t-test [TEST]
+ - [ ] Compure z value
+ - [X] Outsample [TEST]
+ - [X] Compute selection criteria (aic, cic, bic, r2, r2adj, rmse, rmsout, cp)
+ - [X] Model averaging [TEST]
+ - [X] Residual tests [TEST]
+ - [X] Sort by selection criteria
+ - [ ] Fix parameters datatypes
+ - [ ] Fix GSRegData datatypes
+ - [ ] Fix GSRegResult datatypes
+ - [ ] Fix documentation
+ - [ ] Change module name
+ 
+### K Cross-fold validation ✌
 
 ### Output decoration
-- [ ] CSV
-- [ ] JSON
-- [ ] LaTeX
-- [ ] Jupyter plot
-- [ ] Short console text
+ - [ ] CSV
+ - [ ] JSON
+ - [ ] LaTeX
+ - [ ] Jupyter plot
+ - [ ] Short console text
