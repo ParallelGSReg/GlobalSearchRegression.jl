@@ -79,7 +79,7 @@ julia> Preprocessing.input(
     time=:time,
     panel=:panel,
     removeoutliers=true,
-    seasonaladjustment=Dict(:panel=>1, :time=>6),
+    seasonaladjustment=[:panel=>1, :time=>6],
     removemissings=true
     )
 ```

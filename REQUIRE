@@ -3,3 +3,4 @@ DataFrames 0.14.1
 Distributions 0.16.4
 Statistics
 SingularSpectrumAnalysis
+ShiftedArrays

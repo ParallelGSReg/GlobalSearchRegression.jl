@@ -182,7 +182,7 @@ function input(
 
     data = get_data_from_data(data)
 
-    if !in_vector(equation, datanames)
+    if !GlobalSearchRegression.in_vector(equation, datanames)
         error(SELECTED_VARIABLES_DOES_NOT_EXISTS)
     end
 
@@ -293,14 +293,14 @@ function processinput(
     expvars_data = data[1:end, 2:end]
 
     if removemissings
-        depvar_data, expvars_data, panel_data, time_data = filter_raw_data_by_empty_values(depvar_data, expvars_data, panel_data, time_data)
+        depvar_data, expvars_data, panel_data, time_data = GlobalSearchRegression.filter_raw_data_by_empty_values(depvar_data, expvars_data, panel_data, time_data)
     end
 
-    depvar_data, expvars_data, panel_data, time_data = convert_raw_data(datatype, depvar_data, expvars_data, panel_data, time_data)
+    depvar_data, expvars_data, panel_data, time_data = GlobalSearchRegression.convert_raw_data(datatype, depvar_data, expvars_data, panel_data, time_data)
 
     nobs = size(depvar_data, 1)
 
-    return GSRegData(
+    return GlobalSearchRegression.GSRegData(
         equation,
         depvar,
         expvars,

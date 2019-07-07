@@ -1,5 +1,5 @@
 function featureextraction(
-    data::GSRegData;
+    data::GlobalSearchRegression.GSRegData;
     fe_sqr=nothing,
     fe_log=nothing,
     fe_inv=nothing,
@@ -11,28 +11,28 @@ function featureextraction(
 
     if fe_sqr != nothing
         fe_sqr = parse_fe_variables(fe_sqr, data.expvars)
-        data, expvars, datanames = data_add_fe_sqr(data, fe_sqr, expvars, datanames)
+        data = data_add_fe_sqr(data, fe_sqr)
     end
 
-    #if fe_log != nothing
-    #    fe_log = parse_fe_variables(fe_log, expvars, datanames)
-    #    data, expvars, datanames = data_add_fe_log(data, fe_log, expvars, datanames)
-    #end
+    if fe_log != nothing
+        fe_log = parse_fe_variables(fe_log, data.expvars)
+        data = data_add_fe_log(data, fe_log)
+    end
 
-    #if fe_inv != nothing
-    #    fe_inv = parse_fe_variables(fe_inv, expvars, datanames)
-    #    data, expvars, datanames = data_add_fe_inv(data, fe_inv, expvars, datanames)
-    #end
+    if fe_inv != nothing
+        fe_inv = parse_fe_variables(fe_inv, data.expvars)
+        data = data_add_fe_inv(data, fe_inv)
+    end
 
-    #if fe_lag != nothing
-    #    fe_lag = parse_fe_variables(fe_lag, expvars, datanames, include_depvar=true, is_pair=true)
-    #    data, expvars, datanames = data_add_fe_lag(data, fe_lag, expvars, datanames, panel=panel)
-    #end
+    if fe_lag != nothing
+        fe_lag = parse_fe_variables(fe_lag, data.expvars, depvar=data.depvar, is_pair=true)
+        data = data_add_fe_lag(data, fe_lag)
+    end
 
-    #if interaction != nothing
-    #    data, expvars, datanames = data_add_interaction(data, interaction, depvar, expvars, datanames, equation)
-    #end
+    if interaction != nothing
+        interaction = parse_fe_variables(interaction, data.expvars)
+        data = data_add_interaction(data, interaction)
+    end
 
     return data
 end
-

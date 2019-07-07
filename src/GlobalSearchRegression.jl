@@ -18,4 +18,6 @@ using ..FeatureExtraction
 
 export GSRegData, GSRegResult #, featureextration, ols
 
+export get_column_index, in_vector, filter_raw_data_by_empty_values, convert_raw_data, GSRegData
+
 end # module GlobalSearchRegression

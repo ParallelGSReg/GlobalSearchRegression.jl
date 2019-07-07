@@ -68,8 +68,8 @@ end
 Sorts data
 """
 function sort_data(data, datanames; time=nothing, panel=nothing)
-    time_pos = get_column_index(time, datanames)
-    panel_pos = get_column_index(panel, datanames)
+    time_pos = GlobalSearchRegression.get_column_index(time, datanames)
+    panel_pos = GlobalSearchRegression.get_column_index(panel, datanames)
 
     if time_pos != nothing && panel_pos != nothing
         data = sortslices(data, by=x->(x[panel_pos], x[time_pos]), dims=1)
@@ -87,7 +87,7 @@ Filter data by selected columns
 function filter_data_by_selected_columns(data, equation, datanames)
     columns = []
     for i = 1:length(equation)
-        append!(columns, get_column_index(equation[i], datanames))
+        append!(columns, GlobalSearchRegression.get_column_index(equation[i], datanames))
     end
     data = data[:,columns]
     datanames = datanames[columns]
@@ -100,7 +100,7 @@ Validates if there are panel gaps
 """
 function validate_panel(data, datanames; panel=nothing)
     if panel != nothing
-        return !any(ismissing, data[:, get_column_index(panel, datanames)])
+        return !any(ismissing, data[:, GlobalSearchRegression.get_column_index(panel, datanames)])
     end
     return true
 end
@@ -113,17 +113,17 @@ function validate_time(data, datanames; panel=nothing, time=nothing)
 
     # TODO: Merge solutions
     if panel == nothing
-        previous_value = data[1, get_column_index(time, datanames)]
-        for value in data[2:end, get_column_index(time, datanames)]
+        previous_value = data[1, GlobalSearchRegression.get_column_index(time, datanames)]
+        for value in data[2:end, GlobalSearchRegression.get_column_index(time, datanames)]
             if previous_value + 1 != value
                 return false
             end
             previous_value = value
         end
     else
-        panel_index = get_column_index(panel, datanames)
+        panel_index = GlobalSearchRegression.get_column_index(panel, datanames)
         csis = unique(data[:, panel_index])
-        time_index = get_column_index(time, datanames)
+        time_index = GlobalSearchRegression.get_column_index(time, datanames)
         for csi in csis
             rows = findall(x->x == csi, data[:,panel_index])
             previous_value = data[rows[1], time_index]
@@ -190,7 +190,7 @@ end
 Seasonal adjustment from a data column 
 """
 function seasonal_adjustment(data, name, factor, datanames)
-    column = get_column_index(name, datanames)
+    column = GlobalSearchRegression.get_column_index(name, datanames)
     nobs = size(data, 2)
     col = @view(data[:, column])
     L = Int(round(nobs / 2 / factor)) * factor
