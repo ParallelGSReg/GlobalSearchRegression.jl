@@ -144,7 +144,7 @@ Remove outliers from data
 """
 function remove_outliers(data)
     for column in 1:size(data, 2)
-        # remove_outlier(data, column)
+        remove_outlier(data, column)
     end
 end
 

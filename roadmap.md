@@ -32,6 +32,7 @@
  - [ ] Update Readme
 
 ### Preliminary selection
+ - [ ] Normalize data in aux database to process
  - [X] Preselection with GLM.jl based on covariates number
  - [X] Filter data by results
  - [ ] Keep data
