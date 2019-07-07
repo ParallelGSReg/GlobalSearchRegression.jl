@@ -24,9 +24,9 @@
  - [ ] Test of Seasonal adjustment, panel data and time data
  
 ### FeatureExtraction
- - [ ] Allows to receive GSRegData
- - [ ] Feature extraction. Optional creation of non-linear realtionships (sqaure, lag, log, inv, interaction)
- - [ ] Option to excludes observations with missing or null values
+ - [X] Allows to receive GSRegData
+ - [X] Feature extraction. Optional creation of non-linear realtionships (sqaure, lag, log, inv, interaction)
+ - [X] Option to excludes observations with missing or null values
  - [ ] Keep data
  - [ ] Create tests
  - [ ] Update Readme

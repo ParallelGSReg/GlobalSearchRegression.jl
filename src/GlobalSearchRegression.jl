@@ -15,10 +15,10 @@ include("PreliminarySelection/PreliminarySelection.jl")
 
 using ..Preprocessing
 using ..FeatureExtraction
-#using ..AllSubsetRegression
+using ..PreliminarySelection
 
-export GSRegData, GSRegResult #, featureextration, ols
+export GSRegData, GSRegResult
 
-export get_column_index, in_vector, filter_raw_data_by_empty_values, convert_raw_data, GSRegData
+export Preprocessing, FeatureExtraction, PreliminarySelection
 
 end # module GlobalSearchRegression

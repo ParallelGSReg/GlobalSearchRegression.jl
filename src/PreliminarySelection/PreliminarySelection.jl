@@ -1,6 +1,6 @@
 module PreliminarySelection
 
-    using GLMNet, ..GlobalSearchRegression: GSRegData
+    using GLMNet, ..GlobalSearchRegression
 
     include("const.jl")
     include("utils.jl")

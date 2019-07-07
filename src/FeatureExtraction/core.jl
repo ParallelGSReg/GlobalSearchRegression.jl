@@ -34,5 +34,11 @@ function featureextraction(
         data = data_add_interaction(data, interaction)
     end
 
+    if removemissings
+        data = GlobalSearchRegression.filter_data_by_empty_values(data)
+    end
+
+    data = GlobalSearchRegression.convert_data(data)
+
     return data
 end

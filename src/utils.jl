@@ -102,7 +102,7 @@ end
 """
 Convert data by data
 """
-function convert_data(datatype, data)
+function convert_data(data)
     depvar_data, expvars_data, panel_data, time_data = convert_raw_data(
         data.datatype,
         data.depvar_data,
