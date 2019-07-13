@@ -293,7 +293,7 @@ function processinput(
     expvars_data = data[1:end, 2:end]
 
     if removemissings
-        depvar_data, expvars_data, panel_data, time_data = GlobalSearchRegression.filter_raw_data_by_empty_values(depvar_data, expvars_data, panel_data, time_data)
+        depvar_data, expvars_data, panel_data, time_data = GlobalSearchRegression.filter_raw_data_by_empty_values(datatype, depvar_data, expvars_data, panel_data, time_data)
     end
 
     depvar_data, expvars_data, panel_data, time_data = GlobalSearchRegression.convert_raw_data(datatype, depvar_data, expvars_data, panel_data, time_data)

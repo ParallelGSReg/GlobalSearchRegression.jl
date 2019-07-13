@@ -14,7 +14,7 @@ mutable struct GSRegResult
 
     function GSRegResult(
             datanames,
-            outsample::Int,
+            outsample,
             criteria,
             ttest,
             modelavg,

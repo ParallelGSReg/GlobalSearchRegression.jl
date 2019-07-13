@@ -4,10 +4,10 @@ module Preprocessing
     using SingularSpectrumAnalysis
     using ..GlobalSearchRegression
 
-    include("const.jl")
-    include("utils.jl")
-    include("strings.jl")
-    include("core.jl")
-
     export input
+
+    include("const.jl")
+    include("strings.jl")
+    include("utils.jl")
+    include("core.jl")    
 end

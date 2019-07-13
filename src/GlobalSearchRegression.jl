@@ -11,11 +11,12 @@ include("utils.jl")
 include("Preprocessing/Preprocessing.jl")
 include("FeatureExtraction/FeatureExtraction.jl")
 include("PreliminarySelection/PreliminarySelection.jl")
-#include("AllSubsetRegression/AllSubsetRegression.jl")
+include("AllSubsetRegression/AllSubsetRegression.jl")
 
 using ..Preprocessing
 using ..FeatureExtraction
 using ..PreliminarySelection
+using ..AllSubsetRegression
 
 export GSRegData, GSRegResult
 

@@ -1,15 +1,13 @@
 module AllSubsetRegression
 
-    using Distributed
-    using Distributions
-    using SharedArrays
-    using LinearAlgebra
+    using Distributed, Distributions, SharedArrays, LinearAlgebra
     using ..GlobalSearchRegression
+
+    export ols, run_ols, AllSubsetRegressionResult
 
     include("const.jl")
     include("utils.jl")
     include("strings.jl")
     include("estimators/ols.jl")
-
-    export ols
+    include("structs/result.jl")
 end

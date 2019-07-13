@@ -1,4 +1,43 @@
 """
+Initialize options
+"""
+function create_result(data, outsample, criteria, ttest, modelavg, residualtest, orderresults)  
+
+    if :r2adj ∉ criteria
+        push!(criteria, :r2adj)
+    end
+
+    if :rmseout ∉ criteria && outsample != OUTSAMPLE_DEFAULT
+        push!(criteria, :rmseout)
+    end
+
+    datanames = create_datanames(data, criteria, ttest, modelavg, residualtest)
+
+    if modelavg
+        modelavg_datanames = []
+    else
+        modelavg_datanames = nothing
+    end
+
+    outsample_max = data.nobs - INSAMPLE_MIN - size(data.expvars, 1) - if (data.intercept) 1 else 0 end
+
+    if isa(outsample, Int) && outsample_max <= outsample
+        outsample = 0
+    end
+
+    return AllSubsetRegressionResult(
+        datanames,
+        modelavg_datanames,
+        outsample,
+        criteria,
+        modelavg,
+        ttest,
+        residualtest,
+        orderresults
+    )
+end
+
+"""
 Constructs the datanames array for results based on this structure.
     - Index
     - Covariates
@@ -9,12 +48,13 @@ Constructs the datanames array for results based on this structure.
     - Order index from user combined criteria
     - Weight
 """
-function create_datanames(expvars, criteria, ttest, residualtest, time, modelavg)
+function create_datanames(data, criteria, ttest, modelavg, residualtest)
+
     datanames = []
 
     push!(datanames, INDEX)
-
-    for expvar in expvars
+    
+    for expvar in data.expvars
         push!(datanames, Symbol(string(expvar, "_b")))
         if ttest
             push!(datanames, Symbol(string(expvar, "_bstd")))
@@ -22,9 +62,10 @@ function create_datanames(expvars, criteria, ttest, residualtest, time, modelavg
         end
     end
 
-    testfields = (residualtest != nothing && residualtest) ? ((time != nothing) ? RESIDUAL_TESTS_TIME : RESIDUAL_TESTS_CROSS) : []
+    testfields = (residualtest != nothing && residualtest) ? ((data.time != nothing) ? RESIDUAL_TESTS_TIME : RESIDUAL_TESTS_CROSS) : []
     general_information_criteria = unique([ EQUATION_GENERAL_INFORMATION; criteria; testfields ])
     datanames = vcat(datanames, general_information_criteria)
+
     push!(datanames, ORDER)
     if modelavg
         push!(datanames, WEIGHT)
@@ -34,14 +75,34 @@ function create_datanames(expvars, criteria, ttest, residualtest, time, modelavg
 end
 
 """
+Creates an array with keys and array positions
+"""
+function create_datanames_index(datanames)
+    header = Dict{Symbol,Int64}()
+    for (index, name) in enumerate(datanames)
+        header[name] = index
+    end
+    return header
+end
+
+"""
 Returns selected appropiate covariates for each iteration
 """
-function get_selected_cols(i, intercept, datanames)
+function get_selected_variables(order, datanames, intercept; num_jobs=nothing, num_job=nothing, iteration_num=nothing)
+    #if num_jobs != nothing && iseven(num_jobs) && iteration_num != nothing && iseven(iteration_num)
+    #    if iseven(num_job)
+    #        order = order - 1
+    #    else
+    #        order = order + 1
+    #    end
+    #end
+    
     cols = zeros(Int64, 0)
-    binary = string(i, base = 2)
+    binary = string(order, base = 2)
     k = 1
-    for i = 1:length(binary)
-        if binary[length(binary) - i + 1] == '1'
+
+    for order = 1:length(binary)
+        if binary[length(binary) - order + 1] == '1'
             push!(cols, k)
         end
         k = k + 1
@@ -53,14 +114,38 @@ function get_selected_cols(i, intercept, datanames)
 end
 
 """
-Creates an array with keys and array positions
+Get insample data view
 """
-function create_header(datanames)
-    header = Dict{Symbol,Int64}()
-    for (index, name) in enumerate(datanames)
-        header[name] = index
+function get_insample_views(depvar_data, expvars_data, outsample, selected_variables_index)
+    depvar_view = nothing
+    expvars_view = nothing
+    if isa(outsample, Array)
+        nobs = size(depvar_data, 1)
+        insample = findall(x -> !(x in outsample), collect(1:nobs))
+        depvar_view = depvar_data[insample, 1]
+        expvars_view = expvars_data[insample, selected_variables_index]
+    else
+        depvar_view = depvar_data[1:end-outsample, 1]
+        expvars_view = expvars_data[1:end-outsample, selected_variables_index]
     end
-    return header
+    return depvar_view,expvars_view 
+end
+
+"""
+Get outsample data view
+"""
+function get_outsample_views(depvar_data, expvars_data, outsample, selected_variables_index)
+    depvar_view = nothing
+    expvars_view = nothing
+    if isa(outsample, Array)
+        nobs = size(depvar_data, 1)
+        depvar_view = depvar_data[outsample, 1]
+        expvars_view = expvars_data[outsample, selected_variables_index]
+    else
+        depvar_view = depvar_data[end-outsample:end, 1]
+        expvars_view = expvars_data[end-outsample:end, selected_variables_index]
+    end
+    return depvar_view,expvars_view
 end
 
 """

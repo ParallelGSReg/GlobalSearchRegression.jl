@@ -22,14 +22,19 @@
  - [X] Create tests
  - [X] Update Readme
  - [ ] Test of Seasonal adjustment, panel data and time data
- 
+ - [ ] Initialize options
+ - [ ] Create test data
+ - [ ] Refactor tests
+
 ### FeatureExtraction
  - [X] Allows to receive GSRegData
  - [X] Feature extraction. Optional creation of non-linear realtionships (sqaure, lag, log, inv, interaction)
  - [X] Option to excludes observations with missing or null values
  - [ ] Keep data
- - [ ] Create tests
  - [ ] Update Readme
+ - [ ] Initialize options
+ - [ ] Create test data
+ - [ ] Create tests
 
 ### Preliminary selection
  - [ ] Normalize data in aux database to process
@@ -42,21 +47,24 @@
 ### Selection
  - [ ] Parallel processing [TEST]
  - [ ] Iterative estimators (LOGIT, PROBIT) *****
- - [X] OLS [TEST]
- - [X] Adjust selection to interact with feature extraction [TEST]
- - [X] Compute t-test [TEST]
+ - [ ] OLS [TEST]
+ - [ ] Adjust selection to interact with feature extraction [TEST]
+ - [ ] Compute t-test [TEST]
  - [ ] Compure z value
- - [X] Outsample [TEST]
- - [X] Compute selection criteria (aic, cic, bic, r2, r2adj, rmse, rmsout, cp)
- - [X] Model averaging [TEST]
- - [X] Residual tests [TEST]
- - [X] Sort by selection criteria
+ - [ ] Outsample [TEST]
+ - [ ] Compute selection criteria (aic, cic, bic, r2, r2adj, rmse, rmsout, cp)
+ - [ ] Model averaging [TEST]
+ - [ ] Residual tests [TEST]
+ - [ ] Sort by selection criteria
  - [ ] Fix parameters datatypes
  - [ ] Fix GSRegData datatypes
  - [ ] Fix GSRegResult datatypes
  - [ ] Fix documentation
  - [ ] Change module name
- 
+ - [ ] Initialize options
+ - [ ] Create test data
+ - [ ] Create tests
+  
 ### K Cross-fold validation ✌
 
 ### Output decoration

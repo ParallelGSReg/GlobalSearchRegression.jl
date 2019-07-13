@@ -1,12 +1,18 @@
+const INSAMPLE_MIN = 20
+const OUTSAMPLE_DEFAULT = 20
+const CRITERIA_DEFAULT = []
+const MODELAVG_DEFAULT = false
+const TTEST_DEFAULT = false
+const RESIDUALTEST_DEFAULT = false
+const ORDERRESULTS_DEFAULT = false
+
 const INDEX = :index
 const EQUATION_GENERAL_INFORMATION = [:nobs, :ncoef, :sse, :r2, :F, :rmse]
 const RESIDUAL_TESTS_TIME = [:jbtest, :wtest, :bgtest]
 const RESIDUAL_TESTS_CROSS = [:jbtest, :wtest]
 const ORDER = :order
 const WEIGHT = :weight
-const MODELAVG_DEFAULT = false
-const RESIDUALTEST_DEFAULT = false
-const ORDERRESULTS_DEFAULT = false
+
 const AVAILABLE_CRITERIA = Dict(
     :r2adj => Dict(
         "verbose_title" => "Adjusted R²",

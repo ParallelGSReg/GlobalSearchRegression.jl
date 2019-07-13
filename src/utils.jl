@@ -20,7 +20,7 @@ end
 """
 Filter rawdata by empty values
 """
-function filter_raw_data_by_empty_values(depvar_data, expvars_data, panel_data=nothing, time_data=nothing)
+function filter_raw_data_by_empty_values(datatype, depvar_data, expvars_data, panel_data=nothing, time_data=nothing)
     keep_rows = Array{Bool}(undef, size(depvar_data, 1))
     keep_rows .= true
     keep_rows .&= map(b->!b, ismissing.(depvar_data))
@@ -29,8 +29,8 @@ function filter_raw_data_by_empty_values(depvar_data, expvars_data, panel_data=n
         keep_rows .&= map(b->!b, ismissing.(expvars_data[:, i]))
     end
     
-    depvar_data = depvar_data[keep_rows, 1]
-    expvars_data = expvars_data[keep_rows, :]
+    depvar_data = convert(Array{datatype}, depvar_data[keep_rows, 1])
+    expvars_data = convert(Array{datatype}, expvars_data[keep_rows, :])
 
     if panel_data != nothing
         panel_data = panel_data[keep_rows, 1]
@@ -48,6 +48,7 @@ Filter data by empty values
 """
 function filter_data_by_empty_values(data)
     depvar_data, expvars_data, panel_data, time_data = filter_raw_data_by_empty_values(
+        data.datatype,
         data.depvar_data,
         data.expvars_data,
         data.panel_data,
@@ -58,6 +59,7 @@ function filter_data_by_empty_values(data)
     data.expvars_data = expvars_data
     data.panel_data = panel_data
     data.time_data = time_data
+    data.nobs = size(data.depvar_data, 1)
 
     return data
 end
