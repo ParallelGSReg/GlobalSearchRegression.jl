@@ -10,16 +10,19 @@ include("utils.jl")
 #include("core.jl")
 include("Preprocessing/Preprocessing.jl")
 include("FeatureExtraction/FeatureExtraction.jl")
+include("CrossValidation/CrossValidation.jl")
 include("PreliminarySelection/PreliminarySelection.jl")
+include("OutputDecoration/OutputDecoration.jl")
 include("AllSubsetRegression/AllSubsetRegression.jl")
 
 using ..Preprocessing
 using ..FeatureExtraction
 using ..PreliminarySelection
 using ..AllSubsetRegression
+using ..OutputDecoration
 
 export GSRegData, GSRegResult
 
-export Preprocessing, FeatureExtraction, PreliminarySelection
+export Preprocessing, FeatureExtraction, PreliminarySelection, OutputDecoration
 
 end # module GlobalSearchRegression
