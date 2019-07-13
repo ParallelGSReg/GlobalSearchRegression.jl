@@ -140,6 +140,7 @@ function copy_data(data::GSRegData)
         data.nobs
     )
 
+    new_data.extras = copy(data.extras)
     new_data.options = copy(data.options)
     new_data.previous_data = copy(data.previous_data)
     new_data.results = copy(data.results)
@@ -163,6 +164,7 @@ function copy_data!(from_data::GSRegData, to_data::GSRegData)
     to_data.datatype = from_data.datatype
     to_data.removemissings = from_data.removemissings
     to_data.nobs = from_data.nobs
+    to_data.extras = from_data.extras
     to_data.options = from_data.options
     to_data.previous_data = from_data.previous_data
     to_data.results = from_data.results

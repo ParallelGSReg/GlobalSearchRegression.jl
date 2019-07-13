@@ -1,22 +1,19 @@
-function lasso!(data::GlobalSearchRegression.GSRegData)
-    new_data = lasso(data)
-    data = GlobalSearchRegression.copy_data(new_data)
-
-    return data
+function lasso(data::GlobalSearchRegression.GSRegData)
+    lasso!(GlobalSearchRegression.copy_data(data))
 end
 
-function lasso(data::GlobalSearchRegression.GSRegData)
-    new_data = GlobalSearchRegression.copy_data(new_data)
+function lasso!(data::GlobalSearchRegression.GSRegData)
+    data = GlobalSearchRegression.filter_data_by_empty_values(data)
+    data = GlobalSearchRegression.convert_data(data)
 
-    new_data = GlobalSearchRegression.filter_data_by_empty_values(new_data)
-    new_data = GlobalSearchRegression.convert_data(new_data)
+    betas = lassoselection(data)
+    data.extras[:lasso_betas] = betas
 
-    vars = lassoselection(new_data)
+    vars = map(b -> b != 0, betas)
+    data.expvars = data.expvars[vars]
+    data.expvars_data = data.expvars_data[:,vars]
     
-    new_data.expvars = new_data.expvars[vars]
-    new_data.expvars_data = new_data.expvars_data[:,vars]
-    
-    return new_data
+    data
 end
 
 computablevars(nvars) = min(Int(floor(log(2,Sys.total_memory()/2 ^30) + 21)), nvars)
@@ -37,5 +34,5 @@ function lassoselection(data::GlobalSearchRegression.GSRegData; nvars::Int64=not
         end
         best = cant
     end
-    map(b -> b != 0, path.betas[:, best])
+    path.betas[:, best]
 end

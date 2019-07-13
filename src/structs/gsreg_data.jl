@@ -13,6 +13,7 @@ mutable struct GSRegData
     removemissings::Bool
     nobs::Int64
     options::Array{Any}
+    extras::Dict
     previous_data::Array{Any}
     results::Array{Any}
 
@@ -31,9 +32,10 @@ mutable struct GSRegData
             removemissings::Bool,
             nobs::Int64
         )
+        extras = Dict()
         options = Array{Any}(undef, 0)
         previous_data = Array{Any}(undef, 0)
         results = Array{Any}(undef, 0)
-        new(equation, depvar, expvars, panel, time, depvar_data, expvars_data, panel_data, time_data, intercept, datatype, removemissings, nobs, options, previous_data, results)
+        new(equation, depvar, expvars, panel, time, depvar_data, expvars_data, panel_data, time_data, intercept, datatype, removemissings, nobs, options, extras, previous_data, results)
     end
 end

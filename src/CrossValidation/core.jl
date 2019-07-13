@@ -56,9 +56,7 @@ function kfoldcrossvalidation(
         @show size(data.expvars_data)
         @show size(data.expvars_data[dataset,:])
         @show obs
-        @show dataset
     end
-    
     # sacar media/avg de betas y de errores
     # avgrmse = mean(res)
 

@@ -1,0 +1,145 @@
+\documentclass{article}
+
+\usepackage{GSReg-style}
+
+\usepackage[utf8]{inputenc} 
+\usepackage[T1]{fontenc}    
+\usepackage{hyperref}       
+\usepackage{url}            
+\usepackage{booktabs}       
+\usepackage{amsfonts}       
+\usepackage{nicefrac}       
+\usepackage{microtype}
+
+
+\title{Methodology, data and results} 
+
+\author{
+  David S.~Hippocampus \\
+  Department of Computer Science\\
+  Cranberry-Lemon University\\
+  Pittsburgh, PA 15213 \\
+  \texttt{hippo@cs.cranberry-lemon.edu} \\
+  \And
+ Elias D.~Striatum \\
+  Department of Electrical Engineering\\
+  Mount-Sheikh University\\
+  Santa Narimana, Levand \\
+  \texttt{stariate@ee.mount-sheikh.edu} \\
+}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+
+GlobalSearchRegression is both the world-fastest all-subset-regression command (a widespread tool for automatic model/feature selection) and a first-step to develop a coeherent framework to merge Machine Learning and Econometric algorithms.
+
+Written in Julia, it is a High Performance Computing version of the Stata-gsreg command (get the original code here). In a multicore personal computer (we use a Threadripper 1950x build for benchmarks), it runs up-to 100 times faster than the original Stata-code and up-to 10 times faster than well-known R-alternatives (pdredge).
+
+Notwithstanding, GlobalSearchRegression main focus is not only on execution-times but also on progressively combining Machine Learning algorithms with Econometric diagnosis tools into a friendly Graphical User Interface (GUI) to simplify embarrassingly parallel quantitative-research.
+
+In a Machine Learning environment (e.g. problems focusing on predictive analysis / forecasting accuracy) there is an increasing universe of “training/test” algorithms (many of them showing very interesting performance in Julia) to compare alternative results and find-out a suitable model.
+
+However, problems focusing on causal inference require five important econometric features: 1) Parsimony (to avoid very large atheoretical models); 2) Interpretability (for causal inference, rejecting “intuition-loss” transformation and/or complex combinations); 3) Across-models sensitivity analysis (uncertainty is the only certainty; parameter distributions are preferred against “best-model” unique results); 4) Robustness to time series and panel data information (preventing the use of raw bootstrapping or random subsample selection for training and test sets); and 5) advanced residual properties (e.g. going beyond the i.i.d assumption and looking for additional panel structure properties -for each model being evaluated-, which force a departure from many traditional machine learning algorithms).
+
+For all these reasons, researchers increasingly prefer advanced all-subset-regression approaches, choosing among alternative models by means of in-sample and/or out-of-sample criteria, model averaging results, bayesian priors for theoretical bounds on covariates coefficients and different residual constraints. While still unfeasible for large problems (choosing among hundreds of covariates), hardware and software innovations allow researchers to implement this approach in many different scientific projects, choosing among one billion models in a few hours using standard personal computers.
+
+
+\section{Methodology}
+
+
+\section{Variables}
+
+Database used is shown in table 1:
+
+\begin{table}[!h]
+  \centering
+  \caption{Descriptive Statistics for the main dataset}
+    \begin{tabular}{|p{5cm}|c|c|c|c|c|c|}
+    \hline
+    Variable & Obs. & Mean & Sd & Max & Min & \% missing \\
+    \hline
+    \hline
+    {{#var_summary}}
+    {{name}} & {{nobs}} & {{mean}} & {{std}} & {{max}} & {{min}} & {{miss}}\% \\ 
+    \hline
+    {{/var_summary}}
+    \end{tabular}
+\end{table}
+
+
+{{#lasso}}
+\section{Regularization}
+
+Lasso regression is a type of linear regression that uses shrinkage. Shrinkage is where data values are shrunk towards a central point, like the mean. The lasso procedure encourages simple, sparse models (i.e. models with fewer parameters). This particular type of regression is well-suited for models showing high levels of muticollinearity or when you want to automate certain parts of model selection, like variable selection/parameter elimination.
+
+Lasso regression performs L1 regularization, which adds a penalty equal to the absolute value of the magnitude of coefficients. This type of regularization can result in sparse models with few coefficients; Some coefficients can become zero and eliminated from the model. Larger penalties result in coefficient values closer to zero, which is the ideal for producing simpler models. On the other hand, L2 regularization (e.g. Ridge regression) doesn’t result in elimination of coefficients or sparse models. This makes the Lasso far easier to interpret than the Ridge.
+
+\begin{equation}
+    \sum_{n=1}^{n}(y_i - \sum_{j}x_{ij}\beta_{j})^2 + \lambda \sum_{j=1}^p|\beta_{j}|
+\end{equation}
+
+Which is the same as minimizing the sum of squares with constraint $\sum \beta_{j}≤ s$. Some of the $\beta_s$ are shrunk to exactly zero, resulting in a regression model that’s easier to interpret.
+
+A tuning parameter, $\lambda$ controls the strength of the L1 penalty. $\lambda$ is basically the amount of shrinkage:
+
+When $ \lambda = 0$, no parameters are eliminated. The estimate is equal to the one found with linear regression.
+As $\lambda$ increases, more and more coefficients are set to zero and eliminated (theoretically, when $\lambda = \infty$, all coefficients are eliminated).
+As $\lambda$ increases, bias increases.
+
+As $\lambda$ decreases, variance increases.
+
+If an intercept is included in the model, it is usually left unchanged.
+
+LASSO regression is shown in the following table:
+
+\begin{table}[!h]
+  \centering
+  \caption{LASSO Regression results}
+    \begin{tabular}{l c}
+    \hline
+                 &       \\
+    VARIABLES    &  {{indep}} \\
+    \hline
+    \hline
+    {{#summary}}
+    {{var}}  & {{coef}} \\
+    {{/summary}}
+    Constant &  \\
+    \hline
+    \hline
+    Observations &  \\
+    \lambda      &  \\
+    R-squared    &  \\
+    \hline
+    \multicolumn{2}{c}{Standard errors in parentheses} \\
+    \multicolumn{2}{c}{*** p<0.01, ** p<0.05, * p<0.1} \\
+    \end{tabular}
+  \label{tab:addlabel}
+\end{table}
+{{/lasso}}
+\section{Gsreg}
+
+\subsection{All sub-subset regression Best Model}
+
+\subsection{All sub-subset regression Model Averaging}
+
+\subsection{Coefficient, t-test, information criteria distributions and main statistics}
+
+combinar coefficient, t-test (contour), kernel del criterio con y sin coefficient
+
+\section{k-fold cross-validation}
+
+
+\bibliographystyle{unsrt}  
+\begin{thebibliography}{1}
+
+\bibitem{gsreg2019}
+Panigo Demian, Glüzmann Pablo, Mauri Ungaro Adan, Mari Valentín and Monzón Nicolás. 2019.
+\newblock \textit{GlobalSearchRegression.jl: Building bridges between Machine Learning and Econometrics in Fat-Data scenarios}.
+\newblock The Journal of Open Source Software, X(X), XXX--XXX. DOI:xxxxx.x.x.x.x.xxx
+
+\end{thebibliography}
+
+\end{document}
