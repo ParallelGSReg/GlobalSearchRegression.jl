@@ -1,4 +1,5 @@
 function lasso(data::GlobalSearchRegression.GSRegData)
+    new_data = 
     lasso!(GlobalSearchRegression.copy_data(data))
 end
 

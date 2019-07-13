@@ -35,6 +35,7 @@ function kfoldcrossvalidation(
     db = randperm(data.nobs)
     db = collect(1:data.nobs)
     folds = split_database(db, k)
+    
     # if data.time != nothing
     #     if data.panel != nothing
     #         # time & panel -> vemos que pasa acá
@@ -47,18 +48,30 @@ function kfoldcrossvalidation(
     #     folds = []
     # end
 
+    bestmodels = []
+
     for obs in LOOCV(k)
         dataset = collect(Iterators.flatten(folds[obs]))
         testset = setdiff(1:data.nobs, dataset)
-        # reg = GlobalSearchRegression.GSReg(data[obs])
-        # rmse = data[outsample]
-        # append!(res, rmse)
-        @show size(data.expvars_data)
-        @show size(data.expvars_data[dataset,:])
-        @show obs
+
+        backup = GlobalSearchRegression.copy_data(data)
+        backup.depvar_data = backup.depvar_data[dataset]
+        backup.expvars_data = backup.expvars_data[dataset, :]
+        backup.nobs = size(dataset, 1)
+        
+        GlobalSearchRegression.PreliminarySelection.lasso!(backup)
+        res = GlobalSearchRegression.AllSubsetRegression.ols(backup; outsample=testset)
+        append!(bestmodels, Dict(
+            :data => res.bestresult_data,
+            :datanames => res.datanames
+        ))
+    end
+
+    for model in bestmodels 
+        # promedio pepe
+        model[:data][GlobalSearchRegression.get_column_index(:rmsout, model[:datanames])]
     end
     # sacar media/avg de betas y de errores
-    # avgrmse = mean(res)
 
     return data
 end
