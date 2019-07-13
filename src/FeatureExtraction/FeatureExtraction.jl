@@ -3,7 +3,7 @@ module FeatureExtraction
     using ShiftedArrays
     using ..GlobalSearchRegression
 
-    export featureextraction
+    export featureextraction!, featureextraction
 
     include("const.jl")
     include("strings.jl")
