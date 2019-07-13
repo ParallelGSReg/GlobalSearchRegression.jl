@@ -6,8 +6,8 @@ function input(
     intercept::Bool=INTERCEPT_DEFAULT,
     time::Union{Symbol, String, Nothing}=TIME_DEFAULT,
     panel::Union{Symbol, String, Nothing}=PANEL_DEFAULT,
+    seasonaladjustment::Union{Dict, Array, Nothing}=SEASONALADJUSTMENT_DEFAULT,
     removeoutliers::Bool=REMOVEOUTLIERS_DEFAULT,
-    seasonaladjustment::Union{Dict, Nothing}=SEASONALADJUSTMENT_DEFAULT,
     removemissings::Bool=REMOVEMISSINGS_DEFAULT
     )
 
@@ -19,8 +19,8 @@ function input(
         intercept=intercept,
         time=time,
         panel=panel,
-        removeoutliers=removeoutliers,
         seasonaladjustment=seasonaladjustment,
+        removeoutliers=removeoutliers,
         removemissings=removemissings
     )
 end
@@ -31,10 +31,10 @@ function input(
     datanames::Union{Array, Array{Symbol, 1}, Nothing}=nothing,
     method::Union{Symbol, String}=METHOD_DEFAULT,
     intercept::Bool=INTERCEPT_DEFAULT,
-    time::Union{Symbol, String, Nothing}=TIME_DEFAULT,
     panel::Union{Symbol, String, Nothing}=PANEL_DEFAULT,
+    time::Union{Symbol, String, Nothing}=TIME_DEFAULT,
+    seasonaladjustment::Union{Dict, Array, Nothing}=SEASONALADJUSTMENT_DEFAULT,
     removeoutliers::Bool=REMOVEOUTLIERS_DEFAULT,
-    seasonaladjustment::Union{Dict, Nothing}=SEASONALADJUSTMENT_DEFAULT,
     removemissings::Bool=REMOVEMISSINGS_DEFAULT
     )
 
@@ -44,8 +44,8 @@ function input(
         datanames=datanames,
         method=method,
         intercept=intercept,
-        time=time,
         panel=panel,
+        time=time,
         removeoutliers=removeoutliers,
         seasonaladjustment=seasonaladjustment,
         removemissings=removemissings
@@ -58,10 +58,10 @@ function input(
     datanames::Union{Array, Array{Symbol, 1}, Nothing}=nothing,
     method::Union{Symbol, String}=METHOD_DEFAULT,
     intercept::Bool=INTERCEPT_DEFAULT,
-    time::Union{Symbol, String, Nothing}=TIME_DEFAULT,
     panel::Union{Symbol, String, Nothing}=PANEL_DEFAULT,
+    time::Union{Symbol, String, Nothing}=TIME_DEFAULT,
+    seasonaladjustment::Union{Dict, Array, Nothing}=SEASONALADJUSTMENT_DEFAULT,
     removeoutliers::Bool=REMOVEOUTLIERS_DEFAULT,
-    seasonaladjustment::Union{Dict, Nothing}=SEASONALADJUSTMENT_DEFAULT,
     removemissings::Bool=REMOVEMISSINGS_DEFAULT
     )
 
@@ -71,10 +71,10 @@ function input(
         datanames=datanames,
         method=method,
         intercept=intercept,
-        time=time,
         panel=panel,
-        removeoutliers=removeoutliers,
+        time=time,
         seasonaladjustment=seasonaladjustment,
+        removeoutliers=removeoutliers,
         removemissings=removemissings
     )
 end
@@ -85,10 +85,10 @@ function input(
     datanames::Union{Array, Array{Symbol, 1}, Nothing}=nothing,
     method::Union{Symbol, String}=METHOD_DEFAULT,
     intercept::Bool=INTERCEPT_DEFAULT,
-    time::Union{Symbol, String, Nothing}=TIME_DEFAULT,
     panel::Union{Symbol, String, Nothing}=PANEL_DEFAULT,
+    time::Union{Symbol, String, Nothing}=TIME_DEFAULT,
+    seasonaladjustment::Union{Dict, Array, Nothing}=SEASONALADJUSTMENT_DEFAULT,
     removeoutliers::Bool=REMOVEOUTLIERS_DEFAULT,
-    seasonaladjustment::Union{Dict, Nothing}=SEASONALADJUSTMENT_DEFAULT,
     removemissings::Bool=REMOVEMISSINGS_DEFAULT
     )
 
@@ -98,10 +98,10 @@ function input(
         datanames=datanames,
         intercept=intercept,
         method=method,
-        time=time,
         panel=panel,
-        removeoutliers=removeoutliers,
+        time=time,
         seasonaladjustment=seasonaladjustment,
+        removeoutliers=removeoutliers,
         removemissings=removemissings
     )
 end
@@ -112,10 +112,10 @@ function input(
     datanames::Union{Array, Array{Symbol, 1}, Nothing}=nothing,
     method::Union{Symbol, String}=METHOD_DEFAULT,
     intercept::Bool=INTERCEPT_DEFAULT,
-    time::Union{Symbol, String, Nothing}=TIME_DEFAULT,
     panel::Union{Symbol, String, Nothing}=PANEL_DEFAULT,
+    time::Union{Symbol, String, Nothing}=TIME_DEFAULT,
+    seasonaladjustment::Union{Dict, Array, Nothing}=SEASONALADJUSTMENT_DEFAULT,
     removeoutliers::Bool=REMOVEOUTLIERS_DEFAULT,
-    seasonaladjustment::Union{Dict, Nothing}=SEASONALADJUSTMENT_DEFAULT,
     removemissings::Bool=REMOVEMISSINGS_DEFAULT
     )
 
@@ -137,10 +137,10 @@ function input(
         datanames=datanames,
         intercept=intercept,
         method=method,
-        time=time,
         panel=panel,
-        removeoutliers=removeoutliers,
+        time=time,
         seasonaladjustment=seasonaladjustment,
+        removeoutliers=removeoutliers,
         removemissings=removemissings
     )
 end
@@ -151,10 +151,10 @@ function input(
     datanames::Union{Array, Array{Symbol, 1}, Nothing}=nothing,
     method::Union{Symbol, String}=METHOD_DEFAULT,
     intercept::Bool=INTERCEPT_DEFAULT,
-    time::Union{Symbol, String, Nothing}=TIME_DEFAULT,
     panel::Union{Symbol, String, Nothing}=PANEL_DEFAULT,
+    time::Union{Symbol, String, Nothing}=TIME_DEFAULT,
+    seasonaladjustment::Union{Dict, Array, Nothing}=SEASONALADJUSTMENT_DEFAULT,
     removeoutliers::Bool=REMOVEOUTLIERS_DEFAULT,
-    seasonaladjustment::Union{Dict, Nothing}=SEASONALADJUSTMENT_DEFAULT,
     removemissings::Bool=REMOVEMISSINGS_DEFAULT
     )
 
@@ -215,10 +215,10 @@ function input(
         datanames,
         method,
         intercept;
-        time=time,
         panel=panel,
-        removeoutliers=removeoutliers,
+        time=time,
         seasonaladjustment=seasonaladjustment,
+        removeoutliers=removeoutliers,
         removemissings=removemissings
     )
 end
@@ -229,10 +229,10 @@ function processinput(
     datanames::Array{Symbol},
     method::Symbol,
     intercept::Bool;
-    time::Union{Symbol, Nothing}=TIME_DEFAULT,
     panel::Union{Symbol, Nothing}=PANEL_DEFAULT,
+    time::Union{Symbol, Nothing}=TIME_DEFAULT,
+    seasonaladjustment::Union{Dict, Array, Nothing}=SEASONALADJUSTMENT_DEFAULT,
     removeoutliers::Bool=REMOVEOUTLIERS_DEFAULT,
-    seasonaladjustment::Union{Dict, Nothing}=SEASONALADJUSTMENT_DEFAULT,
     removemissings::Bool=REMOVEMISSINGS_DEFAULT
     )
     

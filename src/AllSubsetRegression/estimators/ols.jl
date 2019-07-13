@@ -1,6 +1,4 @@
-using Printf
-
-function run_ols(
+function ols!(
         data::GlobalSearchRegression.GSRegData;
         outsample=OUTSAMPLE_DEFAULT,
         criteria::Array=CRITERIA_DEFAULT,
@@ -21,6 +19,7 @@ function run_ols(
     )
 
     push!(data.results, result)
+
     return data
 end
 
@@ -40,9 +39,7 @@ function ols(
     return result
 end
 
-#function execute!(data::GlobalSearchRegression.GSRegData, result::GlobalSearchRegression.AllSubsetRegression.AllSubsetRegressionResult)
-function execute!(data::GlobalSearchRegression.GSRegData, result)
-
+function execute!(data::GlobalSearchRegression.GSRegData, result::AllSubsetRegressionResult)
     if !data.removemissings
         data = GlobalSearchRegression.filter_data_by_empty_values(data)
     end
@@ -125,14 +122,21 @@ function execute!(data::GlobalSearchRegression.GSRegData, result)
         end
     end
 
-    #if result.orderresults
-    #    result.data = sortrows(result.data, [datanames_index[:order]]; rev=true)
-    #    result.bestresult_data = result.data[1,:]
-    #else
-    #    max_order = argmax(result.data[1,datanames_index[:order]])
-    #    result.bestresult_data = result.data[max_order, : ]
-    #end
-    result.bestresult_data = result.data[1,:]
+    if result.orderresults
+        result.data = sortrows(result.data, [datanames_index[:order]]; rev=true)
+        result.bestresult_data = result.data[1, :]
+    else
+        max_order = result.data[1, datanames_index[:order]]
+        best_result_index = 1
+        for i = 1:num_operations
+            if result.data[i, datanames_index[:order]] > max_order
+                max_order = result.data[i, datanames_index[:order]]
+                best_result_index = i
+            end
+        end
+        result.bestresult_data = result.data[best_result_index, :]
+    end
+
     return result
 end
 
@@ -202,31 +206,34 @@ function execute_row!(
 )
     selected_variables_index = get_selected_variables(order, expvars, intercept, num_jobs=num_jobs, num_job=num_job, iteration_num=iteration_num)    
 
-    depvar_view, expvars_view = get_insample_views(depvar_data, expvars_data, outsample, selected_variables_index)
-    
-    outsample_enabled = size(depvar_view, 1) < size(depvar_data, 1)
+    depvar_subset, expvars_subset = get_insample_subset(depvar_data, expvars_data, outsample, selected_variables_index)
+    outsample_enabled = size(depvar_subset, 1) < size(depvar_data, 1)
 
-    nobs = size(depvar_view, 1)
-    ncoef = size(expvars_view, 2)
-    qrf = qr(expvars_view)
-    b = qrf \ depvar_view                   # estimate
-    ŷ = expvars_view * b                    # predicted values
-    er = depvar_view - ŷ                    # in-sample residuals
+    nobs = size(depvar_subset, 1)
+    ncoef = size(expvars_subset, 2)
+    qrf = qr(expvars_subset)
+    b = qrf \ depvar_subset                   # estimate
+    ŷ = expvars_subset * b                    # predicted values
+    er = depvar_subset - ŷ                    # in-sample residuals
     er2 = er .^ 2                           # squared errors
     sse = sum(er2)                          # residual sum of squares
     df_e = nobs - ncoef                     # degrees of freedom
     rmse = sqrt(sse / nobs)                 # root mean squared error
-    r2 = 1 - var(er) / var(depvar_view)     # model R-squared
+    r2 = 1 - var(er) / var(depvar_subset)     # model R-squared
 
     if ttest
         bstd = sqrt.( sum( (UpperTriangular(qrf.R) \ Matrix(1.0LinearAlgebra.I, ncoef, ncoef) ) .^ 2, dims=2) * (sse / df_e) )
     end
 
     if outsample_enabled > 0
-        depvar_outsample_view, expvars_outsample_view = get_outsample_views(depvar_data, expvars_data, outsample, selected_variables_index)
-        erout = depvar_outsample_view - expvars_outsample_view * b  # out-of-sample residuals
+        depvar_outsample_subset, expvars_outsample_subset = get_outsample_subset(depvar_data, expvars_data, outsample, selected_variables_index)
+        erout = depvar_outsample_subset - expvars_outsample_subset * b  # out-of-sample residuals
         sseout = sum(erout .^ 2)                                    # residual sum of squares
-        rmseout = sqrt(sseout / outsample)                          # root mean squared error
+        outsample_count = outsample
+        if (isa(outsample, Array))
+            outsample_count = size(outsample, 1)
+        end
+        rmseout = sqrt(sseout / outsample_count)                          # root mean squared error
         result_data[ order, datanames_index[:rmseout] ] = rmseout
     end
 
@@ -294,7 +301,7 @@ function execute_row!(
         if time != nothing
             e = er
             lag = 1
-            xmat = expvars_view
+            xmat = expvars_subset
 
             n = size(e,1)
             elag = zeros(Float64,n,lag)
@@ -316,7 +323,7 @@ function execute_row!(
     
 end
 
-# REMOVE
+# Todo: REMOVE
 function to_string(data)
     result = data.results[1]
     datanames_index = create_datanames_index(result.datanames)

@@ -1,13 +1,15 @@
 module AllSubsetRegression
 
+    using Printf
+
     using Distributed, Distributions, SharedArrays, LinearAlgebra
     using ..GlobalSearchRegression
 
-    export ols, run_ols, AllSubsetRegressionResult
-
+    export ols, ols!, AllSubsetRegressionResult
+    
     include("const.jl")
-    include("utils.jl")
     include("strings.jl")
-    include("estimators/ols.jl")
+    include("utils.jl")
     include("structs/result.jl")
+    include("estimators/ols.jl")
 end

@@ -1,7 +1,9 @@
 ## UI
  - [ ] Graphics
 
-## gsreg
+# GlobalSearchRegression
+
+## Implementation
 
 ### Inteface
  - [ ] Do all the next steps in one single call.
@@ -19,52 +21,41 @@
  - [X] Remove outliers
  - [X] Fixed effect
  - [X] Option to excludes observations with missing or null values
- - [X] Create tests
- - [X] Update Readme
- - [ ] Test of Seasonal adjustment, panel data and time data
- - [ ] Initialize options
- - [ ] Create test data
- - [ ] Refactor tests
+ - [X] Create interface methods
 
 ### FeatureExtraction
  - [X] Allows to receive GSRegData
  - [X] Feature extraction. Optional creation of non-linear realtionships (sqaure, lag, log, inv, interaction)
  - [X] Option to excludes observations with missing or null values
- - [ ] Keep data
- - [ ] Update Readme
- - [ ] Initialize options
- - [ ] Create test data
- - [ ] Create tests
+ - [X] Create interface methods
 
-### Preliminary selection
- - [ ] Normalize data in aux database to process
+### PreliminarySelection
+ - [X] Normalize data in aux database to process
  - [X] Preselection with GLM.jl based on covariates number
  - [X] Filter data by results
- - [ ] Keep data
- - [ ] Create tests
- - [ ] Update readme
+ - [X] Create interface methods
 
-### Selection
- - [ ] Parallel processing [TEST]
- - [ ] Iterative estimators (LOGIT, PROBIT) *****
- - [ ] OLS [TEST]
- - [ ] Adjust selection to interact with feature extraction [TEST]
- - [ ] Compute t-test [TEST]
+### AllSubsetRegression
+ - [X] Parallel processing
+ - [X] OLS
+ - [X] Create result datatype
+ - [X] Create interface methods
+ - [X] Adjust selection to interact with feature extraction
+ - [X] Compute t-test
+ - [X] Outsample
+ - [X] Compute selection criteria (aic, cic, bic, r2, r2adj, rmse, rmsout, cp)
+ - [X] Model averaging
+ - [X] Residual tests
+ - [X] Sort by selection criteria
+ - [X] Fix parameters datatypes
+ - [X] Fix GSRegData datatypes
+ - [X] Fix GSRegResult datatypes
+ - [X] Fix documentation
+ - [X] Change module name
+ - [X] Initialize options
+ - [ ] Iterative estimators (LOGIT, PROBIT)
  - [ ] Compure z value
- - [ ] Outsample [TEST]
- - [ ] Compute selection criteria (aic, cic, bic, r2, r2adj, rmse, rmsout, cp)
- - [ ] Model averaging [TEST]
- - [ ] Residual tests [TEST]
- - [ ] Sort by selection criteria
- - [ ] Fix parameters datatypes
- - [ ] Fix GSRegData datatypes
- - [ ] Fix GSRegResult datatypes
- - [ ] Fix documentation
- - [ ] Change module name
- - [ ] Initialize options
- - [ ] Create test data
- - [ ] Create tests
-  
+
 ### K-fold cross-validation ✌
  kcross = true
  rehacer todo pero en muestras divididas en porciones k iguales, randomly, si tiene time, las divisiones son contiguas, 
@@ -86,9 +77,34 @@ k14 = 15
   - salida: tabla
   - sequential
 
-### Output decoration
+### OutputDecoration
  - [ ] CSV
  - [ ] JSON
  - [ ] LaTeX
  - [ ] Jupyter plot
  - [ ] Short console text
+
+## Testing and documentation
+
+### Preprocessing
+ - [X] Create tests
+ - [X] Update Readme
+ - [ ] Test of Seasonal adjustment, panel data and time data
+ - [ ] Initialize options
+ - [ ] Create test data
+ - [ ] Refactor tests
+
+### FeatureExtraction
+ - [ ] Update Readme
+ - [ ] Initialize options
+ - [ ] Create test data
+ - [ ] Create tests
+
+### Preliminary selection
+ - [ ] Create tests
+ - [ ] Update readme
+
+### AllSubsetRegression
+ - [ ] Create test data
+ - [ ] Create tests
+ - [ ] Documentation

@@ -89,14 +89,6 @@ end
 Returns selected appropiate covariates for each iteration
 """
 function get_selected_variables(order, datanames, intercept; num_jobs=nothing, num_job=nothing, iteration_num=nothing)
-    #if num_jobs != nothing && iseven(num_jobs) && iteration_num != nothing && iseven(iteration_num)
-    #    if iseven(num_job)
-    #        order = order - 1
-    #    else
-    #        order = order + 1
-    #    end
-    #end
-    
     cols = zeros(Int64, 0)
     binary = string(order, base = 2)
     k = 1
@@ -116,29 +108,27 @@ end
 """
 Get insample data view
 """
-function get_insample_views(depvar_data, expvars_data, outsample, selected_variables_index)
+function get_insample_subset(depvar_data, expvars_data, outsample, selected_variables_index)
     depvar_view = nothing
     expvars_view = nothing
     if isa(outsample, Array)
-        nobs = size(depvar_data, 1)
-        insample = findall(x -> !(x in outsample), collect(1:nobs))
+        insample = setdiff(1:size(depvar_data, 1), outsample)
         depvar_view = depvar_data[insample, 1]
         expvars_view = expvars_data[insample, selected_variables_index]
     else
         depvar_view = depvar_data[1:end-outsample, 1]
         expvars_view = expvars_data[1:end-outsample, selected_variables_index]
     end
-    return depvar_view,expvars_view 
+    return depvar_view, expvars_view 
 end
 
 """
 Get outsample data view
 """
-function get_outsample_views(depvar_data, expvars_data, outsample, selected_variables_index)
+function get_outsample_subset(depvar_data, expvars_data, outsample, selected_variables_index)
     depvar_view = nothing
     expvars_view = nothing
     if isa(outsample, Array)
-        nobs = size(depvar_data, 1)
         depvar_view = depvar_data[outsample, 1]
         expvars_view = expvars_data[outsample, selected_variables_index]
     else

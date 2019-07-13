@@ -1,4 +1,5 @@
-mutable struct AllSubsetRegressionResult
+mutable struct AllSubsetRegressionResult <: GlobalSearchRegression.GSRegResult
+
     datanames
     modelavg_datanames
     

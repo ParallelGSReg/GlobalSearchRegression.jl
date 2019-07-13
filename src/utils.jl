@@ -120,6 +120,55 @@ function convert_data(data)
     return data
 end
 
+"""
+Copy GSRegData
+"""
+function copy_data(data::GSRegData)
+    new_data = GSRegData(
+        copy(data.equation),
+        data.depvar,
+        copy(data.expvars),
+        data.panel,
+        data.time,
+        copy(data.depvar_data),
+        copy(data.expvars_data),
+        if (data.panel_data != nothing) copy(data.panel_data) else data.panel_data end,
+        if (data.time_data != nothing) copy(data.time_data) else data.time_data end,
+        data.intercept,
+        data.datatype,
+        data.removemissings,
+        data.nobs
+    )
+
+    new_data.options = copy(data.options)
+    new_data.previous_data = copy(data.previous_data)
+    new_data.results = copy(data.results)
+    return new_data
+end
+
+"""
+Copy GSRegData to another data
+"""
+function copy_data!(from_data::GSRegData, to_data::GSRegData)
+    to_data.equation = from_data.equation
+    to_data.depvar = from_data.depvar
+    to_data.expvars = from_data.expvars
+    to_data.panel = from_data.panel
+    to_data.time = from_data.time
+    to_data.depvar_data = from_data.depvar_data
+    to_data.expvars_data = from_data.expvars_data
+    to_data.panel_data = from_data.panel_data
+    to_data.time_data = from_data.time_data
+    to_data.intercept = from_data.intercept
+    to_data.datatype = from_data.datatype
+    to_data.removemissings = from_data.removemissings
+    to_data.nobs = from_data.nobs
+    to_data.options = from_data.options
+    to_data.previous_data = from_data.previous_data
+    to_data.results = from_data.results
+    
+    return to_data
+end
 
 # OLD
 
