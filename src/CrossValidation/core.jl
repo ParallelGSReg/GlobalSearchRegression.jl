@@ -52,7 +52,6 @@ function kfoldcrossvalidation(
 
     bestmodels = []
     
-    
     for obs in LOOCV(k)
         dataset = collect(Iterators.flatten(folds[obs]))
         testset = setdiff(1:data.nobs, dataset)
@@ -86,6 +85,7 @@ function kfoldcrossvalidation(
         append!(commonvars, model[:data][GlobalSearchRegression.get_column_index(:rmsout, model[:datanames])])
     end
     
+
     # mean
     # median
 
