@@ -12,15 +12,17 @@ data_fat = CSV.read(DATABASE_FAT)
         #funcgen("y *", data; ttest=true, cross=(k=3))
 
         dataorig = Preprocessing.input("y *", data_fat)
-        datalassogen = PreliminarySelection.lasso(dataorig)
-        previousresult = AllSubsetRegression.ols(datalassogen, ttest=true)
+
+        datalassogen, vars = PreliminarySelection.lasso(dataorig)
+
+        AllSubsetRegression.ols!(datalassogen, ttest=true)
 
         @show bestmodel = Dict(
-            :data => previousresult.bestresult_data,
-            :datanames => previousresult.datanames
+            :data => datalassogen.results[1].bestresult_data,
+            :datanames => datalassogen.results[1].datanames
         )
 
-        info = CrossValidation.kfoldcrossvalidation(dataorig, previousresult, 3)
+        info = CrossValidation.kfoldcrossvalidation(dataorig, datalassogen, 3)
 
         #exportar a latex, con info y best model.
 

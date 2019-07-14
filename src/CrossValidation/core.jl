@@ -56,37 +56,35 @@ function kfoldcrossvalidation(
         dataset = collect(Iterators.flatten(folds[obs]))
         testset = setdiff(1:data.nobs, dataset)
 
-        # reduced = GlobalSearchRegression.copy_data(data)
-        # reduced.depvar_data = data.depvar_data[dataset]
-        # reduced.expvars_data = data.expvars_data[dataset, :]
-        # reduced.nobs = size(dataset, 1)
-        # _, vars = GlobalSearchRegression.PreliminarySelection.lasso!(reduced)
+        reduced = GlobalSearchRegression.copy_data(data)
+        reduced.depvar_data = data.depvar_data[dataset]
+        reduced.expvars_data = data.expvars_data[dataset, :]
+        reduced.nobs = size(dataset, 1)
+        _, vars = GlobalSearchRegression.PreliminarySelection.lasso!(reduced)
         
         backup = GlobalSearchRegression.copy_data(data)
-        # backup.expvars = data.expvars[vars]
-        # backup.expvars_data = data.expvars_data[:,vars]
+        backup.expvars = data.expvars[vars]
+        backup.expvars_data = data.expvars_data[:,vars]
         
-        res = GlobalSearchRegression.AllSubsetRegression.ols(backup, 
+        GlobalSearchRegression.AllSubsetRegression.ols!(backup,
             outsample = testset,
-            criteria = [ :rmseout ]
+            criteria = [ :rmseout ],
             ttest = previousresult.results[1].ttest,
             residualtest = previousresult.results[1].residualtest
         )
         
-        append!(bestmodels, Dict(
-            :data => res.bestresult_data,
-            :datanames => res.datanames
+        push!(bestmodels, Dict(
+            :data => backup.results[1].bestresult_data,
+            :datanames => backup.results[1].datanames
         ))
     end
 
     commonvars = []
 
-    for model in bestmodels 
+    for model in bestmodels
         append!(commonvars, model[:data][GlobalSearchRegression.get_column_index(:rmsout, model[:datanames])])
     end
     
-    @show commonvars
-
     # mean
     # median
 
@@ -100,10 +98,15 @@ function kfoldcrossvalidation(
     # #variables elegidas (entre todos los )
     # #coef y std
 
-    result = CrossValidationResult()
+    mean = 0
+    median = 0
+
+    result = CrossValidationResult(k, 0, mean, median)
+
+    push!(data.results, result)
 
     addextras(data, result)
-    data.extras -> crossk crosss(addextras)
-    data.results -> push tipo result especifico
+
+    return data
 end
 

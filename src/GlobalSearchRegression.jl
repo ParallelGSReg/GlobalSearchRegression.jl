@@ -13,17 +13,18 @@ module GlobalSearchRegression
     include("FeatureExtraction/FeatureExtraction.jl")
     include("PreliminarySelection/PreliminarySelection.jl")
     include("AllSubsetRegression/AllSubsetRegression.jl")
-    #include("CrossValidation/CrossValidation.jl")
+    include("CrossValidation/CrossValidation.jl")
     include("Output/Output.jl")
 
     using ..Preprocessing
     using ..FeatureExtraction
     using ..PreliminarySelection
     using ..AllSubsetRegression
+    using ..CrossValidation
     using ..Output
 
     export GSRegData, GSRegResult, gsr
 
-    export Preprocessing, FeatureExtraction, PreliminarySelection, Output
+    export Preprocessing, FeatureExtraction, PreliminarySelection, Output, CrossValidation
 
 end
