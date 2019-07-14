@@ -2,7 +2,7 @@ module PreliminarySelection
     using GLMNet
     using ..GlobalSearchRegression
 
-    export lasso!, lasso, lassoselection
+    export lasso!, lasso, lassoselection, PRELIMINARYSELECTION_EXTRAKEY
 
     include("const.jl")
     include("strings.jl")

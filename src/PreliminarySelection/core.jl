@@ -1,5 +1,4 @@
 function lasso(data::GlobalSearchRegression.GSRegData)
-    new_data = 
     lasso!(GlobalSearchRegression.copy_data(data))
 end
 
@@ -14,6 +13,8 @@ function lasso!(data::GlobalSearchRegression.GSRegData)
     data.expvars = data.expvars[vars]
     data.expvars_data = data.expvars_data[:,vars]
     
+    data = addextras(data)
+
     data
 end
 

@@ -199,3 +199,21 @@ function seasonal_adjustment(data, name, factor, datanames)
     col = col - seasonal_component
     return data
 end
+
+"""
+Add values to extras
+"""
+function addextras(data)
+    data.extras[GlobalSearchRegression.generate_extra_key(PREPROCESSING_EXTRAKEY, data.extras)] = Dict(
+        :equation => vcat(data.depvar, data.expvars),
+        :data => DEFAULT_DATANAME,
+        :method => data.method,
+        :intercept => data.intercept,
+        :panel => data.panel,
+        :time => data.time,
+        :seasonaladjustment => data.seasonaladjustment,
+        :removeoutliers => data.removeoutliers,
+        :removemissings => data.removemissings
+    )
+    return data
+end

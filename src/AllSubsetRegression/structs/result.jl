@@ -7,6 +7,7 @@ mutable struct AllSubsetRegressionResult <: GlobalSearchRegression.GSRegResult
     bestresult_data
     modelavg_data
 
+    fixedvariables
     outsample
     criteria
     modelavg
@@ -18,6 +19,7 @@ mutable struct AllSubsetRegressionResult <: GlobalSearchRegression.GSRegResult
     function AllSubsetRegressionResult(
             datanames,
             modelavg_datanames,
+            fixedvariables,
             outsample,
             criteria,
             modelavg,
@@ -26,6 +28,6 @@ mutable struct AllSubsetRegressionResult <: GlobalSearchRegression.GSRegResult
             orderresults
         )
 
-        new(datanames, modelavg_datanames, nothing, nothing, nothing, outsample, criteria, modelavg, ttest, residualtest, orderresults, 0)
+        new(datanames, modelavg_datanames, nothing, nothing, nothing, fixedvariables, outsample, criteria, modelavg, ttest, residualtest, orderresults, 0)
     end
 end

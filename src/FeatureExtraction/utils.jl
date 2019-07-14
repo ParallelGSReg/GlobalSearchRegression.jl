@@ -234,3 +234,18 @@ function data_add_interaction(data, interaction)
 
     return data
 end
+
+"""
+Add values to extras
+"""
+function addextras(data, fe_sqr, fe_log, fe_inv, fe_lag, interaction, removemissings)
+    data.extras[GlobalSearchRegression.generate_extra_key(FEATUREEXTRACTION_EXTRAKEY, data.extras)] = Dict(
+        :fe_sqr => fe_sqr,
+        :fe_log => fe_log,
+        :fe_inv => fe_inv,
+        :fe_lag => fe_lag,
+        :interaction => interaction,
+        :removemissings => removemissings
+    )
+    return data
+end

@@ -1,5 +1,6 @@
-function ols!(
+function ols(
         data::GlobalSearchRegression.GSRegData;
+        fixedvariables::Union{Nothing, Array}=FIXEDVARIABLES_DEFAULT,
         outsample=OUTSAMPLE_DEFAULT,
         criteria::Array=CRITERIA_DEFAULT,
         ttest::Bool=TTEST_DEFAULT,
@@ -8,8 +9,9 @@ function ols!(
         orderresults::Bool=ORDERRESULTS_DEFAULT
     )
 
-    result = ols(
-        data,
+    return ols(
+        GlobalSearchRegression.copy_data(data),
+        fixedvariables=fixedvariables,
         outsample=outsample,
         criteria=criteria,
         ttest=ttest,
@@ -17,26 +19,26 @@ function ols!(
         residualtest=residualtest,
         orderresults=orderresults
     )
-
-    push!(data.results, result)
-
-    return data
 end
 
 function ols(
-        data::GlobalSearchRegression.GSRegData;
-        outsample=OUTSAMPLE_DEFAULT,
-        criteria::Array=CRITERIA_DEFAULT,
-        ttest::Bool=TTEST_DEFAULT,
-        modelavg::Bool=MODELAVG_DEFAULT,
-        residualtest::Bool=RESIDUALTEST_DEFAULT,
-        orderresults::Bool=ORDERRESULTS_DEFAULT
-    )
+    data::GlobalSearchRegression.GSRegData;
+    fixedvariables::Array=FIXEDVARIABLES_DEFAULT,
+    outsample=OUTSAMPLE_DEFAULT,
+    criteria::Array=CRITERIA_DEFAULT,
+    ttest::Bool=TTEST_DEFAULT,
+    modelavg::Bool=MODELAVG_DEFAULT,
+    residualtest::Bool=RESIDUALTEST_DEFAULT,
+    orderresults::Bool=ORDERRESULTS_DEFAULT
+)
 
-    result = create_result(data, outsample, criteria, ttest, modelavg, residualtest, orderresults)
+    result = create_result(data, fixedvariables, outsample, criteria, ttest, modelavg, residualtest, orderresults)
     execute!(data, result)
+    push!(data.results, result)
 
-    return result
+    data = addextras(data, result)
+
+    return data
 end
 
 function execute!(data::GlobalSearchRegression.GSRegData, result::AllSubsetRegressionResult)

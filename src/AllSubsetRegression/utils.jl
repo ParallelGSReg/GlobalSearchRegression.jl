@@ -1,7 +1,7 @@
 """
 Initialize options
 """
-function create_result(data, outsample, criteria, ttest, modelavg, residualtest, orderresults)  
+function create_result(data, fixedvariables, outsample, criteria, ttest, modelavg, residualtest, orderresults)  
 
     if :r2adj ∉ criteria
         push!(criteria, :r2adj)
@@ -28,6 +28,7 @@ function create_result(data, outsample, criteria, ttest, modelavg, residualtest,
     return AllSubsetRegressionResult(
         datanames,
         modelavg_datanames,
+        fixedvariables,
         outsample,
         criteria,
         modelavg,
@@ -169,4 +170,20 @@ function sortrows(B::AbstractMatrix,cols::Array; kws...)
         end
     end
     return B
+end
+
+"""
+Add values to extras
+"""
+function addextras(data, result)
+    data.extras[GlobalSearchRegression.generate_extra_key(ALLSUBSETREGRESSION_EXTRAKEY, data.extras)] = Dict(
+        :outsample => result.outsample,
+        :criteria => result.criteria,
+        :ttest => result.ttest,
+        :modelavg => result.modelavg,
+        :residualtest => result.residualtest,
+        :orderresults => result.orderresults
+        :fixedvariables => result.fixedvariables
+    )
+    return data
 end

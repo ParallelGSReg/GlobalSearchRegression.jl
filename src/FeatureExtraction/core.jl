@@ -8,10 +8,8 @@ function featureextraction(
     removemissings=REMOVEMISSINGS_DEFAULT
     )
 
-    new_data = GlobalSearchRegression.copy_data(data)
-
-    new_data = featureextraction(
-        new_data,
+    return featureextraction(
+        GlobalSearchRegression.copy_data(data),
         fe_sqr=fe_sqr,
         fe_log=fe_log,
         fe_inv=fe_inv,
@@ -19,8 +17,6 @@ function featureextraction(
         interaction=interaction,
         removemissings=removemissings
     )
-
-    return new_data
 end
 
 function featureextraction!(
@@ -31,15 +27,6 @@ function featureextraction!(
     fe_lag::Union{Nothing, Array}=nothing,
     interaction::Union{Nothing, Array}=nothing,
     removemissings=REMOVEMISSINGS_DEFAULT
-    )
-
-    data.extras[GlobalSearchRegression.generate_extra_key(:featureextraction, data.extras)] = Dict(
-        :fe_sqr => fe_sqr,
-        :fe_log => fe_log,
-        :fe_inv => fe_inv,
-        :fe_lag => fe_lag,
-        :interaction => interaction,
-        :removemissings => removemissings
     )
 
     if fe_sqr != nothing
@@ -72,6 +59,8 @@ function featureextraction!(
     end
 
     data = GlobalSearchRegression.convert_data(data)
+
+    data = addextras(data, fe_sqr, fe_log, fe_inv, fe_lag, interaction, removemissings)
 
     return data
 end

@@ -316,16 +316,7 @@ function processinput(
         nobs
     )
 
-    gsreg_data.extras[GlobalSearchRegression.generate_extra_key(:input, gsreg_data.extras)] = Dict(
-        :equation => equation,
-        :method => method,
-        :intercept => intercept,
-        :time => time,
-        :panel => panel,
-        :seasonaladjustment => seasonaladjustment,
-        :removeoutliers => removeoutliers,
-        :removemissings => removemissings
-    )
+    gsreg_data = addextras(gsreg_data)
 
     return gsreg_data
 end

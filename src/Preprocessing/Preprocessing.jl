@@ -4,7 +4,7 @@ module Preprocessing
     using SingularSpectrumAnalysis
     using ..GlobalSearchRegression
 
-    export input
+    export input, PREPROCESSING_EXTRAKEY
 
     include("const.jl")
     include("strings.jl")

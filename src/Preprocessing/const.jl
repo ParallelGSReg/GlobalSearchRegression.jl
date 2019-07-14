@@ -1,3 +1,4 @@
+const PREPROCESSING_EXTRAKEY = :input
 const FAST = :fast
 const PRECISE = :precise
 const INTERCEPT_DEFAULT = true
@@ -9,3 +10,4 @@ const INTERACTION_DEFAULT = nothing
 const REMOVEOUTLIERS_DEFAULT = false
 const REMOVEMISSINGS_DEFAULT = false
 const SEASONALADJUSTMENT_DEFAULT = nothing
+const DEFAULT_DATANAME = "dataname"
