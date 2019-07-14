@@ -33,3 +33,29 @@ function csv(data::GlobalSearchRegression.GSRegData, result::GlobalSearchRegress
     end
     return res
 end
+
+
+function csv(data::GlobalSearchRegression.GSRegData, result::GlobalSearchRegression.CrossValidation.CrossValidationResult, filename::String)
+    return csv(data, result, filename=filename)
+end
+
+function csv(data::GlobalSearchRegression.GSRegData, result::GlobalSearchRegression.CrossValidation.CrossValidationResult; filename::Union{Nothing, String}=nothing)
+    header = []
+    for dataname in result.datanames
+        push!(header, String(dataname))
+    end
+
+    rows = vcat(permutedims(header), result.data)
+    
+    if filename != nothing
+        file = open(filename, "w")
+        writedlm(file, rows, ',')
+        close(file)
+    end
+
+    res = ""    
+    for row in eachrow(rows)
+        res *= @sprintf("%s\n", join(row, ','))
+    end
+    return res
+end

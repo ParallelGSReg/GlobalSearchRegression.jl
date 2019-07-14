@@ -90,7 +90,6 @@ function kfoldcrossvalidation(
 
     commonvars = []
 
-    @show bestmodels
     for model in bestmodels
         #append!(commonvars, model[:data][GlobalSearchRegression.get_column_index(:rmsout, model[:datanames])])
     end
@@ -121,3 +120,72 @@ function kfoldcrossvalidation(
     return previousresult
 end
 
+function to_string(data::GlobalSearchRegression.GSRegData, result::AllSubsetRegressionResult)
+    datanames_index = create_datanames_index(result.datanames)
+
+    out = ""
+    out *= @sprintf("\n")
+    out *= @sprintf("══════════════════════════════════════════════════════════════════════════════\n")
+    out *= @sprintf("                       Cross validation average results                       \n")
+    out *= @sprintf("══════════════════════════════════════════════════════════════════════════════\n")
+    out *= @sprintf("                                                                              \n")
+    out *= @sprintf("                                     Dependent variable: %s                   \n", data.depvar)
+    out *= @sprintf("                                     ─────────────────────────────────────────\n")
+    out *= @sprintf("                                                                              \n")
+    out *= @sprintf(" Selected covariates                 Coef.")
+    if result.ttest
+        out *= @sprintf("        Std.         t-test")
+    end
+    out *= @sprintf("\n")
+    out *= @sprintf("──────────────────────────────────────────────────────────────────────────────\n")
+
+    cols = get_selected_variables(Int64(result.average_data[datanames_index[:index]]), data.expvars, data.intercept)
+
+    for pos in cols
+        varname = data.expvars[pos]
+        out *= @sprintf(" %-35s", varname)
+        out *= @sprintf(" %-10f", result.average_data[datanames_index[Symbol(string(varname, "_b"))]])
+        if result.ttest
+            out *= @sprintf("   %-10f", result.average_data[datanames_index[Symbol(string(varname, "_bstd"))]])
+            out *= @sprintf("   %-10f", result.average_data[datanames_index[Symbol(string(varname, "_t"))]])
+        end
+        out *= @sprintf("\n")
+    end
+
+    out *= @sprintf("──────────────────────────────────────────────────────────────────────────────\n")
+    out *= @sprintf(" Observations                        %-10d\n", result.bestresult_data[datanames_index[:nobs]])
+    out *= @sprintf(" RMSE OUT                            %-10f\n", result.bestresult_data[datanames_index[:rmseout]])
+
+    out *= @sprintf("\n")
+    out *= @sprintf("\n")
+    out *= @sprintf("══════════════════════════════════════════════════════════════════════════════\n")
+    out *= @sprintf("                       Cross validation median results                        \n")
+    out *= @sprintf("══════════════════════════════════════════════════════════════════════════════\n")
+    out *= @sprintf("                                                                              \n")
+    out *= @sprintf("                                     Dependent variable: %s                   \n", data.depvar)
+    out *= @sprintf("                                     ─────────────────────────────────────────\n")
+    out *= @sprintf("                                                                              \n")
+    out *= @sprintf(" Covariates                          Coef.")
+    if result.ttest
+        out *= @sprintf("        Std.         t-test")
+    end
+    out *= @sprintf("\n")
+    out *= @sprintf("──────────────────────────────────────────────────────────────────────────────\n")
+
+    for varname in data.expvars
+        out *= @sprintf(" %-35s", varname)
+        out *= @sprintf(" %-10f", result.median_data[datanames_index[Symbol(string(varname, "_b"))]])
+        if result.ttest
+            out *= @sprintf("   %-10f", result.median_data[datanames_index[Symbol(string(varname, "_bstd"))]])
+            out *= @sprintf("   %-10f", result.median_data[datanames_index[Symbol(string(varname, "_t"))]])
+        end
+        out *= @sprintf("\n")
+    end
+    out *= @sprintf("\n")
+    out *= @sprintf("──────────────────────────────────────────────────────────────────────────────\n")
+    out *= @sprintf(" Observations                        %-10d\n", result.median_data[datanames_index[:nobs]])
+    out *= @sprintf(" RMSE OUT                            %-10f\n", result.median_data[datanames_index[:rmseout]])
+    out *= @sprintf("──────────────────────────────────────────────────────────────────────────────\n")
+    
+    return out
+end
