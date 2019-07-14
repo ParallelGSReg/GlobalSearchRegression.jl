@@ -6,7 +6,6 @@ function summary(data::GlobalSearchRegression.GSRegData; filename::Union{Nothing
     if size(data.results, 1) > 0
         summary(data, data.results[resultnum], filename=filename)
     end
-    return Base.show(data)
 end
 
 function summary(data::GlobalSearchRegression.GSRegData, result::GlobalSearchRegression.AllSubsetRegression.AllSubsetRegressionResult, filename::String)

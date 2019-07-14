@@ -182,7 +182,7 @@ function addextras(data, result)
         :ttest => result.ttest,
         :modelavg => result.modelavg,
         :residualtest => result.residualtest,
-        :orderresults => result.orderresults
+        :orderresults => result.orderresults,
         :fixedvariables => result.fixedvariables
     )
     return data

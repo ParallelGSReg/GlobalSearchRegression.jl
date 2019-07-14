@@ -316,7 +316,7 @@ function processinput(
         nobs
     )
 
-    gsreg_data = addextras(gsreg_data)
+    gsreg_data = addextras(gsreg_data, method, seasonaladjustment, removeoutliers)
 
     return gsreg_data
 end

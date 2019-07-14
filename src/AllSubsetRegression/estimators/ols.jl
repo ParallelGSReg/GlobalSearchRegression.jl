@@ -21,7 +21,7 @@ function ols(
     )
 end
 
-function ols(
+function ols!(
     data::GlobalSearchRegression.GSRegData;
     fixedvariables::Array=FIXEDVARIABLES_DEFAULT,
     outsample=OUTSAMPLE_DEFAULT,

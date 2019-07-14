@@ -203,16 +203,16 @@ end
 """
 Add values to extras
 """
-function addextras(data)
+function addextras(data, method, seasonaladjustment, removeoutliers)
     data.extras[GlobalSearchRegression.generate_extra_key(PREPROCESSING_EXTRAKEY, data.extras)] = Dict(
         :equation => vcat(data.depvar, data.expvars),
         :data => DEFAULT_DATANAME,
-        :method => data.method,
+        :method => method,
         :intercept => data.intercept,
         :panel => data.panel,
         :time => data.time,
-        :seasonaladjustment => data.seasonaladjustment,
-        :removeoutliers => data.removeoutliers,
+        :seasonaladjustment => seasonaladjustment,
+        :removeoutliers => removeoutliers,
         :removemissings => data.removemissings
     )
     return data
