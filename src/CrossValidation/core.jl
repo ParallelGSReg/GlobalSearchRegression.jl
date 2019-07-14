@@ -30,12 +30,13 @@ end
 
 function kfoldcrossvalidation(
     data::GlobalSearchRegression.GSRegData,
+    previousresult::GlobalSearchRegression.GSRegData,
     k::Int)
 
     db = randperm(data.nobs)
-    db = collect(1:data.nobs)
+    #db = collect(1:data.nobs)
     folds = split_database(db, k)
-    
+
     # if data.time != nothing
     #     if data.panel != nothing
     #         # time & panel -> vemos que pasa acá
@@ -49,30 +50,60 @@ function kfoldcrossvalidation(
     # end
 
     bestmodels = []
-
+    
+    
     for obs in LOOCV(k)
         dataset = collect(Iterators.flatten(folds[obs]))
         testset = setdiff(1:data.nobs, dataset)
 
-        backup = GlobalSearchRegression.copy_data(data)
-        backup.depvar_data = backup.depvar_data[dataset]
-        backup.expvars_data = backup.expvars_data[dataset, :]
-        backup.nobs = size(dataset, 1)
+        # reduced = GlobalSearchRegression.copy_data(data)
+        # reduced.depvar_data = data.depvar_data[dataset]
+        # reduced.expvars_data = data.expvars_data[dataset, :]
+        # reduced.nobs = size(dataset, 1)
+        # _, vars = GlobalSearchRegression.PreliminarySelection.lasso!(reduced)
         
-        GlobalSearchRegression.PreliminarySelection.lasso!(backup)
-        res = GlobalSearchRegression.AllSubsetRegression.ols(backup; outsample=testset)
+        backup = GlobalSearchRegression.copy_data(data)
+        # backup.expvars = data.expvars[vars]
+        # backup.expvars_data = data.expvars_data[:,vars]
+        
+        res = GlobalSearchRegression.AllSubsetRegression.ols(backup, 
+            outsample = testset,
+            criteria = [ :rmseout ]
+            ttest = previousresult.results[1].ttest,
+            residualtest = previousresult.results[1].residualtest
+        )
+        
         append!(bestmodels, Dict(
             :data => res.bestresult_data,
             :datanames => res.datanames
         ))
     end
 
-    for model in bestmodels 
-        # promedio pepe
-        model[:data][GlobalSearchRegression.get_column_index(:rmsout, model[:datanames])]
-    end
-    # sacar media/avg de betas y de errores
+    commonvars = []
 
-    return data
+    for model in bestmodels 
+        append!(commonvars, model[:data][GlobalSearchRegression.get_column_index(:rmsout, model[:datanames])])
+    end
+    
+    @show commonvars
+
+    # mean
+    # median
+
+    # commonvars: preguntar en previousresult los params enviados y:
+    #     por var: _b _std _t
+    #     por model: nobs wtest jbtest bgtest rmsout avg/mediana
+
+
+    # # sacar media/avg de betas y de errores
+    # #schema (panel,time,random)
+    # #variables elegidas (entre todos los )
+    # #coef y std
+
+    result = CrossValidationResult()
+
+    addextras(data, result)
+    data.extras -> crossk crosss(addextras)
+    data.results -> push tipo result especifico
 end
 

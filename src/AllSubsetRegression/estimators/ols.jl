@@ -214,14 +214,14 @@ function execute_row!(
     nobs = size(depvar_subset, 1)
     ncoef = size(expvars_subset, 2)
     qrf = qr(expvars_subset)
-    b = qrf \ depvar_subset                   # estimate
-    ŷ = expvars_subset * b                    # predicted values
-    er = depvar_subset - ŷ                    # in-sample residuals
-    er2 = er .^ 2                           # squared errors
-    sse = sum(er2)                          # residual sum of squares
-    df_e = nobs - ncoef                     # degrees of freedom
-    rmse = sqrt(sse / nobs)                 # root mean squared error
-    r2 = 1 - var(er) / var(depvar_subset)     # model R-squared
+    b = qrf \ depvar_subset               # estimate
+    ŷ = expvars_subset * b                # predicted values
+    er = depvar_subset - ŷ                # in-sample residuals
+    er2 = er .^ 2                         # squared errors
+    sse = sum(er2)                        # residual sum of squares
+    df_e = nobs - ncoef                   # degrees of freedom
+    rmse = sqrt(sse / nobs)               # root mean squared error
+    r2 = 1 - var(er) / var(depvar_subset) # model R-squared
 
     if ttest
         bstd = sqrt.( sum( (UpperTriangular(qrf.R) \ Matrix(1.0LinearAlgebra.I, ncoef, ncoef) ) .^ 2, dims=2) * (sse / df_e) )
@@ -230,12 +230,12 @@ function execute_row!(
     if outsample_enabled > 0
         depvar_outsample_subset, expvars_outsample_subset = get_outsample_subset(depvar_data, expvars_data, outsample, selected_variables_index)
         erout = depvar_outsample_subset - expvars_outsample_subset * b  # out-of-sample residuals
-        sseout = sum(erout .^ 2)                                    # residual sum of squares
+        sseout = sum(erout .^ 2)                                        # residual sum of squares
         outsample_count = outsample
         if (isa(outsample, Array))
             outsample_count = size(outsample, 1)
         end
-        rmseout = sqrt(sseout / outsample_count)                          # root mean squared error
+        rmseout = sqrt(sseout / outsample_count)                        # root mean squared error
         result_data[ order, datanames_index[:rmseout] ] = rmseout
     end
 

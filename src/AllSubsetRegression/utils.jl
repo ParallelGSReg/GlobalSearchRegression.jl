@@ -7,8 +7,8 @@ function create_result(data, fixedvariables, outsample, criteria, ttest, modelav
         push!(criteria, :r2adj)
     end
 
-    if :rmseout ∉ criteria && outsample > 0
-        push!(criteria, :rmseout)
+    if :rmseout ∉ criteria && (outsample isa Array && size(outsample, 1) > 0) || (!(outsample isa Array) && outsample > 0)
+            push!(criteria, :rmseout)
     end
 
     datanames = create_datanames(data, criteria, ttest, modelavg, residualtest)
@@ -136,7 +136,7 @@ function get_outsample_subset(depvar_data, expvars_data, outsample, selected_var
         depvar_view = depvar_data[end-outsample:end, 1]
         expvars_view = expvars_data[end-outsample:end, selected_variables_index]
     end
-    return depvar_view,expvars_view
+    return depvar_view, expvars_view
 end
 
 """
