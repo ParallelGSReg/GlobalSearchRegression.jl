@@ -1,3 +1,17 @@
+# TODO: Merge _lasso and lasso
+function _lasso(data::GlobalSearchRegression.GSRegData)
+    return _lasso!(data)
+end
+
+# TODO: Merge _lasso! and lasso!
+function _lasso!(data::GlobalSearchRegression.GSRegData)
+    res = lasso!(data)
+    res[1].extras[:lasso] = Dict()
+    res[1].extras[:lasso][:betas] = res[2]
+
+    return res[1]
+end
+
 function lasso(data::GlobalSearchRegression.GSRegData)
     lasso!(GlobalSearchRegression.copy_data(data))
 end

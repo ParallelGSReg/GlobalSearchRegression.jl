@@ -53,6 +53,7 @@
  - [X] Fix documentation
  - [X] Change module name
  - [X] Initialize options
+ - [ ] Fixed variables
  - [ ] Iterative estimators (LOGIT, PROBIT)
  - [ ] Compure z value
 

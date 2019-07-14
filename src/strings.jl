@@ -1,10 +1,1 @@
-SOME_VARIABLES_NOT_FOUND = "some of the selected variables are not found"
-
-DATA_NOT_DEFINED = "data parameter is not defined"
-OUTSAMPLE_MISMATCH = "rmsout criteria can't be used without outsample option"
-OUTSAMPLE_LOWER_VALUE = "outsample parameter must be greater than 0"
-OUTSAMPLE_HIGHER_VALUE = "outsample parameter is too high to ensure enought observations for in-sample estimation"
-CSV_DUPLICATED_PARAMETERS = "resultscsv and csv parameters are defined at the same time"
-NO_ENOUGH_OBSERVATIONS = "there is no enough observations"
-RESIDUALTEST_EXCEPTION = "for white noise residual filtering, residualtest option must be true"
-WRONG_DATASET_DATATYPE = "the selected database has not float numbers"
+INVALID_PRELIMINARYSELECTION = "selected preliminary selection not found"

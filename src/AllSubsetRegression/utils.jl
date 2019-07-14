@@ -89,7 +89,7 @@ end
 """
 Returns selected appropiate covariates for each iteration
 """
-function get_selected_variables(order, datanames, intercept; num_jobs=nothing, num_job=nothing, iteration_num=nothing)
+function get_selected_variables(order, datanames, intercept, fixedvariables; num_jobs=nothing, num_job=nothing, iteration_num=nothing)
     cols = zeros(Int64, 0)
     binary = string(order, base = 2)
     k = 1

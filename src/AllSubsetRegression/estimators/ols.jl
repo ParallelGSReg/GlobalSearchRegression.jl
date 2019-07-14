@@ -1,6 +1,6 @@
 function ols(
         data::GlobalSearchRegression.GSRegData;
-        fixedvariables::Union{Nothing, Array}=FIXEDVARIABLES_DEFAULT,
+        fixedvariables::Array=FIXEDVARIABLES_DEFAULT,
         outsample=OUTSAMPLE_DEFAULT,
         criteria::Array=CRITERIA_DEFAULT,
         ttest::Bool=TTEST_DEFAULT,
@@ -9,7 +9,7 @@ function ols(
         orderresults::Bool=ORDERRESULTS_DEFAULT
     )
 
-    return ols(
+    return ols!(
         GlobalSearchRegression.copy_data(data),
         fixedvariables=fixedvariables,
         outsample=outsample,
@@ -34,8 +34,7 @@ function ols!(
 
     result = create_result(data, fixedvariables, outsample, criteria, ttest, modelavg, residualtest, orderresults)
     execute!(data, result)
-    push!(data.results, result)
-
+    GlobalSearchRegression.addresult!(data, result)
     data = addextras(data, result)
 
     return data
@@ -58,7 +57,7 @@ function execute!(data::GlobalSearchRegression.GSRegData, result::AllSubsetRegre
     datanames_index = create_datanames_index(result.datanames)
     if nprocs() == nworkers()
         for order = 1:num_operations
-            execute_row!(order, data.depvar, data.expvars, datanames_index, depvar_data, expvars_data, result_data, data.intercept, data.time, data.datatype, result.outsample, result.criteria, result.ttest, result.residualtest)
+            execute_row!(order, data.depvar, data.expvars, datanames_index, depvar_data, expvars_data, result_data, data.intercept, data.time, data.datatype, result.outsample, result.criteria, result.ttest, result.residualtest, result.fixedvariables)
         end
     else
         ops_per_worker = div(num_operations, nworkers())
@@ -69,7 +68,7 @@ function execute!(data::GlobalSearchRegression.GSRegData, result::AllSubsetRegre
         end
         jobs = []
         for num_job = 1:num_jobs
-            push!(jobs, @spawnat num_job+1 execute_job!(num_job, num_jobs, ops_per_worker, data.depvar, data.expvars, datanames_index, depvar_data, expvars_data, result_data, data.intercept, data.time, data.datatype, result.outsample, result.criteria, result.ttest, result.residualtest))
+            push!(jobs, @spawnat num_job+1 execute_job!(num_job, num_jobs, ops_per_worker, data.depvar, data.expvars, datanames_index, depvar_data, expvars_data, result_data, data.intercept, data.time, data.datatype, result.outsample, result.criteria, result.ttest, result.residualtest, result.fixedvariables))
         end
         for job in jobs
             fetch(job)
@@ -79,7 +78,7 @@ function execute!(data::GlobalSearchRegression.GSRegData, result::AllSubsetRegre
         if remainder > 0
             for j = 1:remainder
                 order = j + ops_per_worker * num_jobs
-                execute_row!(order, data.depvar, data.expvars, datanames_index, depvar_data, expvars_data, result_data, data.intercept, data.time, data.datatype, result.outsample, result.criteria, result.ttest, result.residualtest)
+                execute_row!(order, data.depvar, data.expvars, datanames_index, depvar_data, expvars_data, result_data, data.intercept, data.time, data.datatype, result.outsample, result.criteria, result.ttest, result.residualtest, result.fixedvariables)
             end
         end
     end
@@ -158,7 +157,8 @@ function execute_job!(
     outsample,
     criteria,
     ttest,
-    residualtest
+    residualtest,
+    fixedvariables
 )
     @time begin
 
@@ -179,6 +179,7 @@ function execute_job!(
             criteria,
             ttest,
             residualtest,
+            fixedvariables,
             num_jobs=num_jobs,
             num_job=num_job,
             iteration_num=j
@@ -201,12 +202,13 @@ function execute_row!(
     outsample,
     criteria,
     ttest,
-    residualtest;
+    residualtest,
+    fixedvariables;
     num_jobs=nothing,
     num_job=nothing,
     iteration_num=nothing
 )
-    selected_variables_index = get_selected_variables(order, expvars, intercept, num_jobs=num_jobs, num_job=num_job, iteration_num=iteration_num)    
+    selected_variables_index = get_selected_variables(order, expvars, intercept, fixedvariables, num_jobs=num_jobs, num_job=num_job, iteration_num=iteration_num)    
 
     depvar_subset, expvars_subset = get_insample_subset(depvar_data, expvars_data, outsample, selected_variables_index)
     outsample_enabled = size(depvar_subset, 1) < size(depvar_data, 1)

@@ -140,7 +140,7 @@ function copy_data(data::GSRegData)
         data.nobs
     )
 
-    new_data.extras = copy(data.extras)
+    new_data.extras = data.extras
     new_data.options = copy(data.options)
     new_data.previous_data = copy(data.previous_data)
     new_data.results = copy(data.results)
@@ -185,4 +185,34 @@ function generate_extra_key(extra_key, extras)
         end
         return Symbol(string(extra_key, "_", posfix))
     end
+end
+
+"""
+Returns if feature extraction module was selected
+"""
+function featureextraction_enabled(fe_sqr, fe_log, fe_inv, fe_lag, interaction)
+    return fe_sqr != nothing || fe_log != nothing || fe_inv != nothing || fe_lag != nothing || interaction != nothing
+end
+
+"""
+Returns if preliminary selection was selected
+"""
+function preliminaryselection_enabled(preliminaryselection)
+    return preliminaryselection != nothing
+end
+
+"""
+Validates if preliminary selecttion method exists
+"""
+function validate_preliminaryselection(preliminaryselection)
+    return preliminaryselection in VALID_PRELIMINARYSELECTION
+end
+
+"""
+Add result
+"""
+function addresult!(data, result)
+    push!(data.results, result)
+
+    return data
 end
