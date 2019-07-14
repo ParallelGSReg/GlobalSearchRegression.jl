@@ -7,7 +7,7 @@ function create_result(data, outsample, criteria, ttest, modelavg, residualtest,
         push!(criteria, :r2adj)
     end
 
-    if :rmseout ∉ criteria && outsample != OUTSAMPLE_DEFAULT
+    if :rmseout ∉ criteria && outsample > 0
         push!(criteria, :rmseout)
     end
 

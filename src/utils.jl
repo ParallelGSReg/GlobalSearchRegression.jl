@@ -172,84 +172,17 @@ function copy_data!(from_data::GSRegData, to_data::GSRegData)
     return to_data
 end
 
-# OLD
-
 """
-Returns the position of the header value based on this structure.
-    - Index
-    - Covariates
-        * b
-        * bstd
-        * T-test
-    - Equation general information merged with criteria user-defined options.
-    - Order from user combined criteria
-    - Weight
+Generate extra key
 """
-function get_data_position(name, expvars, intercept, ttest, residualtest, time, criteria)
-    data_cols_num = length(expvars)
-    mult_col = (ttest == true) ? 3 : 1
-
-    # INDEX
-    if name == INDEX
-        return 1
-    end
-    displacement = 1
-    displacement += mult_col * (data_cols_num) + 1
-
-    # EQUATION_GENERAL_INFORMATION
-    testfields = (residualtest != nothing && residualtest) ? ((time != nothing) ? RESIDUAL_TESTS_TIME : RESIDUAL_TESTS_CROSS) : []
-    equation_general_information_and_criteria = unique([ EQUATION_GENERAL_INFORMATION; criteria; testfields ])
-    if name in equation_general_information_and_criteria
-        return displacement + findfirst(isequal(name), equation_general_information_and_criteria) - 1
-    end
-    displacement += length(equation_general_information_and_criteria)
-
-    if name == ORDER
-        return displacement
-    end
-    displacement += 1
-
-    if name == WEIGHT
-        return displacement
-    end
-    displacement = 1
-
-    # Covariates
-    string_name = string(name)
-    base_name = Symbol(replace(replace(replace(string_name, "_bstd" => ""), "_t" => ""), "_b" => ""))
-    if base_name in expvars
-        displacement = displacement + (findfirst(isequal(base_name), expvars) - 1) * mult_col
-        if occursin("_bstd", string_name)
-            return displacement + 2
+function generate_extra_key(extra_key, extras)
+    if !(extra_key in keys(extras))
+        return extra_key
+    else
+        posfix = 2
+        while Symbol(string(extra_key, "_", posfix)) in keys(extras)
+            posfix = posfix + 1
         end
-        if occursin("_b", string_name)
-            return displacement + 1
-        end
-        if occursin("_t", string_name)
-            return displacement + 3
-        end
+        return Symbol(string(extra_key, "_", posfix))
     end
-end
-
-
-function export_csv(io::IO, result::GSRegResult)
-    head = []
-    for elem in sort(collect(Dict(value => key for (key, value) in result.header)))
-         push!(head, elem[2])
-    end
-    writedlm(io, [head], ',')
-    writedlm(io, result.results, ',')
-end
-
-"""
-Exports main results with headers to file
-"""
-function export_csv(output::String, result::GSRegResult)
-    file = open(output, "w")
-    export_csv(file, result)
-    close(file)
-end
-
-function get_data_column_pos(name, datanames)
-    return findfirst(x -> name==x, datanames)
 end

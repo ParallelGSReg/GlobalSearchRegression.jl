@@ -1,4 +1,14 @@
-function latex(result::GlobalSearchRegression.GSRegData)
+include("consts.jl")
+
+function latex(data::GlobalSearchRegression.GSRegData, path::String=DEFAULT_DEST_FOLDER)
+    latex(result, path=path)
+end
+
+function latex(data::GlobalSearchRegression.GSRegData; path::String=DEFAULT_DEST_FOLDER)
+    res = Dict()
+
+    res[:base] = base(data)
+
     #construir diccionario desde data parcial
         #formula
         #input features extraction
@@ -8,6 +18,43 @@ function latex(result::GlobalSearchRegression.GSRegData)
     #crear env (copiar files estaticos necesarios)
     #renderizar plots
     #renderizar tpl
+end
+
+function base(data::GlobalSearchRegression.GSRegData)
+    dict = Dict()
+    #dict[:]
+
+    equation::Array{Symbol}
+    depvar::Symbol
+    expvars::Array{Symbol}
+    panel::Union{Symbol, Nothing} 
+    time::Union{Symbol, Nothing}
+    depvar_data::Union{Array{Float64}, Array{Float32}, Array{Union{Float64, Missing}}, Array{Union{Float32, Missing}}}
+    expvars_data::Union{Array{Float64}, Array{Float32}, Array{Union{Float64, Missing}}, Array{Union{Float32, Missing}}}
+    panel_data::Union{Nothing, Array{Int64}, Array{Int32}, Array{Union{Int64, Missing}}, Array{Union{Int32, Missing}}}
+    time_data::Union{Nothing, Array{Float64}, Array{Float32}, Array{Union{Float64, Missing}}, Array{Union{Float32, Missing}}}
+    intercept::Bool
+    datatype::DataType
+    removemissings::Bool
+    nobs::Int64
+    options::Array{Any}
+    extras::Dict
+    previous_data::Array{Any}
+    results::Array{Any}
+    
+    for var in names(data)
+        orig = data[var]
+        obs = collect(skipmissing(orig))
+        push!(result, Dict(
+            "name" => string(var),
+            "nobs" => length(obs),
+            "mean" => @sprintf("%.2f", mean(obs)),
+            "std"  => @sprintf("%.2f", std(obs)),
+            "max"  => @sprintf("%.2f", maximum(obs)),
+            "min"  => @sprintf("%.2f", minimum(obs)),
+            "miss" => @sprintf("%.2f", 100 - (length(obs) / length(orig))*100 )
+        ))
+    end
 end
     
 function get_variable_summary(data)

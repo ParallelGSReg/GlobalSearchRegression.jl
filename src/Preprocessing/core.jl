@@ -300,7 +300,7 @@ function processinput(
 
     nobs = size(depvar_data, 1)
 
-    return GlobalSearchRegression.GSRegData(
+    gsreg_data = GlobalSearchRegression.GSRegData(
         equation,
         depvar,
         expvars,
@@ -315,4 +315,17 @@ function processinput(
         removemissings,
         nobs
     )
+
+    gsreg_data.extras[GlobalSearchRegression.generate_extra_key(:input, gsreg_data.extras)] = Dict(
+        :equation => equation,
+        :method => method,
+        :intercept => intercept,
+        :time => time,
+        :panel => panel,
+        :seasonaladjustment => seasonaladjustment,
+        :removeoutliers => removeoutliers,
+        :removemissings => removemissings
+    )
+
+    return gsreg_data
 end

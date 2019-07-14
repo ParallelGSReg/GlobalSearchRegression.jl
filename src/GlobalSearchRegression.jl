@@ -1,35 +1,26 @@
 module GlobalSearchRegression
 
-using DataFrames,
-      Distributions,
-      Distributed,
-      Printf,
-      SharedArrays,
-      LinearAlgebra,
-      DelimitedFiles
-
 include("structs/gsreg_data.jl")
 include("datatypes/gsreg_result.jl")
+include("const.jl")
+include("strings.jl")
 include("utils.jl")
 
-#include("strings.jl")
-#include("interface.jl")
-#include("core.jl")
 include("Preprocessing/Preprocessing.jl")
 include("FeatureExtraction/FeatureExtraction.jl")
-include("CrossValidation/CrossValidation.jl")
 include("PreliminarySelection/PreliminarySelection.jl")
-include("OutputDecoration/OutputDecoration.jl")
 include("AllSubsetRegression/AllSubsetRegression.jl")
+include("CrossValidation/CrossValidation.jl")
+include("Output/Output.jl")
 
 using ..Preprocessing
 using ..FeatureExtraction
 using ..PreliminarySelection
 using ..AllSubsetRegression
-using ..OutputDecoration
+using ..Output
 
 export GSRegData, GSRegResult
 
-export Preprocessing, FeatureExtraction, PreliminarySelection, OutputDecoration
+export Preprocessing, FeatureExtraction, PreliminarySelection, Output
 
 end

@@ -2,7 +2,7 @@
 Parse fe variables
 """
 function parse_fe_variables(fe_vars, expvars; depvar=nothing, is_pair=false)
-    valid_vars = expvars
+    valid_vars = copy(expvars)
 
     if depvar != nothing
         append!(valid_vars, [depvar])
@@ -125,46 +125,80 @@ function data_add_fe_lag(data, fe_vars)
     nobs = size(data.expvars_data, 1)
     postfix = "_l"
     csis = (data.panel != nothing) ? unique(data.panel_data) : [nothing]
-    
+    depvar_enabled = false
+
     for var in fe_vars
-        col = GlobalSearchRegression.get_column_index(var[1], data.expvars)
-        num_cols = 0
-        for i = 1:var[2]
-            if !(Symbol(string(var[1], postfix, i)) in data.expvars)
-                num_cols = num_cols + 1
-            end
-        end
-        var_data = Array{Union{Missing, data.datatype}}(missing, nobs, num_cols)
-        m = 1
-        for i = 1:var[2]
-            expvar = Symbol(string(var[1], postfix, i))
-            
-            col_added = false
-            for csi in csis
-                rows = (csi != nothing) ? findall(x->x == csi, data.panel_data) : collect(1:1:nobs)
-                num_rows = size(rows, 1)
-                if !(expvar in data.expvars)
-                    var_data[rows[1]:rows[1]+num_rows-1, m] .= lag(data.expvars_data[rows[1]:rows[1]+num_rows-1, col], i)
-                    col_added = true
-                else
-                    n = GlobalSearchRegression.get_column_index(expvar, data.expvars)
-                    data.expvars_data[rows[1]:rows[1]+num_rows-1, n].= lag(data.expvars_data[rows[1]:rows[1]+num_rows-1, col], i)
+        if var in data.expvars
+            col = GlobalSearchRegression.get_column_index(var[1], data.expvars)
+            num_cols = 0
+            for i = 1:var[2]
+                if !(Symbol(string(var[1], postfix, i)) in data.expvars)
+                    num_cols = num_cols + 1
                 end
             end
-            if col_added
-                m = m + 1
-            end
+            var_data = Array{Union{Missing, data.datatype}}(missing, nobs, num_cols)
+            m = 1
+            for i = 1:var[2]
+                expvar = Symbol(string(var[1], postfix, i))
+                
+                col_added = false
+                for csi in csis
+                    rows = (csi != nothing) ? findall(x->x == csi, data.panel_data) : collect(1:1:nobs)
+                    num_rows = size(rows, 1)
+                    if !(expvar in data.expvars)
+                        var_data[rows[1]:rows[1]+num_rows-1, m] .= lag(data.expvars_data[rows[1]:rows[1]+num_rows-1, col], i)
+                        col_added = true
+                    else
+                        n = GlobalSearchRegression.get_column_index(expvar, data.expvars)
+                        data.expvars_data[rows[1]:rows[1]+num_rows-1, n].= lag(data.expvars_data[rows[1]:rows[1]+num_rows-1, col], i)
+                    end
+                end
+                if col_added
+                    m = m + 1
+                end
 
-            if !(expvar in data.expvars)
-                data.expvars = vcat(data.expvars, [expvar])
+                if !(expvar in data.expvars)
+                    data.expvars = vcat(data.expvars, [expvar])
+                end
+            end
+        else
+            num_cols = 0
+            for i = 1:var[2]
+                if !(Symbol(string(var[1], postfix, i)) in data.expvars)
+                    num_cols = num_cols + 1
+                end
+            end
+            var_data = Array{Union{Missing, data.datatype}}(missing, nobs, num_cols)
+            m = 1
+            for i = 1:var[2]
+                expvar = Symbol(string(var[1], postfix, i))
+                
+                col_added = false
+                for csi in csis
+                    rows = (csi != nothing) ? findall(x->x == csi, data.panel_data) : collect(1:1:nobs)
+                    num_rows = size(rows, 1)
+                    if !(expvar in data.expvars)
+                        var_data[rows[1]:rows[1]+num_rows-1, m] .= lag(data.depvar_data[rows[1]:rows[1]+num_rows-1], i)
+                        col_added = true
+                    else
+                        n = GlobalSearchRegression.get_column_index(expvar, data.expvars)
+                        data.expvars_data[rows[1]:rows[1]+num_rows-1, n].= lag(data.depvar_data[rows[1]:rows[1]+num_rows-1], i)
+                    end
+                end
+                if col_added
+                    m = m + 1
+                end
+
+                if !(expvar in data.expvars)
+                    data.expvars = vcat(data.expvars, [expvar])
+                end
             end
         end
-    
         if size(var_data, 2) > 0
             data.expvars_data = hcat(data.expvars_data, var_data)
         end
     end
-
+    
     return data
 end
 

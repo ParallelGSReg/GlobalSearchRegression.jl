@@ -25,7 +25,7 @@ mutable struct AllSubsetRegressionResult <: GlobalSearchRegression.GSRegResult
             residualtest,
             orderresults
         )
-        
+
         new(datanames, modelavg_datanames, nothing, nothing, nothing, outsample, criteria, modelavg, ttest, residualtest, orderresults, 0)
     end
 end

@@ -1,20 +1,24 @@
-using CSV, GlobalSearchRegression, Distributed
+extras = Dict()
 
-data = randn(10,10)
-for i in 1:10
-    for n in 1:10
-        data[i,n] = parse(Int, string(i,n))
-    end
-end
-datanames = [:y, :x1, :x2, :x3, :x4, :x5, :x6, :x7, :x8, :x9]
 
-data = GlobalSearchRegression.Preprocessing.input(
-    "y x*",
-    data,
-    datanames=datanames,
-    intercept=true
-)
+extras = Dict()
 
-data2 = GlobalSearchRegression.FeatureExtraction.featureextraction!(data, fe_sqr=:x1)
-println(data2)
-println(data2.expvars_data)
+extras[get_keys(:a, extras)] = "hola"
+println(extras)
+extras[get_keys(:a, extras)] = "hola"
+println(extras)
+
+
+"""using CSV, GlobalSearchRegression, Distributed
+
+data = CSV.read("data/small.csv")
+data = GlobalSearchRegression.Preprocessing.input("y x*", data, intercept=true)
+println(data.expvars)
+data = GlobalSearchRegression.FeatureExtraction.featureextraction!(data, fe_lag=[:x1=>1, :y=>2])
+println(data.extras)
+
+#data = GlobalSearchRegression.AllSubsetRegression.ols!(data)
+
+#GlobalSearchRegression.Output.summary(data, "summary.txt")
+#GlobalSearchRegression.Output.csv(data, "salida.csv")
+"""
