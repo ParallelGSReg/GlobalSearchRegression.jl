@@ -21,6 +21,9 @@ function gsr(
     modelavg::Bool=AllSubsetRegression.MODELAVG_DEFAULT,
     residualtest::Bool=AllSubsetRegression.RESIDUALTEST_DEFAULT,
     orderresults::Bool=AllSubsetRegression.ORDERRESULTS_DEFAULT,
+    kfoldcrossvalidation::Bool=KFOLDCROSSVALIDATION_DEFAULT,
+    numfolds::Int=NUMFOLDS_DEFAULT,
+    testsetshare::Union{Float32, Float64}=TESTSETSHARE_DEFAULT,
     exportcsv::Union{Nothing, String}=EXPORTCSV_DEFAULT,
     exportsummary::Union{Nothing, String}=EXPORTSUMMARY_DEFAULT
     )
@@ -48,6 +51,9 @@ function gsr(
         modelavg=modelavg,
         residualtest=residualtest,
         orderresults=orderresults,
+        kfoldcrossvalidation=kfoldcrossvalidation,
+        numfolds=numfolds,
+        testsetshare=testsetshare,
         exportcsv=exportcsv,
         exportsummary=exportsummary
     )
@@ -76,6 +82,9 @@ function gsr(
     modelavg::Bool=AllSubsetRegression.MODELAVG_DEFAULT,
     residualtest::Bool=AllSubsetRegression.RESIDUALTEST_DEFAULT,
     orderresults::Bool=AllSubsetRegression.ORDERRESULTS_DEFAULT,
+    kfoldcrossvalidation::Bool=KFOLDCROSSVALIDATION_DEFAULT,
+    numfolds::Int=NUMFOLDS_DEFAULT,
+    testsetshare::Union{Float32, Float64}=TESTSETSHARE_DEFAULT,
     exportcsv::Union{Nothing, String}=EXPORTCSV_DEFAULT,
     exportsummary::Union{Nothing, String}=EXPORTSUMMARY_DEFAULT
 )
@@ -114,7 +123,7 @@ function gsr(
         original_data.extras = data.extras
     end
     
-    data = AllSubsetRegression.ols!(
+    AllSubsetRegression.ols!(
         data,
         fixedvariables=fixedvariables,
         outsample=outsample,
@@ -131,6 +140,10 @@ function gsr(
     
     if exportcsv != nothing
         GlobalSearchRegression.Output.csv(data, exportcsv)
+    end
+
+    if kfoldcrossvalidation
+        CrossValidation.kfoldcrossvalidation!(data, original_data, numfolds, testsetshare)
     end
 
     println(GlobalSearchRegression.Output.summary(data, filename=exportsummary))

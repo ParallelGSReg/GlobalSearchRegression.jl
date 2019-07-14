@@ -28,9 +28,18 @@ function split_database(database::Array{Int,1}, k::Int)
     [database[(i-1)*(ceil(Int,n/k))+1:min(i*(ceil(Int,n/k)),n)] for i in 1:k]
 end
 
-function kfoldcrossvalidation(
-    data::GlobalSearchRegression.GSRegData,
+function kfoldcrossvalidation!(
     previousresult::GlobalSearchRegression.GSRegData,
+    data::GlobalSearchRegression.GSRegData,
+    k::Int,
+    s::Float64)
+    kfoldcrossvalidation(previousresult, data, k, s)
+end
+
+
+function kfoldcrossvalidation(
+    previousresult::GlobalSearchRegression.GSRegData,
+    data::GlobalSearchRegression.GSRegData,
     k::Int,
     s::Float64)
 
@@ -81,8 +90,9 @@ function kfoldcrossvalidation(
 
     commonvars = []
 
+    @show bestmodels
     for model in bestmodels
-        append!(commonvars, model[:data][GlobalSearchRegression.get_column_index(:rmsout, model[:datanames])])
+        #append!(commonvars, model[:data][GlobalSearchRegression.get_column_index(:rmsout, model[:datanames])])
     end
     
 
@@ -104,10 +114,10 @@ function kfoldcrossvalidation(
 
     result = CrossValidationResult(k, 0, mean, median)
 
-    push!(data.results, result)
+    GlobalSearchRegression.addresult!(previousresult, result)
 
-    addextras(data, result)
+    addextras(previousresult, result)
 
-    return data
+    return previousresult
 end
 
