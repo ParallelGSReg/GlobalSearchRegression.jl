@@ -3,15 +3,21 @@ mutable struct CrossValidationResult <: GlobalSearchRegression.GSRegResult
     k::Int64
     s::Float64
 
-    mean
-    median
+    ttest
+    datanames
+    average_data
+    median_data
+    data
 
     function CrossValidationResult(
             k,
             s,
-            mean,
-            median
+            ttest,
+            datanames,
+            average_data,
+            median_data,
+            data
         )
-        new(k, s, mean, median)
+        new(k, s, ttest, datanames, average_data, median_data, data)
     end
 end

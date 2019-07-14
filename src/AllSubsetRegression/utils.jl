@@ -172,6 +172,10 @@ function sortrows(B::AbstractMatrix,cols::Array; kws...)
     return B
 end
 
+function get_varnames(datanames)
+    map(h -> chop("$h", tail=2), filter(s -> endswith("$s", "_b"), datanames))
+end
+
 """
 Add values to extras
 """

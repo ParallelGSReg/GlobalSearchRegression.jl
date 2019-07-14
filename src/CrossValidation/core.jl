@@ -60,6 +60,7 @@ function kfoldcrossvalidation(
     # end
 
     bestmodels = []
+    varnames = []
     
     for obs in LOOCV(k)
         dataset = collect(Iterators.flatten(folds[obs]))
@@ -86,14 +87,17 @@ function kfoldcrossvalidation(
             :data => backup.results[1].bestresult_data,
             :datanames => backup.results[1].datanames
         ))
+
+        append!(varnames, GlobalSearchRegression.AllSubsetRegression.get_varnames(backup.results[1].datanames))
     end
 
-    commonvars = []
+    #@show sort(unique(varnames))
 
-    for model in bestmodels
-        #append!(commonvars, model[:data][GlobalSearchRegression.get_column_index(:rmsout, model[:datanames])])
-    end
-    
+    # commonvars = []
+
+    # for model in bestmodels
+    #     append!(commonvars, model[:data][GlobalSearchRegression.get_column_index(:rmsout, model[:datanames])])
+    # end
 
     # mean
     # median
@@ -108,10 +112,14 @@ function kfoldcrossvalidation(
     # #variables elegidas (entre todos los )
     # #coef y std
 
-    mean = 0
-    median = 0
+    datanames = 
 
-    result = CrossValidationResult(k, 0, mean, median)
+    replace!(data, NaN => 0)
+
+    average_data = mean(data, dims=1)
+    median_data = median(data, dims=1)
+
+    result = CrossValidationResult(k, 0, previousresult.ttest, datanames, average_data, median_data, data)
 
     GlobalSearchRegression.addresult!(previousresult, result)
 
