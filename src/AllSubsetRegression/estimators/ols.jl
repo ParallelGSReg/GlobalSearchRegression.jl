@@ -54,7 +54,7 @@ function execute!(data::GlobalSearchRegression.GSRegData, result::AllSubsetRegre
     depvar_data = convert(SharedArray, data.depvar_data)
     expvars_data = convert(SharedArray, data.expvars_data)
     result_data = fill!(SharedArray{data.datatype}(num_operations, size(result.datanames, 1)), NaN)
-    datanames_index = create_datanames_index(result.datanames)
+    datanames_index = GlobalSearchRegression.create_datanames_index(result.datanames)
     if nprocs() == nworkers()
         for order = 1:num_operations
             execute_row!(order, data.depvar, data.expvars, datanames_index, depvar_data, expvars_data, result_data, data.intercept, data.time, data.datatype, result.outsample, result.criteria, result.ttest, result.residualtest, result.fixedvariables)

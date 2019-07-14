@@ -1,7 +1,7 @@
 module CrossValidation
     
     using ..GlobalSearchRegression
-    using Random, Statistics
+    using Random, Statistics, Printf
     import Base: iterate
 
     include("const.jl")

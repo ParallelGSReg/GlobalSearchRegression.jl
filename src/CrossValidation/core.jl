@@ -112,8 +112,6 @@ function kfoldcrossvalidation(
     # #variables elegidas (entre todos los )
     # #coef y std
 
-    datanames = 
-
     replace!(data, NaN => 0)
 
     average_data = mean(data, dims=1)
@@ -128,8 +126,8 @@ function kfoldcrossvalidation(
     return previousresult
 end
 
-function to_string(data::GlobalSearchRegression.GSRegData, result::AllSubsetRegressionResult)
-    datanames_index = create_datanames_index(result.datanames)
+function to_string(data::GlobalSearchRegression.GSRegData, result::CrossValidationResult)
+    datanames_index = GlobalSearchRegression.create_datanames_index(result.datanames)
 
     out = ""
     out *= @sprintf("\n")

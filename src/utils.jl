@@ -216,3 +216,14 @@ function addresult!(data, result)
 
     return data
 end
+
+"""
+Creates an array with keys and array positions
+"""
+function create_datanames_index(datanames)
+    header = Dict{Symbol,Int64}()
+    for (index, name) in enumerate(datanames)
+        header[name] = index
+    end
+    return header
+end

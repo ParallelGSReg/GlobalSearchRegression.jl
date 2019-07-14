@@ -76,17 +76,6 @@ function create_datanames(data, criteria, ttest, modelavg, residualtest)
 end
 
 """
-Creates an array with keys and array positions
-"""
-function create_datanames_index(datanames)
-    header = Dict{Symbol,Int64}()
-    for (index, name) in enumerate(datanames)
-        header[name] = index
-    end
-    return header
-end
-
-"""
 Returns selected appropiate covariates for each iteration
 """
 function get_selected_variables(order, datanames, intercept; fixedvariables=nothing, num_jobs=nothing, num_job=nothing, iteration_num=nothing)

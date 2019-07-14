@@ -3,7 +3,7 @@
 to_string
 """
 function to_string(data::GlobalSearchRegression.GSRegData, result::AllSubsetRegressionResult)
-    datanames_index = create_datanames_index(result.datanames)
+    datanames_index = GlobalSearchRegression.create_datanames_index(result.datanames)
 
     out = ""
     out *= @sprintf("\n")
