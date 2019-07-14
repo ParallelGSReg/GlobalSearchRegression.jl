@@ -3,11 +3,14 @@ function csv(data::GlobalSearchRegression.GSRegData, filename::String; resultnum
 end
 
 function csv(data::GlobalSearchRegression.GSRegData; filename::Union{Nothing, String}=nothing, resultnum::Int64=1)
-    csv(data, data.results[resultnum], filename=filename)
+    if size(data.results, 1) > 0
+        return csv(data, data.results[resultnum], filename=filename)
+    end
+    return ""
 end
 
 function csv(data::GlobalSearchRegression.GSRegData, result::GlobalSearchRegression.AllSubsetRegression.AllSubsetRegressionResult, filename::String)
-    csv(data, result, filename=filename)
+    return csv(data, result, filename=filename)
 end
 
 function csv(data::GlobalSearchRegression.GSRegData, result::GlobalSearchRegression.AllSubsetRegression.AllSubsetRegressionResult; filename::Union{Nothing, String}=nothing)
@@ -16,15 +19,17 @@ function csv(data::GlobalSearchRegression.GSRegData, result::GlobalSearchRegress
         push!(header, String(dataname))
     end
 
-    res = vcat(permutedims(header), result.data)
+    rows = vcat(permutedims(header), result.data)
     
     if filename != nothing
         file = open(filename, "w")
-        writedlm(file, res, ',')
+        writedlm(file, rows, ',')
         close(file)
-    else
-        for row in eachrow(res)
-            print(join(row, ','))
-        end
     end
+
+    res = ""    
+    for row in eachrow(rows)
+        res *= @sprintf("%s\n", join(row, ','))
+    end
+    return res
 end

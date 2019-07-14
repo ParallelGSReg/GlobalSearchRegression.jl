@@ -20,7 +20,9 @@ function gsr(
     ttest::Bool=AllSubsetRegression.TTEST_DEFAULT,
     modelavg::Bool=AllSubsetRegression.MODELAVG_DEFAULT,
     residualtest::Bool=AllSubsetRegression.RESIDUALTEST_DEFAULT,
-    orderresults::Bool=AllSubsetRegression.ORDERRESULTS_DEFAULT
+    orderresults::Bool=AllSubsetRegression.ORDERRESULTS_DEFAULT,
+    exportcsv::Union{Nothing, String}=EXPORTCSV_DEFAULT,
+    exportsummary::Union{Nothing, String}=EXPORTSUMMARY_DEFAULT
     )
 
     gsr(
@@ -45,7 +47,9 @@ function gsr(
         ttest=ttest,
         modelavg=modelavg,
         residualtest=residualtest,
-        orderresults=orderresults
+        orderresults=orderresults,
+        exportcsv=exportcsv,
+        exportsummary=exportsummary
     )
 end
 
@@ -71,7 +75,9 @@ function gsr(
     ttest::Bool=AllSubsetRegression.TTEST_DEFAULT,
     modelavg::Bool=AllSubsetRegression.MODELAVG_DEFAULT,
     residualtest::Bool=AllSubsetRegression.RESIDUALTEST_DEFAULT,
-    orderresults::Bool=AllSubsetRegression.ORDERRESULTS_DEFAULT
+    orderresults::Bool=AllSubsetRegression.ORDERRESULTS_DEFAULT,
+    exportcsv::Union{Nothing, String}=EXPORTCSV_DEFAULT,
+    exportsummary::Union{Nothing, String}=EXPORTSUMMARY_DEFAULT
 )
 
     if fe_lag != nothing
@@ -121,7 +127,13 @@ function gsr(
 
     original_data.extras = data.extras
 
-    addresult!(data, result)
+    addresult!(original_data, data.results[1])
+    
+    if exportcsv != nothing
+        GlobalSearchRegression.Output.csv(data, exportcsv)
+    end
+
+    println(GlobalSearchRegression.Output.summary(data, filename=exportsummary))
 
     return original_data
 end
