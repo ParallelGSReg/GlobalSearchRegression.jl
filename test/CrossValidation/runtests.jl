@@ -22,7 +22,7 @@ data_fat = CSV.read(DATABASE_FAT)
             :datanames => datalassogen.results[1].datanames
         )
 
-        info = CrossValidation.kfoldcrossvalidation(dataorig, datalassogen, 3)
+        info = CrossValidation.kfoldcrossvalidation(dataorig, datalassogen, 3, 0.03)
 
         #exportar a latex, con info y best model.
 

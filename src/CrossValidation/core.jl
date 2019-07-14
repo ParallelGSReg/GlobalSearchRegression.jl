@@ -31,7 +31,8 @@ end
 function kfoldcrossvalidation(
     data::GlobalSearchRegression.GSRegData,
     previousresult::GlobalSearchRegression.GSRegData,
-    k::Int)
+    k::Int,
+    s::Float64)
 
     db = randperm(data.nobs)
     #db = collect(1:data.nobs)
