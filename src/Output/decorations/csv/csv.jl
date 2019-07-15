@@ -5,6 +5,7 @@ function csv(data::GlobalSearchRegression.GSRegData, filename::String; resultnum
 end
 
 function csv(data::GlobalSearchRegression.GSRegData; filename::Union{Nothing, String}=nothing, resultnum::Int64=1)
+    addextras(data, :csv, filename, nothing)
     if size(data.results, 1) > 0
         return csv(data, data.results[resultnum], filename=filename)
     end

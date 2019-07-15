@@ -1,4 +1,4 @@
-const TEX_TEMPLATE_FOLDER = joinpath(dirname(@__FILE__), "tex")
+const TEX_TEMPLATE_FOLDER = joinpath(dirname(@__FILE__), "tpl")
 const DEFAULT_LATEX_DEST_FOLDER = "./Latex"
 
 function latex(data::GlobalSearchRegression.GSRegData, path::Union{Nothing, String}=DEFAULT_LATEX_DEST_FOLDER)
@@ -6,123 +6,126 @@ function latex(data::GlobalSearchRegression.GSRegData, path::Union{Nothing, Stri
 end
 
 function latex(data::GlobalSearchRegression.GSRegData; path::Union{Nothing, String}=DEFAULT_LATEX_DEST_FOLDER)
+    addextras(data, :latex, nothing, path)
     if size(data.results, 1) > 0
         dict = Dict()
-        #dict basico
+        latex!(dict, data)
         for i in 1:size(data.results, 1)
-            append!(dict, latex(data, data.results[i], path))
+            latex!(dict, data, data.results[i])
         end
-        #cierre basico
-        render_latex(path, dict)
+        render_latex(dict, path)
     end
 end
 
-function latex(data::GlobalSearchRegression.GSRegData, result::GlobalSearchRegression.AllSubsetRegression.AllSubsetRegressionResult, path::AbstractString)
-    dict = GlobalSearchRegression.AllSubsetRegression.to_latex_dict(data, result)
-    create_figures(result, path)
-    return :allsubsetregression => dict
-end
+function latex!(dict::Dict, data::GlobalSearchRegression.GSRegData)
+    preprocessing_dict = process_dict(data.extras[Preprocessing.PREPROCESSING_EXTRAKEY])
 
-function latex(data::GlobalSearchRegression.GSRegData, result::GlobalSearchRegression.CrossValidation.CrossValidationResult, path::AbstractString)
-    dict = GlobalSearchRegression.CrossValidation.to_latex_dict(data, result)
-    create_figures(result, path)
-    return :kfoldcrossvalidation => dict
-end
+    if "seasonaladjustment" in keys(preprocessing_dict) && preprocessing_dict["seasonaladjustment"] != nothing
+        sa = preprocessing_dict["seasonaladjustment"] 
+        fe_seasonaladjustment_names=Array{String}(undef, size(sa, 1))
+        fe_seasonaladjustment_vals=Array{Int64}(undef, size(sa, 1))
+        for i = 1:size(sa,1)
+            fe_seasonaladjustment_names[i] = string(sa[i][1])
+            fe_seasonaladjustment_vals[i] = sa[i][2]
+        end
+        preprocessing_dict["tabseasonalfortex"]=Dict(
+            :fe_seasonaladjustment_names => fe_seasonaladjustment_names,
+            :fe_seasonaladjustment_vals => fe_seasonaladjustment_vals
+        )
+    end
 
-function latex(data::GlobalSearchRegression.GSRegData; path::String=DEFAULT_LATEX_DEST_FOLDER)
-    res = Dict()
+    if "removeoutliers" in keys(preprocessing_dict) && preprocessing_dict["removeoutliers"]
+        preprocessing_dict["removeoutliersfortex"] = Dict(:content=>true)
+    end
 
-    res[:base] = base(data)
+    dict[string(GlobalSearchRegression.AllSubsetRegression.ALLSUBSETREGRESSION_EXTRAKEY)] = process_dict(data.extras[GlobalSearchRegression.AllSubsetRegression.ALLSUBSETREGRESSION_EXTRAKEY])
 
-    #construir diccionario desde data parcial
-        #formula
-        #input features extraction
-        #preselccion lasso
-        #bestmodel
-        #kfold cross validation robustez
-    #crear env (copiar files estaticos necesarios)
-    #renderizar plots
-    #renderizar tpl
-end
+    preprocessing_dict["descriptive"] = []
+    actual_data = collect(skipmissing(data.depvar_data))
+    c_obs = length(actual_data)
+    c_miss = length(data.depvar_data) - c_obs
+    push!(preprocessing_dict["descriptive"], Dict(
+        "name" => string(data.depvar),
+        "nobs" => length(actual_data),
+        "mean" => @sprintf("%.2f", mean(actual_data)),
+        "std"  => @sprintf("%.2f", std(actual_data)),
+        "max"  => @sprintf("%.2f", maximum(actual_data)),
+        "min"  => @sprintf("%.2f", minimum(actual_data)),
+        "miss" => @sprintf("%.2f", (c_miss/c_obs)*100)
+    ))
 
-function base(data::GlobalSearchRegression.GSRegData)
-    dict = Dict()
-    equation::Array{Symbol}
-    depvar::Symbol
-    expvars::Array{Symbol}
-    panel::Union{Symbol, Nothing} 
-    time::Union{Symbol, Nothing}
-    depvar_data::Union{Array{Float64}, Array{Float32}, Array{Union{Float64, Missing}}, Array{Union{Float32, Missing}}}
-    expvars_data::Union{Array{Float64}, Array{Float32}, Array{Union{Float64, Missing}}, Array{Union{Float32, Missing}}}
-    panel_data::Union{Nothing, Array{Int64}, Array{Int32}, Array{Union{Int64, Missing}}, Array{Union{Int32, Missing}}}
-    time_data::Union{Nothing, Array{Float64}, Array{Float32}, Array{Union{Float64, Missing}}, Array{Union{Float32, Missing}}}
-    intercept::Bool
-    datatype::DataType
-    removemissings::Bool
-    nobs::Int64
-    options::Array{Any}
-    extras::Dict
-    previous_data::Array{Any}
-    results::Array{Any}
-    
-    for var in names(data)
-        orig = data[var]
-        obs = collect(skipmissing(orig))
-        push!(result, Dict(
-            "name" => string(var),
-            "nobs" => length(obs),
-            "mean" => @sprintf("%.2f", mean(obs)),
-            "std"  => @sprintf("%.2f", std(obs)),
-            "max"  => @sprintf("%.2f", maximum(obs)),
-            "min"  => @sprintf("%.2f", minimum(obs)),
-            "miss" => @sprintf("%.2f", 100 - (length(obs) / length(orig))*100 )
+    for expvar in data.expvars
+        col = data.expvars_data[:, GlobalSearchRegression.get_column_index(expvar, data.expvars)]
+        actual_data = collect(skipmissing(col))
+        c_obs = length(actual_data)
+        c_miss = length(col) - c_obs
+        push!(preprocessing_dict["descriptive"], Dict(
+            "name" => string(expvar),
+            "nobs" => length(actual_data),
+            "mean" => @sprintf("%.2f", mean(actual_data)),
+            "std"  => @sprintf("%.2f", std(actual_data)),
+            "max"  => @sprintf("%.2f", maximum(actual_data)),
+            "min"  => @sprintf("%.2f", minimum(actual_data)),
+            "miss" => @sprintf("%.2f", (c_miss/c_obs)*100)
         ))
     end
-end
-    
-function get_variable_summary(data)
-    result = []
+   
+    dict[string(Preprocessing.PREPROCESSING_EXTRAKEY)] = preprocessing_dict
 
-    for var in names(data)
-        orig = data[var]
-        obs = collect(skipmissing(orig))
-        push!(result, Dict(
-            "name" => string(var),
-            "nobs" => length(obs),
-            "mean" => @sprintf("%.2f", mean(obs)),
-            "std"  => @sprintf("%.2f", std(obs)),
-            "max"  => @sprintf("%.2f", maximum(obs)),
-            "min"  => @sprintf("%.2f", minimum(obs)),
-            "miss" => @sprintf("%.2f", 100 - (length(obs) / length(orig))*100 )
-        ))
+    if FeatureExtraction.FEATUREEXTRACTION_EXTRAKEY in keys(data.extras)
+        featureextraction_dict = process_dict(data.extras[FeatureExtraction.FEATUREEXTRACTION_EXTRAKEY])
+
+        if "fe_lag" in keys(featureextraction_dict) && featureextraction_dict["fe_lag"] != nothing
+            fe_lag = featureextraction_dict["fe_lag"]
+            fe_lag_names = Array{String}(undef, size(fe_lag,1), 1)
+            fe_lag_vals = Array{Int64}(undef, size(fe_lag,1), 1)
+            for i = 1:size(fe_lag, 1)
+                fe_lag_names[i,1]=string(fe_lag[i][1])
+                fe_lag_vals[i,1]=fe_lag[i][2]
+            end
+            featureextraction_dict["fe_lag_names"] = fe_lag_names
+            featureextraction_dict["fe_lag_lags"] = fe_lag_vals
+        end
+
+        if (featureextraction_dict["fe_lag"] != nothing || featureextraction_dict["fe_log"] != nothing ||
+            featureextraction_dict["fe_inv"] != nothing || featureextraction_dict["fe_sqr"] != nothing ||
+            featureextraction_dict["interaction"] != nothing)
+            featureextraction_dict["removeoutliersfortex"] = Dict(:content => true)
+        end
+
+        dict[string(FeatureExtraction.FEATUREEXTRACTION_EXTRAKEY)] = featureextraction_dict
     end
 
-    return result
-end
-
-function get_lasso_summary(selectedvars)
-    selectedvars = lasso.betas[:,113]
-    result = []
-
-    for var in headers[[false; map(v -> v > 0, selectedvars)]]
-        push!(result, Dict(
-            "var" => var,
-            "coef" => 1
-        ))
+    if Output.OUTPUT_EXTRAKEY in keys(data.extras)
+        dict[string(Output.OUTPUT_EXTRAKEY)] = process_dict(data.extras[Output.OUTPUT_EXTRAKEY])
     end
 
-    return result
+    return dict
 end
 
-function get_tex_summary()
-    Dict(
-        "indep" => "y",
-        "depvar" => "xasxasx", 
-        "var_summary" => get_variable_summary(data),
-        # "lasso" => Dict(
-        #     "summary" => get_lasso_summary(lasso)
-        # )
-    )
+function latex!(dict::Dict, data::GlobalSearchRegression.GSRegData, result::GlobalSearchRegression.AllSubsetRegression.AllSubsetRegressionResult)
+    if GlobalSearchRegression.AllSubsetRegression.ALLSUBSETREGRESSION_EXTRAKEY in keys(data.extras)
+        dict[string(GlobalSearchRegression.AllSubsetRegression.ALLSUBSETREGRESSION_EXTRAKEY)] = process_dict(data.extras[GlobalSearchRegression.AllSubsetRegression.ALLSUBSETREGRESSION_EXTRAKEY])
+    end
+    return dict
+end
+
+function latex!(dict::Dict, data::GlobalSearchRegression.GSRegData, result::GlobalSearchRegression.CrossValidation.CrossValidationResult)
+    if GlobalSearchRegression.CrossValidation.CROSSVALIDATION_EXTRAKEY in keys(data.extras)
+        dict[string(GlobalSearchRegression.CrossValidation.CROSSVALIDATION_EXTRAKEY)] = process_dict(data.extras[GlobalSearchRegression.CrossValidation.CROSSVALIDATION_EXTRAKEY])
+    end
+    return dict
+end
+
+function process_dict(dict)
+    dict_str = Dict()
+    for key in keys(dict)
+        key_str = string(key)
+        if dict[key] != nothing
+            dict_str[key_str] = dict[key]
+        end
+    end
+    return dict_str
 end
 
 """
@@ -135,11 +138,13 @@ end
 """
 Write template based on dict info
 """
-function render_latex(destfolder::AbstractString, dict)
+function render_latex(dict, destfolder::AbstractString)
     io = open(joinpath(destfolder, "main.tex"), "w")
-    write(io, render_from_file(joinpath(TEX_TEMPLATE_FOLDER, "tpl.tex"), dict))
+    render = render_from_file(joinpath(TEX_TEMPLATE_FOLDER, "../tpl.tex"), dict)
+    write(io, replace(render, "&quot;" => "\""))
     close(io)
 end
+
 
 dropnans(res, var) = res.results[findall(x -> !isnan(x), res.results[:, res.header[var]]), res.header[var]]
 

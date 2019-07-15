@@ -56,6 +56,7 @@
  - [ ] Fixed variables
  - [ ] Iterative estimators (LOGIT, PROBIT)
  - [ ] Compure z value
+ - [ ] T-test probability
 
 ### K-fold cross-validation ✌
  kcross = true
@@ -81,7 +82,7 @@ k14 = 15
 ### OutputDecoration
  - [X] CSV
  - [X] JSON
- - [ ] LaTeX
+ - [x] LaTeX
  - [ ] Jupyter plot
  - [ ] Short console text
 

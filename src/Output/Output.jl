@@ -1,5 +1,5 @@
 module Output
-    using DelimitedFiles, Printf
+    using DelimitedFiles, Printf, Statistics, Mustache
     using ..GlobalSearchRegression
 
     export csv, summary, latex

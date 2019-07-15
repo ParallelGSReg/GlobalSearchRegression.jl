@@ -3,6 +3,7 @@ function summary(data::GlobalSearchRegression.GSRegData, filename::String; resul
 end
 
 function summary(data::GlobalSearchRegression.GSRegData; filename::Union{Nothing, String}=nothing, resultnum::Union{Nothing, Int}=nothing)
+    addextras(data, :summary, filename, nothing)
     if size(data.results, 1) > 0
         if resultnum != nothing
             return summary(data, data.results[resultnum], filename=filename)
