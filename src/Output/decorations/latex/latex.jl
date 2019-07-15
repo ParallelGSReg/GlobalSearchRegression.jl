@@ -1,10 +1,35 @@
-include("consts.jl")
+const TEX_TEMPLATE_FOLDER = joinpath(dirname(@__FILE__), "tex")
+const DEFAULT_LATEX_DEST_FOLDER = "./Latex"
 
-function latex(data::GlobalSearchRegression.GSRegData, path::String=DEFAULT_DEST_FOLDER)
-    latex(result, path=path)
+function latex(data::GlobalSearchRegression.GSRegData, path::Union{Nothing, String}=DEFAULT_LATEX_DEST_FOLDER)
+    return latex(data, path=path)
 end
 
-function latex(data::GlobalSearchRegression.GSRegData; path::String=DEFAULT_DEST_FOLDER)
+function latex(data::GlobalSearchRegression.GSRegData; path::Union{Nothing, String}=DEFAULT_LATEX_DEST_FOLDER)
+    if size(data.results, 1) > 0
+        dict = Dict()
+        #dict basico
+        for i in 1:size(data.results, 1)
+            append!(dict, latex(data, data.results[i], path))
+        end
+        #cierre basico
+        render_latex(path, dict)
+    end
+end
+
+function latex(data::GlobalSearchRegression.GSRegData, result::GlobalSearchRegression.AllSubsetRegression.AllSubsetRegressionResult, path::AbstractString)
+    dict = GlobalSearchRegression.AllSubsetRegression.to_latex_dict(data, result)
+    create_figures(result, path)
+    return :allsubsetregression => dict
+end
+
+function latex(data::GlobalSearchRegression.GSRegData, result::GlobalSearchRegression.CrossValidation.CrossValidationResult, path::AbstractString)
+    dict = GlobalSearchRegression.CrossValidation.to_latex_dict(data, result)
+    create_figures(result, path)
+    return :kfoldcrossvalidation => dict
+end
+
+function latex(data::GlobalSearchRegression.GSRegData; path::String=DEFAULT_LATEX_DEST_FOLDER)
     res = Dict()
 
     res[:base] = base(data)
@@ -22,8 +47,6 @@ end
 
 function base(data::GlobalSearchRegression.GSRegData)
     dict = Dict()
-    #dict[:]
-
     equation::Array{Symbol}
     depvar::Symbol
     expvars::Array{Symbol}
@@ -102,38 +125,47 @@ function get_tex_summary()
     )
 end
 
-function create_workspace()
-    cp(joinpath(TEX_TEMPLATE_FOLDER, "tpl"), DEFAULT_DEST_FOLDER)
+"""
+Copy the required files from the tpl folder. The existent content will be replaced. The folder is created if not exists.
+"""
+function create_workspace(destfolder::AbstractString)
+    cp(joinpath(TEX_TEMPLATE_FOLDER, "tpl"), destfolder)
 end
 
-function render()
-    d = get_tex_summary()
-    io = open(joinpath(DEFAULT_DEST_FOLDER, "main.tex"), "w")
-    write(io, render_from_file(joinpath(TEX_TEMPLATE_FOLDER, "tpl.tex"), d))
+"""
+Write template based on dict info
+"""
+function render_latex(destfolder::AbstractString, dict)
+    io = open(joinpath(destfolder, "main.tex"), "w")
+    write(io, render_from_file(joinpath(TEX_TEMPLATE_FOLDER, "tpl.tex"), dict))
     close(io)
 end
 
-dropnans(results, var) = results.results[findall(x -> !isnan(x), result.results[:, results.header[var]]), results.header[var]]
+dropnans(res, var) = res.results[findall(x -> !isnan(x), res.results[:, res.header[var]]), res.header[var]]
 
-function plot(results)
-    expvars2 = results.expvars[:,1]
+
+"""
+Create required figures by the template. Generate png images into the dest folder
+"""
+function create_figures(res, destfolder)
+    expvars2 = res.expvars[:,1]
     expvars2 = deleteat!(expvars2, findfirst(isequal(:_cons), expvars2))
     criteria_diff = Array{Any}(undef, size(expvars2,1), 2)
 
     for (i, expvar) in enumerate(expvars2)
-        x = dropnans(results, Symbol("$(expvar)_b"))
-        y = dropnans(results, Symbol("$(expvar)_t"))
+        x = dropnans(res, Symbol("$(expvar)_b"))
+        y = dropnans(res, Symbol("$(expvar)_t"))
         
-        biden = kde((x,y),npoints=(100,100))
+        biden = kde( (x,y), npoints=(100,100))
         
         contour(biden.x, biden.y, biden.density; xlabel="Coef. $expvar", ylabel="t-test $expvar")
-        savefig(joinpath(DEFAULT_DEST_FOLDER, "contour_$(expvar)_b_t.png"))
+        savefig(joinpath(destfolder, "contour_$(expvar)_b_t.png"))
     
         wireframe(biden.x, biden.y, biden.density; xlabel="Coef. $expvar", ylabel="t-test $expvar", camera=(45,45))
-        savefig(joinpath(DEFAULT_DEST_FOLDER, "wireframe_$(expvar)_b_t.png"))
+        savefig(joinpath(destfolder, "wireframe_$(expvar)_b_t.png"))
     
-        criteria_with = results.results[findall(x -> !isnan(x), results.results[:, results.header[Symbol("$(expvar)_b")]]), results.header[:r2adj]]
-        criteria_without = results.results[findall(x -> isnan(x), results.results[:, results.header[Symbol("$(expvar)_b")]]), results.header[:r2adj]]
+        criteria_with = res.results[findall(x -> !isnan(x), res.results[:, res.header[Symbol("$(expvar)_b")]]), res.header[:r2adj]]
+        criteria_without = res.results[findall(x -> isnan(x), res.results[:, res.header[Symbol("$(expvar)_b")]]), res.header[:r2adj]]
         
         uniden_with = kde(criteria_with)
         uniden_without= kde(criteria_without)
@@ -141,12 +173,12 @@ function plot(results)
         p1 = plot(range(min(criteria_with...), stop = max(criteria_with...), length = 150), z -> pdf(uniden_with, z))
         p1 = plot!(range(min(criteria_without...), stop = max(criteria_without...), length = 150), z -> pdf(uniden_without,z))
         plot(p1, label=["Including $(expvar)" "Excluding $(expvar)"], ylabel = "Adj. R2")
-        savefig(joinpath(DEFAULT_DEST_FOLDER, "Kdensity_criteria_$(expvar).png"))
+        savefig(joinpath(destfolder, "Kdensity_criteria_$(expvar).png"))
         
         p2 = violin(["Including $(expvar)" "Excluding $(expvar)"], [criteria_with, criteria_without], leg = false, marker = (0.1, stroke(0)), alpha = 0.50, color = :blues)
         p2 = boxplot!(["Including $(expvar)" "Excluding $(expvar)"], [criteria_with, criteria_without], leg = false, marker = (0.3, stroke(2)), alpha = 0.6, color = :orange)
         plot(p2, ylabel = "Adj. R2")
-        savefig(joinpath(DEFAULT_DEST_FOLDER, "BoxViolinDot_$(expvar).png"))
+        savefig(joinpath(destfolder, "BoxViolinDot_$(expvar).png"))
         
         criteria_diff[i, 2] = "$(expvar)"
         criteria_diff[i, 1] = mean(criteria_with) - mean(criteria_without)
@@ -155,5 +187,5 @@ function plot(results)
     a = sortslices(criteria_diff, dims = 1)
     labels = convert(Array{String}, a[:,2])
     bar(labels, a[:,1], legend = false, color = :blues, orientation = :horizontal, xlabel="Average impact of each variable on the Adj. R2")
-    savefig(joinpath(DEFAULT_DEST_FOLDER, "cov_relevance.png"))
+    savefig(joinpath(destfolder, "cov_relevance.png"))
 end
