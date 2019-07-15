@@ -1,10 +1,17 @@
-function summary(data::GlobalSearchRegression.GSRegData, filename::String; resultnum::Int64=1)
+function summary(data::GlobalSearchRegression.GSRegData, filename::String; resultnum::Int64=nothing)
     return summary(data, filename=filename, resultnum=resultnum)
 end
 
-function summary(data::GlobalSearchRegression.GSRegData; filename::Union{Nothing, String}=nothing, resultnum::Int64=1)
+function summary(data::GlobalSearchRegression.GSRegData; filename::Union{Nothing, String}=nothing, resultnum::Int64=nothing)
     if size(data.results, 1) > 0
-        return summary(data, data.results[resultnum], filename=filename)
+        if resultnum != nothing
+            return summary(data, data.results[resultnum], filename=filename)
+        else
+            output = []
+            for i in size(data.results, 1)
+                push!(output, summary(data, data.results[i], filename=filename))
+            end
+        end
     end
     return ""
 end
