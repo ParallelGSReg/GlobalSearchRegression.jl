@@ -150,13 +150,15 @@ Add values to extras
 """
 function addextras(data, result)
     data.extras[GlobalSearchRegression.generate_extra_key(ALLSUBSETREGRESSION_EXTRAKEY, data.extras)] = Dict(
-        :outsample => result.outsample,
-        :criteria => result.criteria,
-        :ttest => result.ttest,
-        :modelavg => result.modelavg,
-        :residualtest => result.residualtest,
-        :orderresults => result.orderresults,
-        :fixedvariables => result.fixedvariables
+        "datanames" => result.datanames,
+        "fixedvariables" => result.fixedvariables,
+        "outsample" => result.outsample,
+        "criteria" => result.criteria,
+        "modelavg" => result.modelavg,
+        "ttest" => result.ttest,
+        "residualtest" => result.residualtest,
+        "orderresults" => result.orderresults,
+        "nobs" => result.nobs        
     )
     return data
 end
