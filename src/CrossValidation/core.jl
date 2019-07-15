@@ -60,7 +60,6 @@ function kfoldcrossvalidation(
     # end
 
     bestmodels = []
-    varnames = []
     
     for obs in LOOCV(k)
         dataset = collect(Iterators.flatten(folds[obs]))
@@ -87,39 +86,27 @@ function kfoldcrossvalidation(
             :data => backup.results[1].bestresult_data,
             :datanames => backup.results[1].datanames
         ))
-
-        append!(varnames, GlobalSearchRegression.AllSubsetRegression.get_varnames(backup.results[1].datanames))
     end
 
-    #@show sort(unique(varnames))
+    datanames = unique(Iterators.flatten(model[:datanames] for model in bestmodels))
 
-    # commonvars = []
+    data = Array{Any,2}(zeros(size(bestmodels,1), size(datanames,1)))
 
-    # for model in bestmodels
-    #     append!(commonvars, model[:data][GlobalSearchRegression.get_column_index(:rmsout, model[:datanames])])
-    # end
-
-    # mean
-    # median
-
-    # commonvars: preguntar en previousresult los params enviados y:
-    #     por var: _b _std _t
-    #     por model: nobs wtest jbtest bgtest rmsout avg/mediana
-
-
-    # # sacar media/avg de betas y de errores
-    # #schema (panel,time,random)
-    # #variables elegidas (entre todos los )
-    # #coef y std
+    for (i, model) in enumerate(bestmodels)
+        for (f, col) in enumerate(model[:datanames])
+            pos = GlobalSearchRegression.get_column_index(col, datanames)
+            data[i, pos] = model[:data][f]
+        end
+    end
 
     replace!(data, NaN => 0)
 
     average_data = mean(data, dims=1)
     median_data = median(data, dims=1)
 
-    result = CrossValidationResult(k, 0, previousresult.ttest, datanames, average_data, median_data, data)
+    result = CrossValidationResult(k, 0, previousresult.results[1].ttest, datanames, average_data, median_data, data)
 
-    GlobalSearchRegression.addresult!(previousresult, result)
+    previousresult = GlobalSearchRegression.addresult!(previousresult, result)
 
     addextras(previousresult, result)
 
@@ -145,23 +132,22 @@ function to_string(data::GlobalSearchRegression.GSRegData, result::CrossValidati
     out *= @sprintf("\n")
     out *= @sprintf("──────────────────────────────────────────────────────────────────────────────\n")
 
-    cols = get_selected_variables(Int64(result.average_data[datanames_index[:index]]), data.expvars, data.intercept)
-
-    for pos in cols
-        varname = data.expvars[pos]
-        out *= @sprintf(" %-35s", varname)
-        out *= @sprintf(" %-10f", result.average_data[datanames_index[Symbol(string(varname, "_b"))]])
-        if result.ttest
-            out *= @sprintf("   %-10f", result.average_data[datanames_index[Symbol(string(varname, "_bstd"))]])
-            out *= @sprintf("   %-10f", result.average_data[datanames_index[Symbol(string(varname, "_t"))]])
+    for varname in data.expvars
+        if Symbol(string(varname, "_b")) in keys(datanames_index)
+            out *= @sprintf(" %-35s", varname)
+            out *= @sprintf(" %-10f", result.average_data[datanames_index[Symbol(string(varname, "_b"))]])
+            if result.ttest
+                out *= @sprintf("   %-10f", result.average_data[datanames_index[Symbol(string(varname, "_bstd"))]])
+                out *= @sprintf("   %-10f", result.average_data[datanames_index[Symbol(string(varname, "_t"))]])
+            end
+            out *= @sprintf("\n")
         end
-        out *= @sprintf("\n")
     end
 
     out *= @sprintf("──────────────────────────────────────────────────────────────────────────────\n")
-    out *= @sprintf(" Observations                        %-10d\n", result.bestresult_data[datanames_index[:nobs]])
-    out *= @sprintf(" RMSE OUT                            %-10f\n", result.bestresult_data[datanames_index[:rmseout]])
-
+    out *= @sprintf(" Observations                        %-10d\n", result.average_data[datanames_index[:nobs]])
+    out *= @sprintf(" RMSE OUT                            %-10f\n", result.average_data[datanames_index[:rmseout]])
+    
     out *= @sprintf("\n")
     out *= @sprintf("\n")
     out *= @sprintf("══════════════════════════════════════════════════════════════════════════════\n")
@@ -179,14 +165,17 @@ function to_string(data::GlobalSearchRegression.GSRegData, result::CrossValidati
     out *= @sprintf("──────────────────────────────────────────────────────────────────────────────\n")
 
     for varname in data.expvars
-        out *= @sprintf(" %-35s", varname)
-        out *= @sprintf(" %-10f", result.median_data[datanames_index[Symbol(string(varname, "_b"))]])
-        if result.ttest
-            out *= @sprintf("   %-10f", result.median_data[datanames_index[Symbol(string(varname, "_bstd"))]])
-            out *= @sprintf("   %-10f", result.median_data[datanames_index[Symbol(string(varname, "_t"))]])
+        if Symbol(string(varname, "_b")) in keys(datanames_index)
+            out *= @sprintf(" %-35s", varname)
+            out *= @sprintf(" %-10f", result.median_data[datanames_index[Symbol(string(varname, "_b"))]])
+            if result.ttest
+                out *= @sprintf("   %-10f", result.median_data[datanames_index[Symbol(string(varname, "_bstd"))]])
+                out *= @sprintf("   %-10f", result.median_data[datanames_index[Symbol(string(varname, "_t"))]])
+            end
+            out *= @sprintf("\n")
         end
-        out *= @sprintf("\n")
     end
+
     out *= @sprintf("\n")
     out *= @sprintf("──────────────────────────────────────────────────────────────────────────────\n")
     out *= @sprintf(" Observations                        %-10d\n", result.median_data[datanames_index[:nobs]])

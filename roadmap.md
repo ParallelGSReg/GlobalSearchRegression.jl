@@ -79,8 +79,8 @@ k14 = 15
   - sequential
 
 ### OutputDecoration
- - [ ] CSV
- - [ ] JSON
+ - [X] CSV
+ - [X] JSON
  - [ ] LaTeX
  - [ ] Jupyter plot
  - [ ] Short console text

@@ -135,18 +135,16 @@ function gsr(
     )
 
     original_data.extras = data.extras
-
-    addresult!(original_data, data.results[1])
     
-    if exportcsv != nothing
-        GlobalSearchRegression.Output.csv(data, exportcsv)
-    end
-
     if kfoldcrossvalidation
         CrossValidation.kfoldcrossvalidation!(data, original_data, numfolds, testsetshare)
     end
 
+    if exportcsv != nothing
+        GlobalSearchRegression.Output.csv(data, exportcsv)
+    end
+
     println(GlobalSearchRegression.Output.summary(data, filename=exportsummary))
 
-    return original_data
+    return data
 end

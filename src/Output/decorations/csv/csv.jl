@@ -1,3 +1,5 @@
+#TODO: Refactor as summary
+
 function csv(data::GlobalSearchRegression.GSRegData, filename::String; resultnum::Int64=1)
     csv(data, filename=filename, resultnum=resultnum)
 end

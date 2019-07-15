@@ -76,26 +76,6 @@ function create_datanames(data, criteria, ttest, modelavg, residualtest)
 end
 
 """
-Returns selected appropiate covariates for each iteration
-"""
-function get_selected_variables(order, datanames, intercept; fixedvariables=nothing, num_jobs=nothing, num_job=nothing, iteration_num=nothing)
-    cols = zeros(Int64, 0)
-    binary = string(order, base = 2)
-    k = 1
-
-    for order = 1:length(binary)
-        if binary[length(binary) - order + 1] == '1'
-            push!(cols, k)
-        end
-        k = k + 1
-    end
-    if intercept
-        push!(cols, GlobalSearchRegression.get_column_index(:_cons, datanames))
-    end
-    return cols
-end
-
-"""
 Get insample data view
 """
 function get_insample_subset(depvar_data, expvars_data, outsample, selected_variables_index)

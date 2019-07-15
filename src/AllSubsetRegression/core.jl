@@ -21,7 +21,7 @@ function to_string(data::GlobalSearchRegression.GSRegData, result::AllSubsetRegr
     out *= @sprintf("\n")
     out *= @sprintf("──────────────────────────────────────────────────────────────────────────────\n")
 
-    cols = get_selected_variables(Int64(result.bestresult_data[datanames_index[:index]]), data.expvars, data.intercept)
+    cols = GlobalSearchRegression.get_selected_variables(Int64(result.bestresult_data[datanames_index[:index]]), data.expvars, data.intercept)
 
     for pos in cols
         varname = data.expvars[pos]
