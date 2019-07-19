@@ -205,7 +205,7 @@ Add values to extras
 """
 function addextras(data, method, seasonaladjustment, removeoutliers)
     data.extras[GlobalSearchRegression.generate_extra_key(PREPROCESSING_EXTRAKEY, data.extras)] = Dict(
-        :equation => vcat(data.depvar, data.expvars),
+        :datanames => vcat(data.depvar, data.expvars),
         :depvar => data.depvar,
         :expvars => data.expvars,
         :data => DEFAULT_DATANAME,

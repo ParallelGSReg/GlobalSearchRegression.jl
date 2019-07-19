@@ -2,10 +2,6 @@ const TEX_TEMPLATE_FOLDER = joinpath(dirname(@__FILE__), "tpl")
 const DEFAULT_LATEX_DEST_FOLDER = "./Latex"
 
 function latex(data::GlobalSearchRegression.GSRegData, path::Union{Nothing, String}=DEFAULT_LATEX_DEST_FOLDER)
-    return latex(data, path=path)
-end
-
-function latex(data::GlobalSearchRegression.GSRegData; path::Union{Nothing, String}=DEFAULT_LATEX_DEST_FOLDER)
     addextras(data, :latex, nothing, path)
     if size(data.results, 1) > 0
         dict = Dict()
@@ -13,34 +9,92 @@ function latex(data::GlobalSearchRegression.GSRegData; path::Union{Nothing, Stri
         for i in 1:size(data.results, 1)
             latex!(dict, data, data.results[i])
         end
+        #render_plots(dict, data)
+        create_workspace(path)
         render_latex(dict, path)
     end
 end
 
 function latex!(dict::Dict, data::GlobalSearchRegression.GSRegData)
+    # Preprocessing    
     preprocessing_dict = process_dict(data.extras[Preprocessing.PREPROCESSING_EXTRAKEY])
+    preprocessing_dict["equation"] = join(map(x -> "$x", filter(x -> x != :_cons, preprocessing_dict["datanames"])), " ")
+    preprocessing_dict["datanames"] = string("[:", join(preprocessing_dict["datanames"], ", :"), "]")
+    preprocessing_dict["descriptive"] = []
+
+    datanames_index = GlobalSearchRegression.create_datanames_index(data.expvars) 
+    
+    for (i, var) in enumerate(data.expvars)
+        orig = data.expvars_data[:, datanames_index[var]]
+        obs = collect(skipmissing(orig))
+        c_obs = length(obs)
+        c_miss = length(orig) - c_obs
+        push!(preprocessing_dict["descriptive"], Dict(
+            "name" => string(var),
+            "nobs" => length(obs),
+            "mean" => @sprintf("%.2f", mean(obs)),
+            "std"  => @sprintf("%.2f", std(obs)),
+            "max"  => @sprintf("%.2f", maximum(obs)),
+            "min"  => @sprintf("%.2f", minimum(obs)),
+            "miss" => @sprintf("%.2f", (c_miss/c_obs)*100)
+        ))
+        if( (i + 1) % 54 == 0 )
+            push!(preprocessing_dict["descriptive"], Dict("name" => false))
+        end
+    end
 
     if "seasonaladjustment" in keys(preprocessing_dict) && preprocessing_dict["seasonaladjustment"] != nothing
-        sa = preprocessing_dict["seasonaladjustment"] 
-        fe_seasonaladjustment_names=Array{String}(undef, size(sa, 1))
-        fe_seasonaladjustment_vals=Array{Int64}(undef, size(sa, 1))
-        for i = 1:size(sa,1)
-            fe_seasonaladjustment_names[i] = string(sa[i][1])
-            fe_seasonaladjustment_vals[i] = sa[i][2]
+        preprocessing_dict["seasonaladjustment"] = get_array_details(preprocessing_dict["seasonaladjustment"])
+    end
+    dict[string(Preprocessing.PREPROCESSING_EXTRAKEY)] = preprocessing_dict
+
+    # FeatureExtraction
+    if FeatureExtraction.FEATUREEXTRACTION_EXTRAKEY in keys(data.extras)
+        featureextraction_dict = process_dict(featureextraction_dict[FeatureExtraction.FEATUREEXTRACTION_EXTRAKEY])
+        if featureextraction_dict["featureextraction"]["fe_lag"] != nothing
+            featureextraction_dict["featureextraction"]["fe_lag"] = 
+                get_array_details( featureextraction_dict["featureextraction"]["fe_lag"])
         end
-        preprocessing_dict["tabseasonalfortex"]=Dict(
-            :fe_seasonaladjustment_names => fe_seasonaladjustment_names,
-            :fe_seasonaladjustment_vals => fe_seasonaladjustment_vals
-        )
+        if featureextraction_dict["featureextraction"]["fe_log"] != nothing
+            featureextraction_dict["featureextraction"]["fe_log"] = 
+                get_array_simple_details( featureextraction_dict["featureextraction"]["fe_log"])
+        end
+        if featureextraction_dict["featureextraction"]["fe_inv"] != nothing
+            featureextraction_dict["featureextraction"]["fe_inv"] = 
+                get_array_simple_details( featureextraction_dict["featureextraction"]["fe_inv"])
+        end
+        if featureextraction_dict["featureextraction"]["fe_sqr"] != nothing
+            featureextraction_dict["featureextraction"]["fe_sqr"] = 
+                get_array_simple_details( featureextraction_dict["featureextraction"]["fe_sqr"])
+        end
+        if featureextraction_dict["featureextraction"]["interaction"] != nothing
+            featureextraction_dict["featureextraction"]["interaction"] = 
+                get_array_simple_details( featureextraction_dict["featureextraction"]["interaction"])
+        end
+        if  featureextraction_dict["featureextraction"]["fe_lag"] == nothing && 
+            featureextraction_dict["featureextraction"]["fe_log"] == nothing &&
+            featureextraction_dict["featureextraction"]["fe_inv"] == nothing &&
+            featureextraction_dict["featureextraction"]["fe_sqr"] == nothing &&
+            featureextraction_dict["featureextraction"]["interaction"] == nothing
+            featureextraction_dict["featureextraction"] = false
+        end
+        dict[string(FeatureExtraction.FEATUREEXTRACTION_EXTRAKEY)] = featureextraction_dict
     end
 
-    if "removeoutliers" in keys(preprocessing_dict) && preprocessing_dict["removeoutliers"]
-        preprocessing_dict["removeoutliersfortex"] = Dict(:content=>true)
+    # PreliminarySelection
+    if PreliminarySelection.PRELIMINARYSELECTION_EXTRAKEY in keys(data.extras)
+        dict[string(PreliminarySelection.PRELIMINARYSELECTION_EXTRAKEY)] = process_dict(data.extras[PreliminarySelection.PRELIMINARYSELECTION_EXTRAKEY])
     end
 
+    # Output
+    if Output.OUTPUT_EXTRAKEY in keys(data.extras)
+        dict[string(Output.OUTPUT_EXTRAKEY)] = process_dict(data.extras[Output.OUTPUT_EXTRAKEY])
+    end
+
+
+    """
     dict[string(GlobalSearchRegression.AllSubsetRegression.ALLSUBSETREGRESSION_EXTRAKEY)] = process_dict(data.extras[GlobalSearchRegression.AllSubsetRegression.ALLSUBSETREGRESSION_EXTRAKEY])
 
-    preprocessing_dict["descriptive"] = []
     actual_data = collect(skipmissing(data.depvar_data))
     c_obs = length(actual_data)
     c_miss = length(data.depvar_data) - c_obs
@@ -72,47 +126,95 @@ function latex!(dict::Dict, data::GlobalSearchRegression.GSRegData)
    
     dict[string(Preprocessing.PREPROCESSING_EXTRAKEY)] = preprocessing_dict
 
-    if FeatureExtraction.FEATUREEXTRACTION_EXTRAKEY in keys(data.extras)
-        featureextraction_dict = process_dict(data.extras[FeatureExtraction.FEATUREEXTRACTION_EXTRAKEY])
 
-        if "fe_lag" in keys(featureextraction_dict) && featureextraction_dict["fe_lag"] != nothing
-            fe_lag = featureextraction_dict["fe_lag"]
-            fe_lag_names = Array{String}(undef, size(fe_lag,1), 1)
-            fe_lag_vals = Array{Int64}(undef, size(fe_lag,1), 1)
-            for i = 1:size(fe_lag, 1)
-                fe_lag_names[i,1]=string(fe_lag[i][1])
-                fe_lag_vals[i,1]=fe_lag[i][2]
-            end
-            featureextraction_dict["fe_lag_names"] = fe_lag_names
-            featureextraction_dict["fe_lag_lags"] = fe_lag_vals
-        end
-
-        if (featureextraction_dict["fe_lag"] != nothing || featureextraction_dict["fe_log"] != nothing ||
-            featureextraction_dict["fe_inv"] != nothing || featureextraction_dict["fe_sqr"] != nothing ||
-            featureextraction_dict["interaction"] != nothing)
-            featureextraction_dict["removeoutliersfortex"] = Dict(:content => true)
-        end
-
-        dict[string(FeatureExtraction.FEATUREEXTRACTION_EXTRAKEY)] = featureextraction_dict
-    end
-
-    if Output.OUTPUT_EXTRAKEY in keys(data.extras)
-        dict[string(Output.OUTPUT_EXTRAKEY)] = process_dict(data.extras[Output.OUTPUT_EXTRAKEY])
-    end
-
+    """
     return dict
 end
 
 function latex!(dict::Dict, data::GlobalSearchRegression.GSRegData, result::GlobalSearchRegression.AllSubsetRegression.AllSubsetRegressionResult)
     if GlobalSearchRegression.AllSubsetRegression.ALLSUBSETREGRESSION_EXTRAKEY in keys(data.extras)
         dict[string(GlobalSearchRegression.AllSubsetRegression.ALLSUBSETREGRESSION_EXTRAKEY)] = process_dict(data.extras[GlobalSearchRegression.AllSubsetRegression.ALLSUBSETREGRESSION_EXTRAKEY])
+        
+        datanames_index = GlobalSearchRegression.create_datanames_index(result.datanames)
+        cols = GlobalSearchRegression.get_selected_variables(Int64(result.bestresult_data[datanames_index[:index]]), data.expvars, data.intercept)
+        
+        modelavg_datanames = GlobalSearchRegression.AllSubsetRegression.get_varnames(result.modelavg_datanames)
+
+        d_bestmodel = Dict()
+        d_bestmodel["depvar"] = data.depvar
+        d_bestmodel["bmexpvars"] = []
+
+        for var in data.expvars
+            intercept = if (data.intercept) 1 else 0 end
+            d = Dict()
+            d["name"] = var
+            
+            if (var in data.expvars[cols] && !isnan(result.bestresult_data[datanames_index[Symbol("$(var)_b")]]))
+                d["best"] = Dict()
+                d["best"]["b"] = @sprintf("%.3f", result.bestresult_data[datanames_index[Symbol("$(var)_b")]])
+                if (result.ttest)
+                    d["best"]["ttest"] = true
+                    d["best"]["bstd"] = @sprintf("%.3f", result.bestresult_data[datanames_index[Symbol("$(var)_bstd")]])
+                    t = result.bestresult_data[datanames_index[Symbol("$(var)_t")]]
+                    if (t < 0.01)
+                        d["best"]["stars"] = "***"
+                    else 
+                        if (t < 0.05)
+                            d["best"]["stars"] = "**"
+                        else 
+                            d["best"]["stars"] = "*"
+                        end
+                    end
+                end
+            end
+
+            if (result.modelavg && !isnan(result.modelavg_data[datanames_index[Symbol("$(var)_b")]]))
+                d_bestmodel["modelavg"] = true
+                d["avg"] = Dict()
+                d["avg"]["b"] = @sprintf("%.3f", result.modelavg_data[datanames_index[Symbol("$(var)_b")]])
+                if (result.ttest)
+                    d["avg"]["ttest"] = true
+                    d["avg"]["bstd"] = @sprintf("%.3f", result.modelavg_data[datanames_index[Symbol("$(var)_bstd")]])
+                    t = result.modelavg_data[datanames_index[Symbol("$(var)_t")]]
+                    if (t < 0.01)
+                        d["avg"]["stars"] = "***"
+                    else 
+                        if (t < 0.05)
+                            d["avg"]["stars"] = "**"
+                        else 
+                            d["avg"]["stars"] = "*"
+                        end
+                    end
+                end
+            end
+            if ("best" in keys(d) || "avg" in keys(d))
+                push!(d_bestmodel["bmexpvars"], d)
+            end
+        end
+
+        dict[string(GlobalSearchRegression.AllSubsetRegression.ALLSUBSETREGRESSION_EXTRAKEY)]["bestmodel"] = d_bestmodel
+
+        if dict[string(GlobalSearchRegression.AllSubsetRegression.ALLSUBSETREGRESSION_EXTRAKEY)]["criteria"] != nothing
+            dict[string(GlobalSearchRegression.AllSubsetRegression.ALLSUBSETREGRESSION_EXTRAKEY)]["criteria"] = 
+            get_array_simple_details(dict[string(GlobalSearchRegression.AllSubsetRegression.ALLSUBSETREGRESSION_EXTRAKEY)]["criteria"])
+        end
+
+        if dict[string(GlobalSearchRegression.AllSubsetRegression.ALLSUBSETREGRESSION_EXTRAKEY)]["residualtest"] != false
+            if "time" in keys(dict[string(GlobalSearchRegression.AllSubsetRegression.ALLSUBSETREGRESSION_EXTRAKEY)]) && 
+                dict[string(GlobalSearchRegression.AllSubsetRegression.ALLSUBSETREGRESSION_EXTRAKEY)]["time"] != nothing
+                dict[string(GlobalSearchRegression.AllSubsetRegression.ALLSUBSETREGRESSION_EXTRAKEY)]["residualtestfortex2"] = true
+            else
+                dict[string(GlobalSearchRegression.AllSubsetRegression.ALLSUBSETREGRESSION_EXTRAKEY)]["residualtestfortex"] = true
+            end
+        end
     end
     return dict
 end
 
 function latex!(dict::Dict, data::GlobalSearchRegression.GSRegData, result::GlobalSearchRegression.CrossValidation.CrossValidationResult)
     if GlobalSearchRegression.CrossValidation.CROSSVALIDATION_EXTRAKEY in keys(data.extras)
-        dict[string(GlobalSearchRegression.CrossValidation.CROSSVALIDATION_EXTRAKEY)] = process_dict(data.extras[GlobalSearchRegression.CrossValidation.CROSSVALIDATION_EXTRAKEY])
+        dict[string(GlobalSearchRegression.CrossValidation.CROSSVALIDATION_EXTRAKEY)] = 
+        process_dict(data.extras[GlobalSearchRegression.CrossValidation.CROSSVALIDATION_EXTRAKEY])
     end
     return dict
 end
@@ -132,22 +234,21 @@ end
 Copy the required files from the tpl folder. The existent content will be replaced. The folder is created if not exists.
 """
 function create_workspace(destfolder::AbstractString)
-    cp(joinpath(TEX_TEMPLATE_FOLDER, "tpl"), destfolder)
+    cp(TEX_TEMPLATE_FOLDER, destfolder, force=true)
 end
 
 """
 Write template based on dict info
 """
 function render_latex(dict, destfolder::AbstractString)
+    print(dict)
     io = open(joinpath(destfolder, "main.tex"), "w")
     render = render_from_file(joinpath(TEX_TEMPLATE_FOLDER, "../tpl.tex"), dict)
-    write(io, replace(render, "&quot;" => "\""))
+    write(io, render)
     close(io)
 end
 
-
 dropnans(res, var) = res.results[findall(x -> !isnan(x), res.results[:, res.header[var]]), res.header[var]]
-
 
 """
 Create required figures by the template. Generate png images into the dest folder

@@ -85,6 +85,7 @@ k14 = 15
  - [x] LaTeX
  - [ ] Jupyter plot
  - [ ] Short console text
+ - [ ] Improve utils and keys
 
 ## Testing and documentation
 

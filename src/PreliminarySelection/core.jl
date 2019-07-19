@@ -22,7 +22,8 @@ function lasso!(data::GlobalSearchRegression.GSRegData)
     data.extras[:lasso_betas] = betas
 
     vars = map(b -> b != 0, betas)
-
+    lassonumvars = size(filter(b -> b != 0, betas), 1)
+    
     if data.intercept
         vars[GlobalSearchRegression.get_column_index(:_cons, data.expvars)] = true
     end
@@ -30,7 +31,7 @@ function lasso!(data::GlobalSearchRegression.GSRegData)
     data.expvars = data.expvars[vars]
     data.expvars_data = data.expvars_data[:,vars]
     
-    data = addextras(data)
+    data = addextras(data, lassonumvars)
 
     return data, vars
 end
