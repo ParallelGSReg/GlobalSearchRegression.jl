@@ -137,7 +137,7 @@ function gsr(
     original_data.extras = data.extras
     
     if kfoldcrossvalidation
-        CrossValidation.kfoldcrossvalidation!(data, original_data, numfolds, testsetshare)
+        #CrossValidation.kfoldcrossvalidation!(data, original_data, numfolds, testsetshare)
     end
 
     if exportcsv != nothing

@@ -5,8 +5,9 @@ module AllSubsetRegression
     using Distributed, Distributions, SharedArrays, LinearAlgebra
     using ..GlobalSearchRegression
 
-    export ols, ols!, to_string, AllSubsetRegressionResult, ALLSUBSETREGRESSION_EXTRAKEY
-    
+    export to_string, AllSubsetRegressionResult, ALLSUBSETREGRESSION_EXTRAKEY
+    export ols, ols!
+
     include("const.jl")
     include("strings.jl")
     include("utils.jl")

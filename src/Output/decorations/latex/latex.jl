@@ -1,10 +1,6 @@
 const TEX_TEMPLATE_FOLDER = joinpath(dirname(@__FILE__), "tpl")
 const DEFAULT_LATEX_DEST_FOLDER = "./Latex"
 
-function latex(data::GlobalSearchRegression.GSRegData, path::Union{Nothing, String}=DEFAULT_LATEX_DEST_FOLDER)
-    return latex(data, path=path)
-end
-
 function latex(data::GlobalSearchRegression.GSRegData; path::Union{Nothing, String}=DEFAULT_LATEX_DEST_FOLDER)
     addextras(data, :latex, nothing, path)
     if size(data.results, 1) > 0
