@@ -209,7 +209,7 @@ function input(
         end
     end
 
-    return processinput(
+    gsreg_data, method, seasonaladjustment, removeoutliers = execute(
         equation,
         data,
         datanames,
@@ -221,9 +221,13 @@ function input(
         removeoutliers=removeoutliers,
         removemissings=removemissings
     )
+
+    gsreg_data = addextras(gsreg_data, method, seasonaladjustment, removeoutliers)
+
+    return gsreg_data
 end
 
-function processinput(
+function execute(
     equation::Array{Symbol},
     data::Union{Array{Float64}, Array{Float32}, Array{Union{Float32, Missing}}, Array{Union{Float64, Missing}}},
     datanames::Array{Symbol},
@@ -316,7 +320,5 @@ function processinput(
         nobs
     )
 
-    gsreg_data = addextras(gsreg_data, method, seasonaladjustment, removeoutliers)
-
-    return gsreg_data
+    return gsreg_data, method, seasonaladjustment, removeoutliers
 end

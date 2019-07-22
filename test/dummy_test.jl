@@ -12,4 +12,4 @@ data = CSV.read("data/small.csv")
     preliminaryselection=:lasso
 
 )
-GlobalSearchRegression.Output.latex(data, "./Latex")
+GlobalSearchRegression.Output.latex(data, path="./Latex")
