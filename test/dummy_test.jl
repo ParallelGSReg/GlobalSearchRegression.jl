@@ -2,4 +2,4 @@ using CSV, GlobalSearchRegression, Distributed
 
 data = CSV.read("data/small.csv")
 @time data = GlobalSearchRegression.gsr("y x*", data, kfoldcrossvalidation=true)
-GlobalSearchRegression.Output.latex(data, "./")
+GlobalSearchRegression.Output.latex(data, path="./")
