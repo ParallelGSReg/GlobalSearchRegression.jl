@@ -272,6 +272,12 @@ function execute(
         end
     end
 
+    if seasonaladjustment != nothing && time != nothing
+        seasonal_adjustments(data, seasonaladjustment, datanames)
+    elseif seasonaladjustment != nothing && time == nothing
+        error(TIME_VARIABLE_INEXISTENT)
+    end
+
     (data, datanames) = filter_data_by_selected_columns(data, equation, datanames)
 
     depvar = equation[1]
@@ -287,10 +293,6 @@ function execute(
 
     if removeoutliers
         remove_outliers(data)
-    end
-
-    if seasonaladjustment != nothing
-        seasonal_adjustments(data, seasonaladjustment, datanames)
     end
     
     depvar_data = data[1:end, 1]

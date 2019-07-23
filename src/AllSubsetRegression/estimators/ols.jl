@@ -1,6 +1,6 @@
 function ols(
         data::GlobalSearchRegression.GSRegData;
-        fixedvariables::Array=FIXEDVARIABLES_DEFAULT,
+        fixedvariables::Union{Nothing, Array}=FIXEDVARIABLES_DEFAULT,
         outsample=OUTSAMPLE_DEFAULT,
         criteria::Array=CRITERIA_DEFAULT,
         ttest::Bool=TTEST_DEFAULT,
@@ -23,7 +23,7 @@ end
 
 function ols!(
     data::GlobalSearchRegression.GSRegData;
-    fixedvariables::Array=FIXEDVARIABLES_DEFAULT,
+    fixedvariables::Union{Nothing, Array}=FIXEDVARIABLES_DEFAULT,
     outsample=OUTSAMPLE_DEFAULT,
     criteria::Array=CRITERIA_DEFAULT,
     ttest::Bool=TTEST_DEFAULT,
