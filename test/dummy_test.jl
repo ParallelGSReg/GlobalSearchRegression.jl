@@ -21,7 +21,7 @@ data = CSV.read("visitors.csv")
     residualtest=true,
     orderresults=true,
     kfoldcrossvalidation=true,
-    numfolds=3,
-    exportcsv="salida.csv"
+    numfolds=3
+    #exportcsv="salida.csv",
+    #exportlatex="/home/valentin/GSREG.zip"
 )
-#GlobalSearchRegression.Output.latex(data, path="./Latex")

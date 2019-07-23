@@ -1,21 +1,26 @@
 const TEX_TEMPLATE_FOLDER = joinpath(dirname(@__FILE__), "tpl")
-const DEFAULT_LATEX_DEST_FOLDER = "./Latex"
+const DEFAULT_LATEX_DEST_FOLDER = "./LaTeX"
 
-function latex(data::GlobalSearchRegression.GSRegData; path::Union{Nothing, String}=DEFAULT_LATEX_DEST_FOLDER)
-    addextras(data, :latex, nothing, path)
+function latex(data::GlobalSearchRegression.GSRegData, originaldata::GlobalSearchRegression.GSRegData;
+     path::Union{Nothing, String}=DEFAULT_LATEX_DEST_FOLDER)
+    tempfolder = tempname()
+    mkdir(tempfolder)
+
+    addextras(data, :latex, nothing, tempfolder)
     if size(data.results, 1) > 0
         dict = Dict()
-        latex!(dict, data)
+        latex!(dict, data, originaldata)
         for i in 1:size(data.results, 1)
-            latex!(dict, data, data.results[i])
+            latex!(dict, data, originaldata, data.results[i])
         end
-        create_workspace(path)
+        create_workspace(tempfolder)
         if data.results[1].ttest
-            create_figures(data, path)
+            create_figures(data, tempfolder)
         end
-        render_latex(dict, path)
-        zip_folder(path)
+        render_latex(dict, tempfolder)
+        zip_folder(tempfolder, path)
     end
+    rm(tempfolder, force=true, recursive=true)
 end
 
 function get_col_statistics(data)
@@ -43,17 +48,17 @@ function get_col_statistics(data)
     )
 end
 
-function latex!(dict::Dict, data::GlobalSearchRegression.GSRegData)
+function latex!(dict::Dict, data::GlobalSearchRegression.GSRegData, originaldata::GlobalSearchRegression.GSRegData)
     # Preprocessing    
     preprocessing_dict = process_dict(data.extras[Preprocessing.PREPROCESSING_EXTRAKEY])
     preprocessing_dict["equation"] = join(map(x -> "$x", filter(x -> x != :_cons, preprocessing_dict["datanames"])), " ")
     preprocessing_dict["datanames"] = string("[:", join(preprocessing_dict["datanames"], ", :"), "]")
     preprocessing_dict["descriptive"] = []
         
-    datanames_index = GlobalSearchRegression.create_datanames_index(data.expvars) 
+    datanames_index = GlobalSearchRegression.create_datanames_index(originaldata.expvars) 
     
-    for (i, var) in enumerate(data.expvars)
-        orig = data.expvars_data[:, datanames_index[var]]
+    for (i, var) in enumerate(originaldata.expvars)
+        orig = originaldata.expvars_data[:, datanames_index[var]]
         obs = collect(skipmissing(orig))
         c_obs = length(obs)
         c_miss = length(orig) - c_obs
@@ -133,7 +138,7 @@ function latex!(dict::Dict, data::GlobalSearchRegression.GSRegData)
     return dict
 end
 
-function latex!(dict::Dict, data::GlobalSearchRegression.GSRegData, result::GlobalSearchRegression.AllSubsetRegression.AllSubsetRegressionResult)
+function latex!(dict::Dict, data::GlobalSearchRegression.GSRegData, originaldata::GlobalSearchRegression.GSRegData, result::GlobalSearchRegression.AllSubsetRegression.AllSubsetRegressionResult)
     if GlobalSearchRegression.AllSubsetRegression.ALLSUBSETREGRESSION_EXTRAKEY in keys(data.extras)
         dict[string(GlobalSearchRegression.AllSubsetRegression.ALLSUBSETREGRESSION_EXTRAKEY)] = process_dict(data.extras[GlobalSearchRegression.AllSubsetRegression.ALLSUBSETREGRESSION_EXTRAKEY])
         
@@ -235,7 +240,7 @@ function latex!(dict::Dict, data::GlobalSearchRegression.GSRegData, result::Glob
     return dict
 end
 
-function latex!(dict::Dict, data::GlobalSearchRegression.GSRegData, result::GlobalSearchRegression.CrossValidation.CrossValidationResult)
+function latex!(dict::Dict, data::GlobalSearchRegression.GSRegData, originaldata::GlobalSearchRegression.GSRegData, result::GlobalSearchRegression.CrossValidation.CrossValidationResult)
     if GlobalSearchRegression.CrossValidation.CROSSVALIDATION_EXTRAKEY in keys(data.extras)
         dict[string(GlobalSearchRegression.CrossValidation.CROSSVALIDATION_EXTRAKEY)] = 
         process_dict(data.extras[GlobalSearchRegression.CrossValidation.CROSSVALIDATION_EXTRAKEY])
@@ -274,9 +279,9 @@ function render_latex(dict, destfolder::AbstractString)
     close(io)
 end
 
-function zip_folder(destfolder::AbstractString)
-    filenamesforzip = map(x -> joinpath(destfolder,x), readdir(destfolder))
-    create_zip(joinpath(destfolder,"GSREG.zip"), filenamesforzip)
+function zip_folder(sourcefolder::AbstractString, destfolder::AbstractString)
+    filenamesforzip = map(x -> joinpath(sourcefolder,x), readdir(sourcefolder))
+    create_zip(destfolder, filenamesforzip)
 end
 
 dropnans(res, var) = res.results[findall(x -> !isnan(x), res.results[:, res.header[var]]), res.header[var]]
@@ -322,8 +327,6 @@ function create_figures(data, destfolder)
         plot(p2, ylabel = "Adj. R2")
         savefig(joinpath(destfolder, "BoxViolinDot_$(expvar).png"))
 
-        println(joinpath(destfolder, "asdasd"))
-        
         criteria_diff[i, 1] = mean(criteria_with) - mean(criteria_without)
         criteria_diff[i, 2] = "$(expvar)"
     end
@@ -332,5 +335,4 @@ function create_figures(data, destfolder)
     labels = convert(Array{String}, a[:,2])
     bar(labels, a[:,1], legend = false, color = :blues, orientation = :horizontal, xlabel="Average impact of each variable on the Adj. R2")
     savefig(joinpath(destfolder, "cov_relevance.png"))
-    println(joinpath(destfolder, "cov_relevance.png"))
 end
