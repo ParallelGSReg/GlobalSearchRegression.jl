@@ -25,7 +25,8 @@ function gsr(
     numfolds::Int=NUMFOLDS_DEFAULT,
     testsetshare::Union{Float32, Float64}=TESTSETSHARE_DEFAULT,
     exportcsv::Union{Nothing, String}=EXPORTCSV_DEFAULT,
-    exportsummary::Union{Nothing, String}=EXPORTSUMMARY_DEFAULT
+    exportsummary::Union{Nothing, String}=EXPORTSUMMARY_DEFAULT,
+    exportlatex::Union{Nothing, String}=EXPORTLATEX_DEFAULT
     )
 
     gsr(
@@ -55,7 +56,8 @@ function gsr(
         numfolds=numfolds,
         testsetshare=testsetshare,
         exportcsv=exportcsv,
-        exportsummary=exportsummary
+        exportsummary=exportsummary,
+        exportlatex=exportlatex
     )
 end
 
@@ -86,7 +88,8 @@ function gsr(
     numfolds::Int=NUMFOLDS_DEFAULT,
     testsetshare::Union{Float32, Float64}=TESTSETSHARE_DEFAULT,
     exportcsv::Union{Nothing, String}=EXPORTCSV_DEFAULT,
-    exportsummary::Union{Nothing, String}=EXPORTSUMMARY_DEFAULT
+    exportsummary::Union{Nothing, String}=EXPORTSUMMARY_DEFAULT,
+    exportlatex::Union{Nothing, String}=EXPORTLATEX_DEFAULT
 )
 
     if fe_lag == nothing || seasonaladjustment != nothing
@@ -142,6 +145,10 @@ function gsr(
 
     if exportcsv != nothing
         GlobalSearchRegression.Output.csv(data, filename=exportscsv)
+    end
+
+    if exportlatex != nothing
+        GlobalSearchRegression.Output.latex(data, original_data, path=exportlatex)
     end
 
     #println(GlobalSearchRegression.Output.summary(data, filename=exportsummary))
