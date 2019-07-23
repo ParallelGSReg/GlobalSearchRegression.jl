@@ -9,9 +9,12 @@ function latex(data::GlobalSearchRegression.GSRegData; path::Union{Nothing, Stri
         for i in 1:size(data.results, 1)
             latex!(dict, data, data.results[i])
         end
-        #render_plots(dict, data)
         create_workspace(path)
+        if data.results[1].ttest
+            create_figures(data, path)
+        end
         render_latex(dict, path)
+        zip_folder(path)
     end
 end
 
@@ -248,21 +251,28 @@ function render_latex(dict, destfolder::AbstractString)
     close(io)
 end
 
-dropnans(res, var) = res.results[findall(x -> !isnan(x), res.results[:, res.header[var]]), res.header[var]]
+function zip_folder(destfolder::AbstractString)
+    create_zip(joinpath(destfolder,"GSREG.zip"), map(p->joinpath(destfolder, p),readdir(destfolder)))
+end
 
 """
 Create required figures by the template. Generate png images into the dest folder
 """
-function create_figures(res, destfolder)
-    expvars2 = res.expvars[:,1]
-    expvars2 = deleteat!(expvars2, findfirst(isequal(:_cons), expvars2))
+function create_figures(data, destfolder)
+    expvars2 = data.expvars
+    deleteat!(expvars2, GlobalSearchRegression.get_column_index(:_cons, data.expvars))
+
     criteria_diff = Array{Any}(undef, size(expvars2,1), 2)
 
     for (i, expvar) in enumerate(expvars2)
-        x = dropnans(res, Symbol("$(expvar)_b"))
-        y = dropnans(res, Symbol("$(expvar)_t"))
+        bcol = GlobalSearchRegression.get_column_index(Symbol("$(expvar)_b"), data.results[1].datanames)
+        tcol = GlobalSearchRegression.get_column_index(Symbol("$(expvar)_t"), data.results[1].datanames)
+        r2col = GlobalSearchRegression.get_column_index(:r2adj, data.results[1].datanames)
         
-        biden = kde( (x,y), npoints=(100,100))
+        x = data.results[1].data[findall(x -> !isnan(x), data.results[1].data[:, bcol]), bcol]
+        y = data.results[1].data[findall(x -> !isnan(x), data.results[1].data[:, tcol]), tcol]
+        
+        biden = kde((x, y), npoints=(100,100))
         
         contour(biden.x, biden.y, biden.density; xlabel="Coef. $expvar", ylabel="t-test $expvar")
         savefig(joinpath(destfolder, "contour_$(expvar)_b_t.png"))
@@ -270,8 +280,8 @@ function create_figures(res, destfolder)
         wireframe(biden.x, biden.y, biden.density; xlabel="Coef. $expvar", ylabel="t-test $expvar", camera=(45,45))
         savefig(joinpath(destfolder, "wireframe_$(expvar)_b_t.png"))
     
-        criteria_with = res.results[findall(x -> !isnan(x), res.results[:, res.header[Symbol("$(expvar)_b")]]), res.header[:r2adj]]
-        criteria_without = res.results[findall(x -> isnan(x), res.results[:, res.header[Symbol("$(expvar)_b")]]), res.header[:r2adj]]
+        criteria_with = data.results[1].data[findall(x -> !isnan(x), data.results[1].data[:, bcol]), r2col]
+        criteria_without = data.results[1].data[findall(x -> isnan(x), data.results[1].data[:, bcol]), r2col]
         
         uniden_with = kde(criteria_with)
         uniden_without= kde(criteria_without)
@@ -285,13 +295,16 @@ function create_figures(res, destfolder)
         p2 = boxplot!(["Including $(expvar)" "Excluding $(expvar)"], [criteria_with, criteria_without], leg = false, marker = (0.3, stroke(2)), alpha = 0.6, color = :orange)
         plot(p2, ylabel = "Adj. R2")
         savefig(joinpath(destfolder, "BoxViolinDot_$(expvar).png"))
+
+        println(joinpath(destfolder, "asdasd"))
         
-        criteria_diff[i, 2] = "$(expvar)"
         criteria_diff[i, 1] = mean(criteria_with) - mean(criteria_without)
+        criteria_diff[i, 2] = "$(expvar)"
     end
 
     a = sortslices(criteria_diff, dims = 1)
     labels = convert(Array{String}, a[:,2])
     bar(labels, a[:,1], legend = false, color = :blues, orientation = :horizontal, xlabel="Average impact of each variable on the Adj. R2")
     savefig(joinpath(destfolder, "cov_relevance.png"))
+    println(joinpath(destfolder, "cov_relevance.png"))
 end
