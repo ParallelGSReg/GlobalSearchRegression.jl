@@ -14,7 +14,7 @@ function gsr(
     fe_lag::Union{Nothing, Array}=nothing,
     interaction::Union{Nothing, Array}=nothing,
     preliminaryselection::Union{Nothing, Symbol}=nothing,
-    fixedvariables::Array=AllSubsetRegression.FIXEDVARIABLES_DEFAULT,
+    fixedvariables::Union{Nothing, Array}=AllSubsetRegression.FIXEDVARIABLES_DEFAULT,
     outsample=AllSubsetRegression.OUTSAMPLE_DEFAULT,
     criteria::Array=AllSubsetRegression.CRITERIA_DEFAULT,
     ttest::Bool=AllSubsetRegression.TTEST_DEFAULT,
@@ -75,7 +75,7 @@ function gsr(
     fe_lag::Union{Nothing, Array}=nothing,
     interaction::Union{Nothing, Array}=nothing,
     preliminaryselection::Union{Nothing, Symbol}=nothing,
-    fixedvariables::Array=AllSubsetRegression.FIXEDVARIABLES_DEFAULT,
+    fixedvariables::Union{Nothing, Array}=AllSubsetRegression.FIXEDVARIABLES_DEFAULT,
     outsample=AllSubsetRegression.OUTSAMPLE_DEFAULT,
     criteria::Array=AllSubsetRegression.CRITERIA_DEFAULT,
     ttest::Bool=AllSubsetRegression.TTEST_DEFAULT,
@@ -89,10 +89,10 @@ function gsr(
     exportsummary::Union{Nothing, String}=EXPORTSUMMARY_DEFAULT
 )
 
-    if fe_lag != nothing
-        removemissings = false
-    else
+    if fe_lag == nothing || seasonaladjustment != nothing
         removemissings = true
+    else
+        removemissings = false
     end
 
     data = Preprocessing.input(
@@ -137,7 +137,7 @@ function gsr(
     original_data.extras = data.extras
     
     if kfoldcrossvalidation
-        #CrossValidation.kfoldcrossvalidation!(data, original_data, numfolds, testsetshare)
+        CrossValidation.kfoldcrossvalidation!(data, original_data, numfolds, testsetshare)
     end
 
     if exportcsv != nothing
