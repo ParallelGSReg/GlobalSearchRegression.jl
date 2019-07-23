@@ -109,7 +109,7 @@ function gsr(
     )
 
     if featureextraction_enabled(fe_sqr, fe_log, fe_inv, fe_lag, interaction)
-        data = FeatureExtraction.featureextraction!(data, fe_lag=fe_lag, fe_log=fe_log, fe_inv=fe_inv, interaction=interaction, removemissings=true)
+        data = FeatureExtraction.featureextraction!(data, fe_sqr=fe_sqr, fe_lag=fe_lag, fe_log=fe_log, fe_inv=fe_inv, interaction=interaction, removemissings=true)
     end
 
     original_data = copy_data(data)
@@ -141,10 +141,10 @@ function gsr(
     end
 
     if exportcsv != nothing
-        GlobalSearchRegression.Output.csv(data, exportcsv)
+        GlobalSearchRegression.Output.csv(data, filename=exportscsv)
     end
 
-    println(GlobalSearchRegression.Output.summary(data, filename=exportsummary))
+    #println(GlobalSearchRegression.Output.summary(data, filename=exportsummary))
 
     return data
 end

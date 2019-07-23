@@ -9,7 +9,10 @@ data = CSV.read("data/small.csv")
     removeoutliers=true,
     outsample=10,
     modelavg=true,
-    preliminaryselection=:lasso
-
+    fe_sqr=:x1,
+    fe_inv=[:x2, :x3],
+    criteria=[:aic],
+    preliminaryselection=:lasso,
+    orderresults=true
 )
 GlobalSearchRegression.Output.latex(data, path="./Latex")

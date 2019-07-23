@@ -32,12 +32,23 @@ The advantage of having thousands/millions of features to deal with complex phen
 
 In Economics, this process has a dual approach with machine-learning (ML) and econometric (EC) algorithms emerging for different purposes: the former for prediction/forecasts (focusing on $\hat{y}$) and the latter for estimation/causal inference (interested in $\hat{\beta}$). Alternatively, the same distinction can be expressed in Diebold’s terms as non-causal vs causal prediction, where ML algorithms are designed to reduce prediction sampling-risks -i.e. learning through cross-validation techniques- and EC methods to identify unbiased multivariate relationships -i.e. avoiding consistency issues through residual and coefficient tests for model selection. 
 
+<<<<<<< Updated upstream
 Following Varian’s advices, about ML and EC complementarities -i.e. merging algorithms from different families to reduce both sampling and model uncertainty-, we are developing a novel multi-layer-multi-algorithm methodology combining two reinforcing paradigms: The London School of Economics (LSE) “Testimation” approach -to obtain information about residual properties- and the Bayesian-like “Double-model averaging” -across different covariates and sub-samples. This methodology includes five complementary layers -handling cross-section, time series and panel data- see \cite{gsreg2019}: \begin{enumerate}
     \item Pre-processing: with outlier detection, missing values identification, seasonal adjustment and normalization/standardization functions; 
     
     \item  Feature extraction: creation of logs, squares, inverses and interactions from selected variables;
     
     \item  Feature pre-selection: using filter and embedded ML algorithms like CFS, Variance threshold and LASSO functions; 
+=======
+Following Varian’s advices, about ML and EC complementarities -i.e. merging algorithms from different families to reduce both sampling and model uncertainty-, we are developing a novel multi-layer-multi-algorithm methodology combining two reinforcing paradigms: The London School of Economics (LSE) “Testimation” approach -to obtain information about residual properties- and the Bayesian-like “Double-model averaging” -across different covariates and sub-samples. This methodology includes five complementary layers -handling cross-section, time series and panel data- see \cite{gsreg2019}: 
+
+\begin{enumerate}
+    \item Pre-processing: with outlier detection, missing values identification, seasonal adjustment and normalization/standardization functions; 
+    
+    \item Feature extraction: creation of logs, squares, inverses and interactions from selected variables;
+    
+    \item Feature pre-selection: using filter and embedded ML algorithms like CFS, Variance threshold and LASSO functions; 
+>>>>>>> Stashed changes
     
     \item Final feature selection: with a modified all-subset regression approach, including residual tests and model averaging capabilities; 
     
@@ -47,6 +58,7 @@ Following Varian’s advices, about ML and EC complementarities -i.e. merging al
 In order to implement this feature selection algorithm, the following syntax has been used:
 
 \begin{lstlisting} 
+<<<<<<< Updated upstream
       using GlobalSearchRegression
       GlobalSearchRegression.gsr(
         equation = "y x1 x2 x3 x4 x5",
@@ -80,6 +92,30 @@ In order to implement this feature selection algorithm, the following syntax has
 \end{lstlisting}
 
 The report is structured as follows. After this introduction, the methodology is presented. In section 3, descriptive statistics are introduced. In turn, section 4 is dedicated to LASSO results. In turn, section 4 is dedicated to All-subset-regression results. After that, section 5 shows All-subset-regression results. Finally, the last section examines K-fold cross-validation outcomes.
+=======
+  using GlobalSearchRegression
+  GlobalSearchRegression.gsr(
+    equation = "y x1 x2 x3 x4 x5",
+    data = dataname,
+    datanames = [:y, :x1, :x2, :x3, :x4, :x5, :_cons],
+    method = :fast,
+    intercept = true,
+    removeoutliers = true,
+    fe_sqr = [:x1],
+    fe_inv = [:x2, :x3],
+    preliminaryselection = :lasso,
+    outsample = 10,
+    criteria = [:aic, :r2adj, :rmseout],
+    ttest = true,
+    modelavg = true,
+    residualtest = true,
+    orderresults = true,
+    kfoldcrossvalidation = Dict{Any,Any}(&quot;median&quot;=&gt;Float32[5.0 0.104308 0.110503 0.697177 0.257786 0.147638 0.910498 0.0 0.0 0.0 0.0 0.0 0.0 76.0 3.0 73.34 0.0557891 1.74445 0.979705 1.03926 0.028917 0.753357 1.69827e-6 0.553203 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0],&quot;kfolds&quot;=&gt;5,&quot;average&quot;=&gt;[4.4 0.0850554 0.0753098 0.704371 3.23892e5 4.45651e5 0.993071 -0.0551728 0.0332958 -0.663285 0.0 0.0 0.0 76.8 3.0 76.6028 0.0440697 1.56848 0.998422 1.00981 0.018118 0.608007 2.29482e-6 0.695288 -0.0134449 0.020064 -0.13402 0.0785279 0.0503194 0.62532 0.0 0.0 0.0],&quot;datanames&quot;=&gt;Symbol[:index, :x4_b, :x4_bstd, :x4_t, :_cons_b, :_cons_bstd, :_cons_t, :x1_sqrt_b, :x1_sqrt_bstd, :x1_sqrt_t, :x2_inv_b, :x2_inv_bstd, :x2_inv_t, :nobs, :ncoef, :sse, :r2, :F, :rmse, :rmseout, :r2adj, :jbtest, :wtest, :order, :x1_b, :x1_bstd, :x1_t, :x3_b, :x3_bstd, :x3_t, :x5_b, :x5_bstd, :x5_t],&quot;tsetsize&quot;=&gt;0.0,&quot;ttest&quot;=&gt;true),
+  )
+\end{lstlisting}
+
+The report is structured as follows. After this introduction, the methodology is presented. In section 3, descriptive statistics are introduced. After that, LASSO results are examined. Then, All-subset-regression analysis is shown. Finally, the last section examines K-fold cross-validation outcomes.
+>>>>>>> Stashed changes
 
 \section{Methodology}
 
@@ -87,12 +123,27 @@ The report is structured as follows. After this introduction, the methodology is
 It performs required variable transformations to improve model accuracy and feature selection. In this report, it has been used the following internal pre-processing functions:
 
 \begin{enumerate}
+<<<<<<< Updated upstream
     \item Remove-missings: Rows with missing values have been ommited for regression purposes.
   
 
 
   \item Remove-outliers: extreme observations (because of input errors or extraordinary/non-relevant events) have been removed using the standard 3-sigma rule (see \cite{lehmann2013}).
 \end{enumerate}
+=======
+  \item Remove-missings: Rows with missing values have been ommited for regression purposes.
+
+  
+
+  \item Remove-outliers: extreme observations (because of input errors or extraordinary/non-relevant events) have been removed using the standard 3-sigma rule (see \cite{lehmann2013}).
+\end{enumerate}
+\subsection{Feature extraction}
+
+In this stage, selected functions have been used to create additional covariates with the following transformations:  
+
+\begin{enumerate}
+\end{enumerate}
+>>>>>>> Stashed changes
 \subsection{Regularization - LASSO}
 The Least Absolute Shrinkage and Selection Operator (LASSO) algorithm is a type of regularized linear regression that uses shrinkage (see \cite{tibshirani1996}) to obtain simple sparse models. This particular type of regression is well-suited for feature selection in models with high levels of muticollinearity, and particularly efficient in fat-data scenarios.
 
@@ -111,7 +162,11 @@ As $\lambda$ increases, more and more coefficients are set to zero and associate
 
 The choice of $\lambda$ entails a well-known trade-off:  As $\lambda$ increases, estimator bias increases but as $\lambda$ decreases, estimator variance increases (i.e. omitted variables vs model over-fitting).
 
+<<<<<<< Updated upstream
 In this report, the $\lambda$ parameter has been dynamically defined in order to retain up to 6 covariates.
+=======
+In this report, the $\lambda$ parameter has been dynamically defined in order to retain up to 3 covariates.
+>>>>>>> Stashed changes
 
 It must be noticed that all predictors are standardized "on-the-fly", in order to avoid scale issues in feature selection.
 
@@ -121,7 +176,11 @@ Unlike other feature selection algorithms (including LASSO), All-subset-regressi
 
 Fortunately, the \verb GlobalSearchRegression.jl package has significantly reduced execution times, running up to 3165 times faster than Stata and 197 times faster than R (see \cite{gsreg2019}). This improvement allows researchers to regain attention on ASR algorithms, looking for better feature selection results. 
 
+<<<<<<< Updated upstream
 In this Julia package, the best model among $2^{n}-1$ alternatives is selected using a potentially composite ordering variable defined as the equally-weighted average of normalized (to guarantee equal weights) and harmonized (to ensure that higher values always identify better models) user's specified criteria. For in-sample adjustment, available alternatives include: Adjusted R2 (:r2adj, the default), Bayesian information criteria (:bic), Akaike and Corrected Akaike information criteria (:aic and :aicc), Mallows's Cp statistic (:cp), Sum of squared errors (also known as Residual sum of squares, :sse) and the Root mean square error (:rmse). For out-of-sample accuracy, there is available the out-of-sample root mean square error (:rmsout). Users are free to combine in-sample and out-of-sample information criteria. In this report, selected information criteria include (the key variable/s for feature selection.
+=======
+In this Julia package, the best model among $2^{n}-1$ alternatives is selected using a potentially composite ordering variable defined as the equally-weighted average of normalized (to guarantee equal weights) and harmonized (to ensure that higher values always identify better models) user's specified criteria. For in-sample adjustment, available alternatives include: Adjusted R2 (:r2adj, the default), Bayesian information criteria (:bic), Akaike and Corrected Akaike information criteria (:aic and :aicc), Mallows's Cp statistic (:cp), Sum of squared errors (also known as Residual sum of squares, :sse) and the Root mean square error (:rmse). For out-of-sample accuracy, there is available the out-of-sample root mean square error (:rmsout). Users are free to combine in-sample and out-of-sample information criteria. In this report, selected information criteria include ([:aic, :r2adj, :rmseout]) as the key variable/s for feature selection.
+>>>>>>> Stashed changes
 
 Additional options applied in this report includes:
 
@@ -132,10 +191,44 @@ Additional options applied in this report includes:
   \item Across-models' average coefficients, t-tests and additional statistics were obtained using combined-criteria exponential weights because of the modelavg=true option. More precisely, each alternative model has a weight given by w1/sum(w1), where w1 is defined as exp(-delta/2) and delta is equal to max(index)-index -- where index is the above mentioned normalized, harmonized and potentially combined selection criteria--.
   \item The residualtest=true option enables white heteroskedasticity and Jarque-Bera normality test to be implemented for each model.
   \item The residualtest=true option enables white heteroskedasticity, Jarque-Bera normality test and the Breusch-Godfrey test for autocorrelation to be implemented for each model.
+<<<<<<< Updated upstream
 \end{enumerate}
 
 --------------------------------------------------
 
+=======
+  \item User's specification of orderresults=true entails that the output matrix has been sorted by the the above mentioned normalized, harmonized and potentially combined selection criteria.
+\end{enumerate}
+\subsection{K-fold Cross Validation}
+
+Cross-validation (CV) is a procedure used to examine feature selection robustness to re-sampling. Among different alternatives, the K-fold approach has a parameter $K$ which identifies the number of groups that a given database must be split into (see \cite{arlot2010}). In this report user selected k-fold number is 5.
+
+The general procedure is as follows:
+
+\begin{enumerate}
+  \item Randomly split the database into k disjoint -roughly equally sized- groups
+  \item For each group:
+  \begin{enumerate}
+    \item Take a group as a hold out or test data set (leave-one-out scheme);
+    \item Take the remaining groups together as a training data set;
+    \item Fit a model on the training set and evaluate it on the test set; and
+    \item Retain the evaluation (i.e out-of-sample Root Mean Square Error -RMSE-).
+  \end{enumerate}
+  \item Summarize model strengths using CV scores
+\end{enumerate}
+
+In \verb GlobalSearchRegression.jl  the K-fold cross-validation is available for both LASSO pre-selection and ASR final selection. In the latter, for each K-partition $2^{p} - 1$ alternative models are fitted (where p is the number of potential covariates included in the ASR algorithm) and the candidate ‘optimal’ model is selected using the out-of-sample Root Mean Square Error (obtained from the test set). Therefore, K-candidate models are retained (one for each K-partition). The final "best" model is obtained using either across-model averages or medians. 
+
+This cross-validation specific alternative has been denominated as \textit{Averaging Cross validation (ACV)} by Jung and Hu (see, \cite{jung2015}). The authors found that:
+
+\begin{quote}
+"Due to the averaging effect, efficiency of the final parameter estimates obtained by ACV improves over that of the traditional K-fold CV. We note that parameter estimates of CV and ACV are identical when all the candidate ‘optimal’ models from ACV are identical to the model selected by the traditional CV."
+
+\hfill Jung and Hu (2015:168)
+\end{quote}
+
+It is worth mentioning that K-fold preferred methodologies change depending on whether cross-section, time-series or panel data observations are employed. For the first one, standard K-fold random allocation is the gold-standard (see \cite{arlot2010}). 
+>>>>>>> Stashed changes
 
 \section{Descriptive Statistics}
 
@@ -143,8 +236,11 @@ Main descriptive statistics for All-subset-regression potential covariates are p
 
 \clearpage
 
+<<<<<<< Updated upstream
 \section{Variables}
 
+=======
+>>>>>>> Stashed changes
 \begin{table}[!h]
   \centering
   \caption{Descriptive Statistics for the main dataset}
@@ -153,12 +249,19 @@ Main descriptive statistics for All-subset-regression potential covariates are p
     Variable & Description & Obs. & Mean & Sd & Max & Min & \% Miss \\
     \hline
     \hline
+<<<<<<< Updated upstream
     x1 & Insert Description & 96 & -0.03 & 1.08 & 2.29 & -2.76 & 0.00\% \\ 
     x2 & Insert Description & 96 & -0.11 & 0.90 & 1.61 & -2.31 & 0.00\% \\ 
     x3 & Insert Description & 96 & -0.10 & 0.95 & 2.15 & -2.38 & 0.00\% \\ 
     x4 & Insert Description & 96 & 0.13 & 1.00 & 2.63 & -2.73 & 0.00\% \\ 
     x5 & Insert Description & 96 & -0.09 & 0.84 & 1.80 & -2.48 & 0.00\% \\ 
     _cons & Insert Description & 96 & 1.00 & 0.00 & 1.00 & 1.00 & 0.00\% \\ 
+=======
+    x4 & Insert Description & 96 & 0.13 & 1.00 & 2.63 & -2.73 & 0.00\% \\ 
+    \_cons & Insert Description & 96 & 1.00 & 0.00 & 1.00 & 1.00 & 0.00\% \\ 
+    x1\_sqrt & Insert Description & 96 & 1.15 & 1.47 & 7.60 & 0.00 & 0.00\% \\ 
+    x2\_inv & Insert Description & 96 & 4.76 & 30.35 & 283.08 & -20.91 & 0.00\% \\ 
+>>>>>>> Stashed changes
     \hline
     \end{tabular}
 \end{table}
@@ -177,6 +280,7 @@ LASSO regression is shown in the following table:
     Variables & y \\
     \hline
     \hline
+<<<<<<< Updated upstream
        &  \\
        &  \\
        &  \\
@@ -187,12 +291,25 @@ LASSO regression is shown in the following table:
     \hline
     Observations &  96 \\
     \lambda      &   \\
+=======
+      x4 & 0.001 \\
+      \_cons & -0.045 \\
+      x1\_sqrt & -0.001 \\
+    \hline
+    \hline
+    Observations &  96 \\
+    \lambda      &  0.140 \\
+>>>>>>> Stashed changes
     \hline
     \end{tabular}
   \label{tab:addlabel}
 \end{table}
 
 
+<<<<<<< Updated upstream
+=======
+\clearpage
+>>>>>>> Stashed changes
 \section{Global Search Regression}
 
 \subsection{All sub-subset regression: Best Model and Model Averaging}
@@ -207,6 +324,7 @@ LASSO regression is shown in the following table:
                  &  Best Model               & Model Averaging            \\
     Variables    &  y               & y                 \\
     \hline 
+<<<<<<< Updated upstream
     x1     & -0.121***  & -0.126***     \\
                  &              & 0.103  \\
      
@@ -228,6 +346,23 @@ LASSO regression is shown in the following table:
 
     Observations &   \multicolumn{ 1  }{c}{ } \\
     Criteria     &   \multicolumn{ 1  }{c}{ } \\
+=======
+    x4     & 0.114  & 0.127     \\
+                 & 0.107        & 0.108  \\
+     
+    \_cons     & 0.323**  & 232046.016     \\
+                 & 0.134        & 725523.750  \\
+     
+    x1\_sqrt     & -0.156**  & -0.162**     \\
+                 & 0.071        & 0.071  \\
+     
+    x2\_inv     &   & 0.000     \\
+                 &         & 0.000  \\
+    \hline
+
+    Observations &   \multicolumn{ 1  }{c}{ 96 } \\
+    Criteria     &   \multicolumn{ 1  }{c}{ [:aic, :r2adj, :rmseout] } \\
+>>>>>>> Stashed changes
     \hline
     \hline
     \multicolumn{ 2  }{c}{Standard errors in parentheses} \\
@@ -244,7 +379,11 @@ Finally, we include a unique figure where covariate relative performance is comp
 \clearpage
 
 \begin{center}
+<<<<<<< Updated upstream
     \large{\textbf{Coefficient, t-test and selection criteria gains distributions for  }}
+=======
+    \large{\textbf{Coefficient, t-test and selection criteria gains distributions for x4 }}
+>>>>>>> Stashed changes
 \end{center}
 
 \vspace{-5mm}
@@ -253,26 +392,44 @@ Finally, we include a unique figure where covariate relative performance is comp
   \centering
   \begin{minipage}[b]{0.46\textwidth}
     \centering
+<<<<<<< Updated upstream
     \includegraphics[width=\textwidth]{contour__b_t.png}
+=======
+    \includegraphics[width=\textwidth]{contour_x4_b_t.png}
+>>>>>>> Stashed changes
     \caption{Bivariate Kernel density (Contour view)}
   \end{minipage}
   \hfill
   \begin{minipage}[b]{0.53\textwidth}
     \centering
+<<<<<<< Updated upstream
     \includegraphics[width=\textwidth]{wireframe__b_t.png}
+=======
+    \includegraphics[width=\textwidth]{wireframe_x4_b_t.png}
+>>>>>>> Stashed changes
     \caption{Bivariate Kernel density (Contour view)}
   \end{minipage}
 
   \begin{minipage}[b]{0.48\textwidth}
     \centering
+<<<<<<< Updated upstream
     \includegraphics[width=\textwidth]{Kdensity_criteria_.png}
     \caption{Selection criteria gains for including  (Kernel view)}
+=======
+    \includegraphics[width=\textwidth]{Kdensity_criteria_x4.png}
+    \caption{Selection criteria gains for including x4 (Kernel view)}
+>>>>>>> Stashed changes
   \end{minipage}
   \hfill
   \begin{minipage}[b]{0.48\textwidth}
     \centering    
+<<<<<<< Updated upstream
     \includegraphics[width=\textwidth]{BoxViolinDot_.png}
     \caption{Selection criteria gains for including  (Box-Violin view)}    
+=======
+    \includegraphics[width=\textwidth]{BoxViolinDot_x4.png}
+    \caption{Selection criteria gains for including x4 (Box-Violin view)}    
+>>>>>>> Stashed changes
   \end{minipage}
 \end{figure}
 
@@ -285,6 +442,7 @@ The following table shows main statistics of coefficient and t-test distribution
     \caption{Statistics}
     \begin{tabular}{|l|c|c|}
     \hline
+<<<<<<< Updated upstream
     Variable  Statistics &  Coefficient Distribution &  T-test Distribution  \\
     \hline
     \hline
@@ -301,13 +459,35 @@ The following table shows main statistics of coefficient and t-test distribution
     Positive Share    &      &  \\
     \hline
     Significant Share &  &  \\
+=======
+    Variable x4 Statistics &  Coefficient Distribution &  T-test Distribution  \\
+    \hline
+    \hline
+    Simple average    & 0.129      & 1.186 \\
+    \hline
+    Median            & 0.129   & 1.189 \\
+    \hline
+    Mode              & 0.114     & 1.071 \\
+    \hline
+    Skewness          & 0.013      & 0.111 \\
+    \hline
+    kurtosis          & -0.090     & -0.026 \\
+    \hline
+    Positive Share    & -1.696     & -1.833 \\
+    \hline
+    Significant Share & 1.000 &  \\
+>>>>>>> Stashed changes
     \hline
     \end{tabular}
 \end{table}
 
 \clearpage
 \begin{center}
+<<<<<<< Updated upstream
     \large{\textbf{Coefficient, t-test and selection criteria gains distributions for  }}
+=======
+    \large{\textbf{Coefficient, t-test and selection criteria gains distributions for _cons }}
+>>>>>>> Stashed changes
 \end{center}
 
 \vspace{-5mm}
@@ -316,26 +496,44 @@ The following table shows main statistics of coefficient and t-test distribution
   \centering
   \begin{minipage}[b]{0.46\textwidth}
     \centering
+<<<<<<< Updated upstream
     \includegraphics[width=\textwidth]{contour__b_t.png}
+=======
+    \includegraphics[width=\textwidth]{contour__cons_b_t.png}
+>>>>>>> Stashed changes
     \caption{Bivariate Kernel density (Contour view)}
   \end{minipage}
   \hfill
   \begin{minipage}[b]{0.53\textwidth}
     \centering
+<<<<<<< Updated upstream
     \includegraphics[width=\textwidth]{wireframe__b_t.png}
+=======
+    \includegraphics[width=\textwidth]{wireframe__cons_b_t.png}
+>>>>>>> Stashed changes
     \caption{Bivariate Kernel density (Contour view)}
   \end{minipage}
 
   \begin{minipage}[b]{0.48\textwidth}
     \centering
+<<<<<<< Updated upstream
     \includegraphics[width=\textwidth]{Kdensity_criteria_.png}
     \caption{Selection criteria gains for including  (Kernel view)}
+=======
+    \includegraphics[width=\textwidth]{Kdensity_criteria__cons.png}
+    \caption{Selection criteria gains for including _cons (Kernel view)}
+>>>>>>> Stashed changes
   \end{minipage}
   \hfill
   \begin{minipage}[b]{0.48\textwidth}
     \centering    
+<<<<<<< Updated upstream
     \includegraphics[width=\textwidth]{BoxViolinDot_.png}
     \caption{Selection criteria gains for including  (Box-Violin view)}    
+=======
+    \includegraphics[width=\textwidth]{BoxViolinDot__cons.png}
+    \caption{Selection criteria gains for including _cons (Box-Violin view)}    
+>>>>>>> Stashed changes
   \end{minipage}
 \end{figure}
 
@@ -348,6 +546,7 @@ The following table shows main statistics of coefficient and t-test distribution
     \caption{Statistics}
     \begin{tabular}{|l|c|c|}
     \hline
+<<<<<<< Updated upstream
     Variable  Statistics &  Coefficient Distribution &  T-test Distribution  \\
     \hline
     \hline
@@ -364,13 +563,35 @@ The following table shows main statistics of coefficient and t-test distribution
     Positive Share    &      &  \\
     \hline
     Significant Share &  &  \\
+=======
+    Variable _cons Statistics &  Coefficient Distribution &  T-test Distribution  \\
+    \hline
+    \hline
+    Simple average    & 321217.906      & 1.086 \\
+    \hline
+    Median            & 0.323   & 1.325 \\
+    \hline
+    Mode              & 0.323     & 2.420 \\
+    \hline
+    Skewness          & 647836.750      & 1.187 \\
+    \hline
+    kurtosis          & 1.572     & 0.086 \\
+    \hline
+    Positive Share    & 0.895     & -1.586 \\
+    \hline
+    Significant Share & 0.714 &  \\
+>>>>>>> Stashed changes
     \hline
     \end{tabular}
 \end{table}
 
 \clearpage
 \begin{center}
+<<<<<<< Updated upstream
     \large{\textbf{Coefficient, t-test and selection criteria gains distributions for  }}
+=======
+    \large{\textbf{Coefficient, t-test and selection criteria gains distributions for x1_sqrt }}
+>>>>>>> Stashed changes
 \end{center}
 
 \vspace{-5mm}
@@ -379,26 +600,44 @@ The following table shows main statistics of coefficient and t-test distribution
   \centering
   \begin{minipage}[b]{0.46\textwidth}
     \centering
+<<<<<<< Updated upstream
     \includegraphics[width=\textwidth]{contour__b_t.png}
+=======
+    \includegraphics[width=\textwidth]{contour_x1_sqrt_b_t.png}
+>>>>>>> Stashed changes
     \caption{Bivariate Kernel density (Contour view)}
   \end{minipage}
   \hfill
   \begin{minipage}[b]{0.53\textwidth}
     \centering
+<<<<<<< Updated upstream
     \includegraphics[width=\textwidth]{wireframe__b_t.png}
+=======
+    \includegraphics[width=\textwidth]{wireframe_x1_sqrt_b_t.png}
+>>>>>>> Stashed changes
     \caption{Bivariate Kernel density (Contour view)}
   \end{minipage}
 
   \begin{minipage}[b]{0.48\textwidth}
     \centering
+<<<<<<< Updated upstream
     \includegraphics[width=\textwidth]{Kdensity_criteria_.png}
     \caption{Selection criteria gains for including  (Kernel view)}
+=======
+    \includegraphics[width=\textwidth]{Kdensity_criteria_x1_sqrt.png}
+    \caption{Selection criteria gains for including x1_sqrt (Kernel view)}
+>>>>>>> Stashed changes
   \end{minipage}
   \hfill
   \begin{minipage}[b]{0.48\textwidth}
     \centering    
+<<<<<<< Updated upstream
     \includegraphics[width=\textwidth]{BoxViolinDot_.png}
     \caption{Selection criteria gains for including  (Box-Violin view)}    
+=======
+    \includegraphics[width=\textwidth]{BoxViolinDot_x1_sqrt.png}
+    \caption{Selection criteria gains for including x1_sqrt (Box-Violin view)}    
+>>>>>>> Stashed changes
   \end{minipage}
 \end{figure}
 
@@ -411,6 +650,7 @@ The following table shows main statistics of coefficient and t-test distribution
     \caption{Statistics}
     \begin{tabular}{|l|c|c|}
     \hline
+<<<<<<< Updated upstream
     Variable  Statistics &  Coefficient Distribution &  T-test Distribution  \\
     \hline
     \hline
@@ -427,13 +667,35 @@ The following table shows main statistics of coefficient and t-test distribution
     Positive Share    &      &  \\
     \hline
     Significant Share &  &  \\
+=======
+    Variable x1_sqrt Statistics &  Coefficient Distribution &  T-test Distribution  \\
+    \hline
+    \hline
+    Simple average    & -0.162      & -2.283 \\
+    \hline
+    Median            & -0.163   & -2.306 \\
+    \hline
+    Mode              & -0.156     & -2.203 \\
+    \hline
+    Skewness          & 0.005      & 0.053 \\
+    \hline
+    kurtosis          & 0.481     & 1.127 \\
+    \hline
+    Positive Share    & -0.952     & -0.686 \\
+    \hline
+    Significant Share & 0.000 &  \\
+>>>>>>> Stashed changes
     \hline
     \end{tabular}
 \end{table}
 
 \clearpage
 \begin{center}
+<<<<<<< Updated upstream
     \large{\textbf{Coefficient, t-test and selection criteria gains distributions for  }}
+=======
+    \large{\textbf{Coefficient, t-test and selection criteria gains distributions for x2_inv }}
+>>>>>>> Stashed changes
 \end{center}
 
 \vspace{-5mm}
@@ -442,26 +704,44 @@ The following table shows main statistics of coefficient and t-test distribution
   \centering
   \begin{minipage}[b]{0.46\textwidth}
     \centering
+<<<<<<< Updated upstream
     \includegraphics[width=\textwidth]{contour__b_t.png}
+=======
+    \includegraphics[width=\textwidth]{contour_x2_inv_b_t.png}
+>>>>>>> Stashed changes
     \caption{Bivariate Kernel density (Contour view)}
   \end{minipage}
   \hfill
   \begin{minipage}[b]{0.53\textwidth}
     \centering
+<<<<<<< Updated upstream
     \includegraphics[width=\textwidth]{wireframe__b_t.png}
+=======
+    \includegraphics[width=\textwidth]{wireframe_x2_inv_b_t.png}
+>>>>>>> Stashed changes
     \caption{Bivariate Kernel density (Contour view)}
   \end{minipage}
 
   \begin{minipage}[b]{0.48\textwidth}
     \centering
+<<<<<<< Updated upstream
     \includegraphics[width=\textwidth]{Kdensity_criteria_.png}
     \caption{Selection criteria gains for including  (Kernel view)}
+=======
+    \includegraphics[width=\textwidth]{Kdensity_criteria_x2_inv.png}
+    \caption{Selection criteria gains for including x2_inv (Kernel view)}
+>>>>>>> Stashed changes
   \end{minipage}
   \hfill
   \begin{minipage}[b]{0.48\textwidth}
     \centering    
+<<<<<<< Updated upstream
     \includegraphics[width=\textwidth]{BoxViolinDot_.png}
     \caption{Selection criteria gains for including  (Box-Violin view)}    
+=======
+    \includegraphics[width=\textwidth]{BoxViolinDot_x2_inv.png}
+    \caption{Selection criteria gains for including x2_inv (Box-Violin view)}    
+>>>>>>> Stashed changes
   \end{minipage}
 \end{figure}
 
@@ -474,7 +754,11 @@ The following table shows main statistics of coefficient and t-test distribution
     \caption{Statistics}
     \begin{tabular}{|l|c|c|}
     \hline
+<<<<<<< Updated upstream
     Variable  Statistics &  Coefficient Distribution &  T-test Distribution  \\
+=======
+    Variable x2_inv Statistics &  Coefficient Distribution &  T-test Distribution  \\
+>>>>>>> Stashed changes
     \hline
     \hline
     Simple average    &       &  \\
@@ -495,6 +779,7 @@ The following table shows main statistics of coefficient and t-test distribution
 \end{table}
 
 \clearpage
+<<<<<<< Updated upstream
 \begin{center}
     \large{\textbf{Coefficient, t-test and selection criteria gains distributions for  }}
 \end{center}
@@ -568,6 +853,49 @@ The following table shows main statistics of coefficient and t-test distribution
 In this figure it is shown that potential covariates included in the general unrrestricted model of the all-subset-regression algorithm display singnificant differences in terms of the user selected information criteria. For each explanatory variable information criteria gains were obtained as the differece between averages information criteria obtained from models which includes and excludes that covariate. Available statistics suggests that there   explanatory  that improved model accuracy.  or }} helps to increase up to a \% the user selected information criteria. On the contrary, there    that have a deleterious impact on model accuracy. This is specially true for , which seems to decrease up to a \% the user selected information criteria}}
 
 
+=======
+
+\begin{figure}[!ht]
+    \centering
+    \caption{Covariable relevance related to selection criteria}
+    \includegraphics[scale=0.6]{cov_relevance.png}
+\end{figure}
+
+%In this figure it is shown that potential covariates included in the general unrrestricted model of the all-subset-regression algorithm display singnificant differences in terms of the user selected information criteria. For each explanatory variable information criteria gains were obtained as the differece between averages information criteria obtained from models which includes and excludes that covariate. Available statistics suggests that there   explanatory  that improved model accuracy.  or }} helps to increase up to a \% the user selected information criteria. On the contrary, there    that have a deleterious impact on model accuracy. This is specially true for , which seems to decrease up to a \% the user selected information criteria}}
+
+\section{k-fold cross-validation}
+
+\begin{table}[!h]
+  \centering
+  \caption{K-fold cross-validation Results}
+    \begin{tabular}{l c c}
+    \hline
+    \multicolumn{3}{c}{K-fold scheme:\textbf{Insert scheme}}    \\
+                    & 5-fold         & 5-fold \\
+    Variables       & Mean                    & Median          \\
+    \hline
+    \hline
+Float32[5.0 0.104308 0.110503 0.697177 0.257786 0.147638 0.910498 0.0 0.0 0.0 0.0 0.0 0.0 76.0 3.0 73.34 0.0557891 1.74445 0.979705 1.03926 0.028917 0.753357 1.69827e-6 0.553203 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0]
+
+--
+
+
+[4.4 0.0850554 0.0753098 0.704371 3.23892e5 4.45651e5 0.993071 -0.0551728 0.0332958 -0.663285 0.0 0.0 0.0 76.8 3.0 76.6028 0.0440697 1.56848 0.998422 1.00981 0.018118 0.608007 2.29482e-6 0.695288 -0.0134449 0.020064 -0.13402 0.0785279 0.0503194 0.62532 0.0 0.0 0.0]
+
+    \hline
+
+    Error out-sample &     &   \\
+                     &     &   \\
+    \hline
+    \hline
+    \multicolumn{3}{c}{\textit{Standard errors in parentheses}} \\
+    \multicolumn{3}{c}{*** p < 0.01, ** p < 0.05, * p < 0.1} \\
+    \hline
+    \end{tabular}
+  \label{tab:addlabel}
+\end{table}
+
+>>>>>>> Stashed changes
 \addcontentsline{toc}{section}{References} 
 \bibliographystyle{unsrt}  
 \begin{thebibliography}{1}

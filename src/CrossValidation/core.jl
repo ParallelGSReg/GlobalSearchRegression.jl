@@ -43,8 +43,8 @@ function kfoldcrossvalidation(
     k::Int,
     s::Float64)
 
-    db = randperm(data.nobs)
-    #db = collect(1:data.nobs)
+    #db = randperm(data.nobs)
+    db = collect(1:data.nobs)
     folds = split_database(db, k)
 
     # if data.time != nothing
@@ -69,8 +69,8 @@ function kfoldcrossvalidation(
         reduced.depvar_data = data.depvar_data[dataset]
         reduced.expvars_data = data.expvars_data[dataset, :]
         reduced.nobs = size(dataset, 1)
-        _, vars = GlobalSearchRegression.PreliminarySelection.lasso!(reduced)
-        
+        _, vars = GlobalSearchRegression.PreliminarySelection.lasso!(reduced, addextrasflag=false)
+
         backup = GlobalSearchRegression.copy_data(data)
         backup.expvars = data.expvars[vars]
         backup.expvars_data = data.expvars_data[:,vars]

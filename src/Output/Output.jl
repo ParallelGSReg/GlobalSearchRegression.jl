@@ -1,5 +1,16 @@
 module Output
-    using DelimitedFiles, Printf, Statistics, Mustache, KernelDensity, Distributions, StatsPlots, ZipFile, InfoZIP
+    using DelimitedFiles,
+            Printf,
+            Mustache, 
+            KernelDensity,
+            StatsPlots,
+            ZipFile,
+            InfoZIP,
+            Statistics, 
+            StatsPlots,
+            DataFrames,
+            Distributions,
+            Distributed
     using Plots
     using ..GlobalSearchRegression
 

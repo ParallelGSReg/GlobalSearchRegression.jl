@@ -32,12 +32,14 @@ The advantage of having thousands/millions of features to deal with complex phen
 
 In Economics, this process has a dual approach with machine-learning (ML) and econometric (EC) algorithms emerging for different purposes: the former for prediction/forecasts (focusing on $\hat{y}$) and the latter for estimation/causal inference (interested in $\hat{\beta}$). Alternatively, the same distinction can be expressed in Diebold’s terms as non-causal vs causal prediction, where ML algorithms are designed to reduce prediction sampling-risks -i.e. learning through cross-validation techniques- and EC methods to identify unbiased multivariate relationships -i.e. avoiding consistency issues through residual and coefficient tests for model selection. 
 
-Following Varian’s advices, about ML and EC complementarities -i.e. merging algorithms from different families to reduce both sampling and model uncertainty-, we are developing a novel multi-layer-multi-algorithm methodology combining two reinforcing paradigms: The London School of Economics (LSE) “Testimation” approach -to obtain information about residual properties- and the Bayesian-like “Double-model averaging” -across different covariates and sub-samples. This methodology includes five complementary layers -handling cross-section, time series and panel data- see \cite{gsreg2019}: \begin{enumerate}
+Following Varian’s advices, about ML and EC complementarities -i.e. merging algorithms from different families to reduce both sampling and model uncertainty-, we are developing a novel multi-layer-multi-algorithm methodology combining two reinforcing paradigms: The London School of Economics (LSE) “Testimation” approach -to obtain information about residual properties- and the Bayesian-like “Double-model averaging” -across different covariates and sub-samples. This methodology includes five complementary layers -handling cross-section, time series and panel data- see \cite{gsreg2019}: 
+
+\begin{enumerate}
     \item Pre-processing: with outlier detection, missing values identification, seasonal adjustment and normalization/standardization functions; 
     
-    \item  Feature extraction: creation of logs, squares, inverses and interactions from selected variables;
+    \item Feature extraction: creation of logs, squares, inverses and interactions from selected variables;
     
-    \item  Feature pre-selection: using filter and embedded ML algorithms like CFS, Variance threshold and LASSO functions; 
+    \item Feature pre-selection: using filter and embedded ML algorithms like CFS, Variance threshold and LASSO functions; 
     
     \item Final feature selection: with a modified all-subset regression approach, including residual tests and model averaging capabilities; 
     
@@ -47,41 +49,37 @@ Following Varian’s advices, about ML and EC complementarities -i.e. merging al
 In order to implement this feature selection algorithm, the following syntax has been used:
 
 \begin{lstlisting} 
-      using GlobalSearchRegression
-      GlobalSearchRegression.gsr(
-        {{#input}}
-        equation = "{{equation}}",
-        data = {{data}},
-        datanames = {{datanames}},
-        method = :{{method}},
-        intercept = {{intercept}},
-        {{#panel}}panel = {{.}},{{/panel}}
-        {{#time}}time = {{.}},{{/time}}
-        {{#seasonaladjustment}}seasonaladjustment = {{.}},{{/seasonaladjustment}}
-        removeoutliers = {{removeoutliers}},
-        {{/input}}
-
-        fe_sqr
-        fe_log
-        fe_inv
-        fe_lag
-        interaction
-        preliminaryselection
-        fixedvariables
-        outsample
-        criteria
-        ttest
-        modelavg
-        residualtest
-        orderresults
-        kfoldcrossvalidation
-        numfolds
-        testsetshare
-        exportcsv
-        exportsummary
+  using GlobalSearchRegression
+  GlobalSearchRegression.gsr({{#input}}
+    equation = "{{equation}}",
+    data = {{data}},
+    datanames = {{datanames}},
+    method = :{{method}},
+    intercept = {{intercept}},{{#panel}}
+    panel = {{.}},{{/panel}}{{#time}}
+    time = {{.}},{{/time}}{{#seasonaladjustment}}
+    seasonaladjustment = {{.}},{{/seasonaladjustment}}
+    removeoutliers = {{removeoutliers}},{{/input}}{{#featureextraction}}{{#fe_sqr}}
+    fe_sqr = {{.}},{{/fe_sqr}}{{#fe_log}}
+    fe_log = {{.}},{{/fe_log}}{{#fe_inv}}
+    fe_inv = {{.}},{{/fe_inv}}{{#fe_lag}}
+    fe_lag = {{.}},{{/fe_lag}}{{#interaction}}
+    interaction = {{.}},{{/interaction}}{{/featureextraction}}{{#preliminaryselection}}
+    preliminaryselection = :{{preliminaryselection}},{{/preliminaryselection}}{{#allsubsetregression}}{{#fixedvariables}}
+    fixedvariables = {{.}},{{/fixedvariables}}{{#outsample}}
+    outsample = {{.}},{{/outsample}}{{#criteria}}
+    criteria = {{.}},{{/criteria}}
+    ttest = {{ttest}},
+    modelavg = {{modelavg}},
+    residualtest = {{residualtest}},{{#orderresults}}
+    orderresults = {{.}},{{/orderresults}}{{/allsubsetregression}}{{#crossvalidation}}
+    kfoldcrossvalidation = {{.}},{{/crossvalidation}}{{#numfolds}}
+    numfolds = {{.}},{{/numfolds}}{{#testsetshare}}
+    testsetshare = {{.}}{{/testsetshare}}
+  )
 \end{lstlisting}
 
-The report is structured as follows. After this introduction, the methodology is presented. In section 3, descriptive statistics are introduced. In turn, section 4 is dedicated to LASSO results. In turn, section 4 is dedicated to All-subset-regression results. After that, section 5 shows All-subset-regression results. Finally, the last section examines K-fold cross-validation outcomes.
+The report is structured as follows. After this introduction, the methodology is presented. In section 3, descriptive statistics are introduced. {{#preliminaryselection}}After that, LASSO results are examined.{{/preliminaryselection}} Then, All-subset-regression analysis is shown. {{#crossvalidation}}Finally, the last section examines K-fold cross-validation outcomes.{{/crossvalidation}}
 
 \section{Methodology}
 
@@ -90,15 +88,16 @@ The report is structured as follows. After this introduction, the methodology is
 It performs required variable transformations to improve model accuracy and feature selection. In this report, it has been used the following internal pre-processing functions:
 
 \begin{enumerate}
-    \item Remove-missings: Rows with missing values have been ommited for regression purposes.
-  
-  {{#seasonalfortex}}
-    \item Seasonal-adjustment: variables {{#:fe_seasonaladjustment_names}}{{.}}, {{/:fe_seasonaladjustment_names}}have been selected for seasonal adjustment using \verb SingularSpectrumAnalysis.jl  (see \cite{hassani2007}). For each one, the function removes the seasonal component using window lengths equal to {{#:fe_seasonaladjustment_vals}}{{.}}, {{/:fe_seasonaladjustment_vals}}respectively.
-  {{/seasonalfortex}}
+  \item Remove-missings: Rows with missing values have been ommited for regression purposes.
 
-  {{#seasonalfortex2}}
-  \item Seasonal-adjustment: variable {{#:fe_seasonaladjustment_names2}}{{.}}{{/:fe_seasonaladjustment_names2}} has been selected for seasonal adjustment using \verb SingularSpectrumAnalysis.jl  (see \cite{hassani2007}). The function removes the seasonal component using a window length equal to {{#:fe_seasonaladjustment_vals2}}{{.}}{{/:fe_seasonaladjustment_vals2}}.
-  {{/seasonalfortex2}}
+  {{#seasonaladjustment}}{{#seasonaladjustment}}
+    {{#vars}}
+      \item Seasonal-adjustment: variables {{#names}}{{.}}, {{/names}} have been selected for seasonal adjustment using \verb SingularSpectrumAnalysis.jl  (see \cite{hassani2007}). For each one, the function removes the seasonal component using window lengths equal to {{#values}}{{.}}, {{/values}}respectively.
+    {{/vars}}
+    {{#var}}
+      \item Seasonal-adjustment: variable {{#names}}{{.}}{{/names}}, has been selected for seasonal adjustment using \verb SingularSpectrumAnalysis.jl  (see \cite{hassani2007}). The function removes the seasonal component using a window length equal to {{#values}}{{.}}{{/values}}.
+    {{/var}}
+  {{/seasonaladjustment}}{{/seasonaladjustment}}
 
   {{#removeoutliers}} 
   \item Remove-outliers: extreme observations (because of input errors or extraordinary/non-relevant events) have been removed using the standard 3-sigma rule (see \cite{lehmann2013}).
@@ -184,7 +183,7 @@ Unlike other feature selection algorithms (including LASSO), All-subset-regressi
 
 Fortunately, the \verb GlobalSearchRegression.jl package has significantly reduced execution times, running up to 3165 times faster than Stata and 197 times faster than R (see \cite{gsreg2019}). This improvement allows researchers to regain attention on ASR algorithms, looking for better feature selection results. 
 
-In this Julia package, the best model among $2^{n}-1$ alternatives is selected using a potentially composite ordering variable defined as the equally-weighted average of normalized (to guarantee equal weights) and harmonized (to ensure that higher values always identify better models) user's specified criteria. For in-sample adjustment, available alternatives include: Adjusted R2 (:r2adj, the default), Bayesian information criteria (:bic), Akaike and Corrected Akaike information criteria (:aic and :aicc), Mallows's Cp statistic (:cp), Sum of squared errors (also known as Residual sum of squares, :sse) and the Root mean square error (:rmse). For out-of-sample accuracy, there is available the out-of-sample root mean square error (:rmsout). Users are free to combine in-sample and out-of-sample information criteria. In this report, selected information criteria include ({{#criteria_names}}{{.}}, {{/criteria_names}}the key variable/s for feature selection.
+In this Julia package, the best model among $2^{n}-1$ alternatives is selected using a potentially composite ordering variable defined as the equally-weighted average of normalized (to guarantee equal weights) and harmonized (to ensure that higher values always identify better models) user's specified criteria. For in-sample adjustment, available alternatives include: Adjusted R2 (:r2adj, the default), Bayesian information criteria (:bic), Akaike and Corrected Akaike information criteria (:aic and :aicc), Mallows's Cp statistic (:cp), Sum of squared errors (also known as Residual sum of squares, :sse) and the Root mean square error (:rmse). For out-of-sample accuracy, there is available the out-of-sample root mean square error (:rmsout). Users are free to combine in-sample and out-of-sample information criteria. In this report, selected information criteria include ({{criteria}}) as the key variable/s for feature selection.
 
 Additional options applied in this report includes:
 
@@ -212,9 +211,6 @@ Additional options applied in this report includes:
   {{/orderresults}}
 \end{enumerate}
 {{/allsubsetregression}}
-
---------------------------------------------------
-
 {{#crossvalidation}}
 \subsection{K-fold Cross Validation}
 
@@ -319,15 +315,12 @@ where $T{j}$ is the total number of time series observations for panel-id = j.
 \end{enumerate}
 {{/panelid}}
 {{/crossvalidation}}
-
 {{#input}}
 \section{Descriptive Statistics}
 
 Main descriptive statistics for All-subset-regression potential covariates are presented in table 1:
 
 \clearpage
-
-\section{Variables}
 
 \begin{table}[!h]
   \centering
@@ -373,21 +366,22 @@ LASSO regression is shown in the following table:
     Variables & {{ depvar }} \\
     \hline
     \hline
-    {{#expvars}}
+    {{#expvssars}}
       {{ name }} & {{ coef }} \\
-    {{/expvars}}
+    {{/expvssars}}
     \hline
     \hline
     Observations &  {{ nobs }} \\
-    \lambda      &  {{ lambda }} \\
+    \lambda      &  {{ lassolambda }} \\
     \hline
     \end{tabular}
   \label{tab:addlabel}
 \end{table}
 {{/preliminaryselection}}
 
-
 {{#allsubsetregression}}
+
+\clearpage
 \section{Global Search Regression}
 
 \subsection{All sub-subset regression: Best Model and Model Averaging}
@@ -403,12 +397,12 @@ LASSO regression is shown in the following table:
                  &  Best Model              {{#modelavg}} & Model Averaging           {{/modelavg}} \\
     Variables    &  {{depvar}}              {{#modelavg}} & {{depvar}}                {{/modelavg}} \\
     \hline{{#bmexpvars}} 
-    {{name}}     & {{best.b}}{{best.stars}} {{#avg}} & {{b}}{{stars}}    {{/avg}} \\{{#ttest}}
-                 & {{best.bstd}}            {{#avg}} & {{bstd}} {{/avg}} \\{{/ttest}}
+    {{name}}     & {{#best}}{{b}}{{stars}}{{/best}} {{#avg}} & {{b}}{{stars}}    {{/avg}} \\{{#ttest}}
+                 & {{#best}}{{bstd}}{{/best}}       {{#avg}} & {{bstd}} {{/avg}} \\{{/ttest}}
     {{/bmexpvars}}\hline
 
-    Observations &   \multicolumn{ {{^avg}}1{{/avg}} {{#avg}}2{{/avg}} }{c}{ } \\
-    Criteria     &   \multicolumn{ {{^avg}}1{{/avg}} {{#avg}}2{{/avg}} }{c}{ } \\
+    Observations &   \multicolumn{ {{^avg}}1{{/avg}} {{#avg}}2{{/avg}} }{c}{ {{ nobs }} } \\
+    Criteria     &   \multicolumn{ {{^avg}}1{{/avg}} {{#avg}}2{{/avg}} }{c}{ {{ criteria }} } \\
     \hline
     \hline
     \multicolumn{ {{^avg}}2{{/avg}} {{#avg}}3{{/avg}} }{c}{Standard errors in parentheses} \\
@@ -497,7 +491,7 @@ The following table shows main statistics of coefficient and t-test distribution
     \includegraphics[scale=0.6]{cov_relevance.png}
 \end{figure}
 
-In this figure it is shown that potential covariates included in the general unrrestricted model of the all-subset-regression algorithm display singnificant differences in terms of the user selected information criteria. For each explanatory variable information criteria gains were obtained as the differece between averages information criteria obtained from models which includes and excludes that covariate. Available statistics suggests that there {{are or is}} {{numofpositivegainsvariables}} explanatory {{variable or variables}} that improved model accuracy. {{Among them, {{bestvar}} or {{bestvar}}}} helps to increase up to a {{gainsinperc}}\% the user selected information criteria. On the contrary, there {{are or is}} {{numofnegativegainsvariables}} {{covariate or covariates}} that have a deleterious impact on model accuracy. This is specially true for {{worstvar}}, which seems to decrease up to a {{lossinperc}}\% the user selected information criteria}}
+%In this figure it is shown that potential covariates included in the general unrrestricted model of the all-subset-regression algorithm display singnificant differences in terms of the user selected information criteria. For each explanatory variable information criteria gains were obtained as the differece between averages information criteria obtained from models which includes and excludes that covariate. Available statistics suggests that there {{are or is}} {{numofpositivegainsvariables}} explanatory {{variable or variables}} that improved model accuracy. {{Among them, {{bestvar}} or {{bestvar}}}} helps to increase up to a {{gainsinperc}}\% the user selected information criteria. On the contrary, there {{are or is}} {{numofnegativegainsvariables}} {{covariate or covariates}} that have a deleterious impact on model accuracy. This is specially true for {{worstvar}}, which seems to decrease up to a {{lossinperc}}\% the user selected information criteria}}
 {{/allsubsetregression}}
 
 {{#crossvalidation}}
@@ -508,17 +502,25 @@ In this figure it is shown that potential covariates included in the general unr
   \caption{K-fold cross-validation Results}
     \begin{tabular}{l c c}
     \hline
-    \multicolumn{3}{c}{K-fold scheme:\textbf{Insert scheme}} \\
-                 & {{kfolds}}-fold  & {{kfolds}}-fold \\
-    Variables    & Mean             & Median          \\
+    \multicolumn{3}{c}{K-fold scheme:\textbf{Insert scheme}}    \\
+                    & {{kfolds}}-fold         & {{kfolds}}-fold \\
+    Variables       & Mean                    & Median          \\
     \hline
     \hline
-                 &                  &                  \\
-                 &                  &                  \\
+{{ median }}
+
+--
+
+
+{{ average }}
+
+    {{#kfoldvars}}
+      {{ varname }} & {{ meancoef }}{{stars}} & {{ mediancoef }}{{stars}} \\
+                    & {{ meanstd }}           & {{ medianstd }}           \\
+    {{/kfoldvars}}
     \hline
 
     Error out-sample &     &   \\
-    Error in-sample  &     &   \\
                      &     &   \\
     \hline
     \hline

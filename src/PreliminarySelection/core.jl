@@ -16,8 +16,12 @@ function lasso(data::GlobalSearchRegression.GSRegData)
     lasso!(GlobalSearchRegression.copy_data(data))
 end
 
-function lasso!(data::GlobalSearchRegression.GSRegData)
-    betas = lassoselection(data)
+function lasso!(data::GlobalSearchRegression.GSRegData; addextrasflag=true)
+    betas, lambda = lassoselection(data)
+
+    if betas == nothing
+        return data, map(b -> true, data.expvars)
+    end
 
     data.extras[:lasso_betas] = betas
 
@@ -31,13 +35,15 @@ function lasso!(data::GlobalSearchRegression.GSRegData)
     data.expvars = data.expvars[vars]
     data.expvars_data = data.expvars_data[:,vars]
     
-    data = addextras(data, lassonumvars)
-
+    if( addextrasflag )
+        data = addextras(data, lassonumvars, betas, lambda)
+    end
+    
     return data, vars
 end
 
 function computablevars(nvars::Int)
-    return 8
+    return 3
     min(Int(floor(log(2,Sys.total_memory()/2 ^30) + 21)), nvars)
 end
 
@@ -47,7 +53,7 @@ function lassoselection(data)
     nvars = computablevars(size(data.expvars,1))
 
     if nvars >= size(data.expvars,1)
-        return data.expvars
+        return data.expvars, nothing
     end
 
     path = glmnet(data.expvars_data, data.depvar_data; nlambda=1000)
@@ -58,10 +64,10 @@ function lassoselection(data)
             if cant == nvars 
                 best = i
             end
-            break;
+            break
         end
         best = i
     end
 
-    path.betas[:, best]
+    return path.betas[:, best], path.lambda[best]
 end
