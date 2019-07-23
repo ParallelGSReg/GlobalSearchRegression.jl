@@ -3,13 +3,15 @@ Initialize options
 """
 function create_result(data, fixedvariables, outsample, criteria, ttest, modelavg, residualtest, orderresults)  
 
-    if :r2adj ∉ criteria
-        push!(criteria, :r2adj)
+    if outsample == nothing
+        outsample = 0
     end
 
-    if :rmseout ∉ criteria && (outsample isa Array && size(outsample, 1) > 0) || (!(outsample isa Array) && outsample > 0)
-            push!(criteria, :rmseout)
+    if (outsample isa Array && size(outsample, 1) > 0) || (!(outsample isa Array) && outsample > 0)
+        push!(criteria, :rmseout)
     end
+
+    criteria = unique(criteria)
 
     datanames = create_datanames(data, criteria, ttest, modelavg, residualtest)
 
@@ -102,8 +104,8 @@ function get_outsample_subset(depvar_data, expvars_data, outsample, selected_var
         depvar_view = depvar_data[outsample, 1]
         expvars_view = expvars_data[outsample, selected_variables_index]
     else
-        depvar_view = depvar_data[end-outsample:end, 1]
-        expvars_view = expvars_data[end-outsample:end, selected_variables_index]
+        depvar_view = depvar_data[end-outsample+1:end, 1]
+        expvars_view = expvars_data[end-outsample+1:end, selected_variables_index]
     end
     return depvar_view, expvars_view
 end

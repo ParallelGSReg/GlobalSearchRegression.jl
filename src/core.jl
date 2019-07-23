@@ -15,7 +15,7 @@ function gsr(
     interaction::Union{Nothing, Array}=nothing,
     preliminaryselection::Union{Nothing, Symbol}=nothing,
     fixedvariables::Union{Nothing, Array}=AllSubsetRegression.FIXEDVARIABLES_DEFAULT,
-    outsample=AllSubsetRegression.OUTSAMPLE_DEFAULT,
+    outsample::Union{Nothing, Int, Array}=AllSubsetRegression.OUTSAMPLE_DEFAULT,
     criteria::Array=AllSubsetRegression.CRITERIA_DEFAULT,
     ttest::Bool=AllSubsetRegression.TTEST_DEFAULT,
     modelavg::Bool=AllSubsetRegression.MODELAVG_DEFAULT,
@@ -76,7 +76,7 @@ function gsr(
     interaction::Union{Nothing, Array}=nothing,
     preliminaryselection::Union{Nothing, Symbol}=nothing,
     fixedvariables::Union{Nothing, Array}=AllSubsetRegression.FIXEDVARIABLES_DEFAULT,
-    outsample=AllSubsetRegression.OUTSAMPLE_DEFAULT,
+    outsample::Union{Nothing, Int, Array}=AllSubsetRegression.OUTSAMPLE_DEFAULT,
     criteria::Array=AllSubsetRegression.CRITERIA_DEFAULT,
     ttest::Bool=AllSubsetRegression.TTEST_DEFAULT,
     modelavg::Bool=AllSubsetRegression.MODELAVG_DEFAULT,
@@ -89,7 +89,7 @@ function gsr(
     exportsummary::Union{Nothing, String}=EXPORTSUMMARY_DEFAULT
 )
 
-    if fe_lag == nothing || seasonaladjustment != nothing
+    if fe_lag == nothing
         removemissings = true
     else
         removemissings = false
@@ -113,7 +113,7 @@ function gsr(
     end
 
     original_data = copy_data(data)
-    
+
     if preliminaryselection_enabled(preliminaryselection)
         preliminaryselection = Symbol(preliminaryselection)
         if !validate_preliminaryselection(preliminaryselection)
@@ -141,10 +141,10 @@ function gsr(
     end
 
     if exportcsv != nothing
-        GlobalSearchRegression.Output.csv(data, filename=exportscsv)
+        GlobalSearchRegression.Output.csv(data, filename=exportcsv)
     end
 
-    #println(GlobalSearchRegression.Output.summary(data, filename=exportsummary))
+    println(GlobalSearchRegression.Output.summary(data, filename=exportsummary))
 
     return data
 end

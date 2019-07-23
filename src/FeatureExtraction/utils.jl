@@ -128,7 +128,7 @@ function data_add_fe_lag(data, fe_vars)
     depvar_enabled = false
 
     for var in fe_vars
-        if var in data.expvars
+        if var[1] in data.expvars
             col = GlobalSearchRegression.get_column_index(var[1], data.expvars)
             num_cols = 0
             for i = 1:var[2]
@@ -213,7 +213,7 @@ function data_add_interaction(data, interaction)
     if !GlobalSearchRegression.in_vector(interaction, data.expvars)
         error(INTERACTION_EQUATION_ERROR)
     end
-
+    
     num_variables = size(interaction, 1)
     infix = "_"
     

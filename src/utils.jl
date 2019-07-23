@@ -60,6 +60,7 @@ function filter_data_by_empty_values(data)
     data.panel_data = panel_data
     data.time_data = time_data
     data.nobs = size(data.depvar_data, 1)
+    data.removemissings = true
 
     return data
 end
@@ -144,6 +145,7 @@ function copy_data(data::GSRegData)
     new_data.options = copy(data.options)
     new_data.previous_data = copy(data.previous_data)
     new_data.results = copy(data.results)
+    
     return new_data
 end
 
@@ -247,4 +249,21 @@ function get_selected_variables(order, datanames, intercept; fixedvariables=noth
         push!(cols, GlobalSearchRegression.get_column_index(:_cons, datanames))
     end
     return cols
+end
+
+"""
+Add intercept
+"""
+function add_intercept!(data)
+    data.expvars_data = hcat(data.expvars_data, ones(data.nobs))
+    push!(data.expvars, :_cons)
+end
+
+"""
+Remove intercept
+"""
+function remove_intercept!(data)
+    cons_index = get_column_index(:_cons, data.expvars)
+    data.expvars_data = hcat(data.expvars_data[:, 1:cons_index-1], data.expvars_data[:, cons_index+1:end])
+    data.expvars = vcat(data.expvars[1:cons_index-1], data.expvars[cons_index+1:end])
 end

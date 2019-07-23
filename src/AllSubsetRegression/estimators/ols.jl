@@ -1,7 +1,7 @@
 function ols(
         data::GlobalSearchRegression.GSRegData;
         fixedvariables::Union{Nothing, Array}=FIXEDVARIABLES_DEFAULT,
-        outsample=OUTSAMPLE_DEFAULT,
+        outsample::Union{Nothing, Int, Array}=OUTSAMPLE_DEFAULT,
         criteria::Array=CRITERIA_DEFAULT,
         ttest::Bool=TTEST_DEFAULT,
         modelavg::Bool=MODELAVG_DEFAULT,
@@ -24,7 +24,7 @@ end
 function ols!(
     data::GlobalSearchRegression.GSRegData;
     fixedvariables::Union{Nothing, Array}=FIXEDVARIABLES_DEFAULT,
-    outsample=OUTSAMPLE_DEFAULT,
+    outsample::Union{Nothing, Int, Array}=OUTSAMPLE_DEFAULT,
     criteria::Array=CRITERIA_DEFAULT,
     ttest::Bool=TTEST_DEFAULT,
     modelavg::Bool=MODELAVG_DEFAULT,
@@ -34,6 +34,7 @@ function ols!(
 
     result = create_result(data, fixedvariables, outsample, criteria, ttest, modelavg, residualtest, orderresults)
     execute!(data, result)
+
     GlobalSearchRegression.addresult!(data, result)
     data = addextras(data, result)
 
@@ -86,14 +87,14 @@ function execute!(data::GlobalSearchRegression.GSRegData, result::AllSubsetRegre
     result.data = Array(result_data)
     
     if :cp in result.criteria
-        result.data[ :, datanames_index[:cp] ] = (result.data[ :, datanames_index[:nobs] ] .- maximum(result.data[ :, datanames_index[:ncoef] ]) .- 2) .* (result.data[ :,datanames_index[:rmse] ] ./ minimum(result.data[ :,datanames_index[:rmse] ])) .- (result.data[ :,datanames_index[:nobs] ] .- 2 .* result.data[ :,datanames_index[:ncoef] ])
+        result.data[ :, datanames_index[:cp] ] = (result.data[ :, datanames_index[:nobs] ] .- maximum(result.data[ :, datanames_index[:ncoef] ]) .- 2) .* (result.data[ :,datanames_index[:rmse] ] ./ minimum(result.data[ :,datanames_index[:rmse] ])) .- (result.data[ :, datanames_index[:nobs] ] .- 2 .* result.data[ :, datanames_index[:ncoef] ])
     end
 
     len_criteria = length(result.criteria)
     for criteria in result.criteria
-        result.data[ :,datanames_index[:order] ] += AVAILABLE_CRITERIA[criteria]["index"] * (1 / len_criteria) * ( (result.data[ :,datanames_index[criteria] ] .- mean(result.data[ :,datanames_index[criteria] ]) ) ./ std(result.data[ :,datanames_index[criteria] ]) )
+        result.data[ :,datanames_index[:order] ] += AVAILABLE_CRITERIA[criteria]["index"] * (1 / len_criteria) * ( (result.data[ :, datanames_index[criteria] ] .- mean(result.data[ :, datanames_index[criteria] ]) ) ./ std(result.data[ :, datanames_index[criteria] ]) )
     end
-    
+
     if result.modelavg
         delta = maximum(result.data[:, datanames_index[:order]]) .- result.data[:, datanames_index[:order]]
         w1 = exp.(-delta/2)
@@ -101,7 +102,7 @@ function execute!(data::GlobalSearchRegression.GSRegData, result::AllSubsetRegre
         result.modelavg_data = Vector{Float64}(undef, size(result.datanames))
         weight_pos = (result.ttest) ? 4 : 2
         for expvar in data.expvars
-            obs = result.data[:,datanames_index[Symbol(string(expvar, "_b"))]]
+            obs = result.data[:, datanames_index[Symbol(string(expvar, "_b"))]]
             if result.ttest
                 obs = hcat(obs, result.data[:, datanames_index[Symbol(string(expvar, "_bstd"))]])
                 obs = hcat(obs, result.data[:, datanames_index[Symbol(string(expvar, "_t"))]])
@@ -119,7 +120,9 @@ function execute!(data::GlobalSearchRegression.GSRegData, result::AllSubsetRegre
         end
 
         for criteria in [:nobs, :r2adj, :F, :order]
-            result.modelavg_data[datanames_index[criteria]] = sum(result.data[:, datanames_index[criteria]] .* result.data[:, datanames_index[:weight]])
+            if criteria in keys(datanames_index)
+                result.modelavg_data[datanames_index[criteria]] = sum(result.data[:, datanames_index[criteria]] .* result.data[:, datanames_index[:weight]])
+            end
         end
     end
 
@@ -208,8 +211,8 @@ function execute_row!(
     num_job=nothing,
     iteration_num=nothing
 )
-    selected_variables_index = GlobalSearchRegression.get_selected_variables(order, expvars, intercept, fixedvariables=fixedvariables, num_jobs=num_jobs, num_job=num_job, iteration_num=iteration_num)    
 
+    selected_variables_index = GlobalSearchRegression.get_selected_variables(order, expvars, intercept, fixedvariables=fixedvariables, num_jobs=num_jobs, num_job=num_job, iteration_num=iteration_num)    
     depvar_subset, expvars_subset = get_insample_subset(depvar_data, expvars_data, outsample, selected_variables_index)
     outsample_enabled = size(depvar_subset, 1) < size(depvar_data, 1)
 
@@ -273,7 +276,7 @@ function execute_row!(
         result_data[ order, datanames_index[:bic] ] = result_data[ order, datanames_index[:nobs] ] * log.(result_data[ order, datanames_index[:rmse] ]) + ( result_data[ order, datanames_index[:ncoef] ] - 1 ) * log.(result_data[ order, datanames_index[:nobs] ]) + result_data[ order, datanames_index[:nobs] ] + result_data[ order, datanames_index[:nobs] ] * log(2π)
     end
 
-    if :r2adj in criteria
+    if :r2adj in criteria || :r2adj in keys(datanames_index)
         result_data[ order, datanames_index[:r2adj] ] = 1 - (1 - result_data[ order, datanames_index[:r2] ]) * ((result_data[ order, datanames_index[:nobs] ] - 1) / (result_data[ order, datanames_index[:nobs] ] - result_data[ order, datanames_index[:ncoef] ]))
     end
 

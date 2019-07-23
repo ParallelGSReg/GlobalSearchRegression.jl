@@ -4,8 +4,8 @@ function featureextraction(
     fe_log::Union{Nothing, String, Symbol, Array{String}, Array{Symbol}}=nothing,
     fe_inv::Union{Nothing, String, Symbol, Array{String}, Array{Symbol}}=nothing,
     fe_lag::Union{Nothing, Array}=nothing,
-    interaction::Union{Nothing, Array}=nothing,
-    removemissings=REMOVEMISSINGS_DEFAULT
+    interaction::Union{Nothing, Array, Dict}=nothing,
+    removemissings::Bool=REMOVEMISSINGS_DEFAULT
     )
 
     return featureextraction!(
@@ -25,12 +25,12 @@ function featureextraction!(
     fe_log::Union{Nothing, String, Symbol, Array{String}, Array{Symbol}}=nothing,
     fe_inv::Union{Nothing, String, Symbol, Array{String}, Array{Symbol}}=nothing,
     fe_lag::Union{Nothing, Array}=nothing,
-    interaction::Union{Nothing, Array}=nothing,
-    removemissings=REMOVEMISSINGS_DEFAULT
+    interaction::Union{Nothing, Array, Dict}=nothing,
+    removemissings::Bool=REMOVEMISSINGS_DEFAULT
     )
 
     data = execute!(
-        GlobalSearchRegression.copy_data(data),
+        data,
         fe_sqr=fe_sqr,
         fe_log=fe_log,
         fe_inv=fe_inv,
@@ -40,7 +40,7 @@ function featureextraction!(
     )
 
     data = addextras(data, fe_sqr, fe_log, fe_inv, fe_lag, interaction, removemissings)
-
+    
     return data
 end
 
@@ -50,9 +50,13 @@ function execute!(
     fe_log::Union{Nothing, String, Symbol, Array{String}, Array{Symbol}}=nothing,
     fe_inv::Union{Nothing, String, Symbol, Array{String}, Array{Symbol}}=nothing,
     fe_lag::Union{Nothing, Array}=nothing,
-    interaction::Union{Nothing, Array}=nothing,
-    removemissings=REMOVEMISSINGS_DEFAULT
+    interaction::Union{Nothing, Array, Dict}=nothing,
+    removemissings::Bool=REMOVEMISSINGS_DEFAULT
     )
+
+    if data.intercept
+        GlobalSearchRegression.remove_intercept!(data)
+    end
 
     if fe_sqr != nothing
         data = data_add_fe_sqr(data, parse_fe_variables(fe_sqr, data.expvars))
@@ -72,6 +76,10 @@ function execute!(
 
     if interaction != nothing
         data = data_add_interaction(data, parse_fe_variables(interaction, data.expvars))
+    end
+
+    if data.intercept
+        GlobalSearchRegression.add_intercept!(data)
     end
 
     if removemissings

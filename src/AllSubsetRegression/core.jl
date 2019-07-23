@@ -36,10 +36,12 @@ function to_string(data::GlobalSearchRegression.GSRegData, result::AllSubsetRegr
 
     out *= @sprintf("──────────────────────────────────────────────────────────────────────────────\n")
     out *= @sprintf(" Observations                        %-10d\n", result.bestresult_data[datanames_index[:nobs]])
-    out *= @sprintf(" Adjusted R²                         %-10f\n", result.bestresult_data[datanames_index[:r2adj]])
     out *= @sprintf(" F-statistic                         %-10f\n", result.bestresult_data[datanames_index[:F]])
+    if :r2adj in result.datanames 
+        out *= @sprintf(" Adjusted R²                         %-10f\n", result.bestresult_data[datanames_index[:r2adj]])
+    end
     for criteria in result.criteria
-        if AVAILABLE_CRITERIA[criteria]["verbose_show"]
+        if AVAILABLE_CRITERIA[criteria]["verbose_show"] && criteria != :r2adj
     out *= @sprintf(" %-30s      %-10f\n", AVAILABLE_CRITERIA[criteria]["verbose_title"], result.bestresult_data[datanames_index[criteria]])
         end
     end
@@ -62,6 +64,9 @@ function to_string(data::GlobalSearchRegression.GSRegData, result::AllSubsetRegr
         end
         out *= @sprintf("\n")
         out *= @sprintf("──────────────────────────────────────────────────────────────────────────────\n")
+
+        println("69")
+        println(data.expvars)
 
         for varname in data.expvars
             out *= @sprintf(" %-35s", varname)
