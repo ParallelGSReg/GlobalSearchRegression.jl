@@ -163,8 +163,6 @@ function execute_job!(
     residualtest,
     fixedvariables
 )
-    @time begin
-
     for j = 1:ops_per_worker
         order = (j-1) * num_jobs + num_job
         execute_row!(
@@ -187,7 +185,6 @@ function execute_job!(
             num_job=num_job,
             iteration_num=j
         )
-    end
     end
 end
 

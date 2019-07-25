@@ -147,11 +147,11 @@ function gsr(
         GlobalSearchRegression.Output.csv(data, filename=exportcsv)
     end
 
-    println(GlobalSearchRegression.Output.summary(data, filename=exportsummary))
-
     if exportlatex != nothing
         GlobalSearchRegression.Output.latex(data, original_data, path=exportlatex)
     end
+
+    println(GlobalSearchRegression.Output.summary(data, filename=exportsummary))
 
     return data
 end

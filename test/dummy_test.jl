@@ -1,27 +1,22 @@
 using CSV, GlobalSearchRegression, Distributed
 
-data = CSV.read("visitors.csv")
+data = CSV.read("database.csv")
 
-@time data = GlobalSearchRegression.gsr(
-    "australia china japan uk", 
+data = GlobalSearchRegression.gsr(
+    "y x*", 
     data,
     method=:precise,
     intercept=true,
-    time=:date,
     removeoutliers=true,
-    fe_sqr=[:china],
-    fe_log=[:japan],
-    fe_inv=:uk,
-    fe_lag=[:japan => 1],
+    fe_sqr=[:x1],
+    fe_log=[:x2],
+    fe_inv=:x3,
     preliminaryselection=:lasso,
     outsample=10,
-    criteria=[:aic],
+    criteria=[:aic, :aicc],
     ttest=true,
     modelavg=true,
     residualtest=true,
     orderresults=true,
-    kfoldcrossvalidation=true,
-    numfolds=3
-    #exportcsv="salida.csv",
-    #exportlatex="/home/valentin/GSREG.zip"
+    exportlatex="GSREG.zip"
 )

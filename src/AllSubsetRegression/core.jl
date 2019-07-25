@@ -65,9 +65,6 @@ function to_string(data::GlobalSearchRegression.GSRegData, result::AllSubsetRegr
         out *= @sprintf("\n")
         out *= @sprintf("──────────────────────────────────────────────────────────────────────────────\n")
 
-        println("69")
-        println(data.expvars)
-
         for varname in data.expvars
             out *= @sprintf(" %-35s", varname)
             out *= @sprintf(" %-10f", result.modelavg_data[datanames_index[Symbol(string(varname, "_b"))]])

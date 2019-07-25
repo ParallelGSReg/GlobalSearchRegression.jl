@@ -43,7 +43,7 @@ function lasso!(data::GlobalSearchRegression.GSRegData; addextrasflag=true)
 end
 
 function computablevars(nvars::Int)
-    return 3
+    return 20
     min(Int(floor(log(2,Sys.total_memory()/2 ^30) + 21)), nvars)
 end
 
