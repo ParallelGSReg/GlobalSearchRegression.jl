@@ -68,6 +68,15 @@ function kfoldcrossvalidation(
         reduced = GlobalSearchRegression.copy_data(data)
         reduced.depvar_data = data.depvar_data[dataset]
         reduced.expvars_data = data.expvars_data[dataset, :]
+
+        if reduced.time != nothing
+            reduced.time_data = data.time_data[dataset]
+        end
+        
+        if reduced.panel != nothing
+            reduced.panel_data = data.panel_data[dataset]
+        end
+
         reduced.nobs = size(dataset, 1)
         _, vars = GlobalSearchRegression.PreliminarySelection.lasso!(reduced, addextrasflag=false)
 
