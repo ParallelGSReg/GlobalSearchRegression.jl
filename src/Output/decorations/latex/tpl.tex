@@ -320,12 +320,10 @@ where $T{j}$ is the total number of time series observations for panel-id = j.
 
 Main descriptive statistics for All-subset-regression potential covariates are presented in table 1:
 
-\clearpage
-
 \begin{table}[!h]
   \centering
   \caption{Descriptive Statistics for the main dataset}
-    \begin{tabular}{|p{2cm}|p{4cm}|c|c|c|c|c|c|}
+    \begin{tabular}{|p{2cm}|c|c|c|c|c|c|c|}
     \hline
     Variable & Description & Obs. & Mean & Sd & Max & Min & \% Miss \\
     \hline
@@ -345,7 +343,7 @@ Main descriptive statistics for All-subset-regression potential covariates are p
     Variable & Description & Obs. & Mean & Sd & Max & Min & \% Miss \\
     \hline
     \hline
-    {{/name}}{{#name}}{{name}} & Insert Description & {{nobs}} & {{mean}} & {{std}} & {{max}} & {{min}} & {{miss}}\% \\ 
+    {{/name}}{{#name}}{{name}} &  & {{nobs}} & {{mean}} & {{std}} & {{max}} & {{min}} & {{miss}}\% \\ 
     {{/name}}{{/descriptive}}\hline
     \end{tabular}
 \end{table}
@@ -471,13 +469,15 @@ The following table shows main statistics of coefficient and t-test distribution
     \hline
     Mode              & {{b.mode}}     & {{t.mode}} \\
     \hline
-    Skewness          & {{b.std}}      & {{t.std}} \\
+    Std               & {{b.std}}      & {{t.std}} \\
     \hline
-    kurtosis          & {{b.skew}}     & {{t.skew}} \\
+    Skewness          & {{b.skew}}     & {{t.skew}} \\
     \hline
-    Positive Share    & {{b.kurt}}     & {{t.kurt}} \\
+    kurtosis          & {{b.kurt}}     & {{t.kurt}} \\
     \hline
-    Significant Share & {{b.posshare}} & {{t.sigshare}} \\
+    Positive Share    & {{posshare}} &  \\
+    \hline
+    Significant Share &  & {{sigshare}} \\
     \hline
     \end{tabular}
 \end{table}
@@ -502,22 +502,18 @@ The following table shows main statistics of coefficient and t-test distribution
   \caption{K-fold cross-validation Results}
     \begin{tabular}{l c c}
     \hline
-    \multicolumn{3}{c}{K-fold scheme:\textbf{Insert scheme}}    \\
-                    & {{kfolds}}-fold         & {{kfolds}}-fold \\
-    Variables       & Mean                    & Median          \\
+    \multicolumn{3}{c}{K-fold scheme:\textbf{Insert scheme}}                             \\
+               &                  \multicolumn{2}{c}{ {{kfolds}}-fold }                  \\
+    Variables  & Mean                             & Median                               \\
     \hline
     \hline
-{{ median }}
---
-{{ average }}
     {{#kfoldvars}}
-      {{ varname }} & {{ meancoef }}{{stars}} & {{ mediancoef }}{{stars}} \\
-                    & {{ meanstd }}           & {{ medianstd }}           \\
+    {{name}}   & {{#mean}}{{b}}{{stars}}{{/mean}} & {{#median}}{{b}}{{stars}}{{/median}} \\
+               & {{#mean}}{{bstd}}{{/mean}}       & {{#median}}{{bstd}}{{/median}}       \\
     {{/kfoldvars}}
     \hline
 
-    Error out-sample &     &   \\
-                     &     &   \\
+    Error out-sample &  {{#outsample}}{{mean}}{{/outsample}}   & {{#outsample}}{{median}}{{/outsample}} \\
     \hline
     \hline
     \multicolumn{3}{c}{\textit{Standard errors in parentheses}} \\

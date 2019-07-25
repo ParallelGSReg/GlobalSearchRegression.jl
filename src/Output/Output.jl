@@ -11,7 +11,7 @@ module Output
             DataFrames,
             Distributions,
             Distributed
-    using Plots
+    using Plots, StatsPlots
     using ..GlobalSearchRegression
 
     export csv, summary, latex

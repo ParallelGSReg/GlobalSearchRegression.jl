@@ -1,15 +1,18 @@
-using CSV, GlobalSearchRegression, Distributed
-
-data = CSV.read("test/data/small.csv")
-
-data = GlobalSearchRegression.Preprocessing.input("y x*", data, intercept=true)
-result = GlobalSearchRegression.AllSubsetRegression.ols(
+using CSV, GlobalSearchRegression, Distributed, DataFrames, CSV
+ 
+data = CSV.read("data/fat.csv")
+@time data = GlobalSearchRegression.gsr(
+    "y *", 
     data,
+    intercept=true,
+    preliminaryselection=:lasso,
     outsample=10,
-    criteria=[:r2adj, :bic, :aic, :aicc, :cp, :rmse, :sse, :rmseout],
+    criteria=[:aic, :aicc, :cp],
     ttest=true,
     modelavg=true,
     residualtest=true,
-    orderresults=false
+    orderresults=true,
+    kfoldcrossvalidation=true,
+    numfolds=3,
+    exportlatex=ARGS[1]
 )
-GlobalSearchRegression.OutputDecoration.csv_res(result.results[1], "salida.csv")
