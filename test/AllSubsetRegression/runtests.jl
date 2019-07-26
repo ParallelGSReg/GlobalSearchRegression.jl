@@ -6,8 +6,6 @@ data_small = CSV.read(DATABASE_SMALL)
     @testset "With T-test" begin
         res = gsr("y x*", data_small, ttest=true)
 
-        @show res.results[1]
-
         @test 1 == 1
     end
 end

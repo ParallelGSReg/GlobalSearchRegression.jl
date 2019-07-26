@@ -1,4 +1,4 @@
-using CSV, GlobalSearchRegression, Distributed
+using CSV, GlobalSearchRegression
 
 data = CSV.read("visitors.csv")
 
@@ -18,6 +18,7 @@ data = GlobalSearchRegression.gsr(
     residualtest=true,
     orderresults=true,
     kfoldcrossvalidation=true,
-    numfolds=5,
-    exportcsv="visitors_output.csv"
+    numfolds=10,
+    exportcsv="visitors_output.csv",
+    exportlatex="latex.zip"
 )
