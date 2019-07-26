@@ -335,4 +335,26 @@ function create_figures(data, destfolder)
     labels = convert(Array{String}, a[:,2])
     bar(labels, a[:,1], legend = false, color = :blues, orientation = :horizontal, xlabel="Average impact of each variable on the Adj. R2")
     savefig(joinpath(destfolder, "cov_relevance.png"))
+
+    positivegainsvariables = findall(x => x > 0, a[:,1])
+    negativegainsvariables = findall(x => x < 0, a[:,1])
+
+    intelligent_text = Dict()
+    intelligent_text["numofpositivegainsvariables"] = size(positivegainsvariables, 1)
+    intelligent_text["numofnegativegainsvariables"] = size(negativegainsvariables, 1)
+
+    intelligent_text["multiple_positive_variables"] = intelligent_text["numofpositivegainsvariables"] > 1
+    intelligent_text["multiple_negative_variables"] = intelligent_text["numofpositivegainsvariables"] > 1
+    intelligent_text["no_negative_variables"] = intelligent_text["numofnegativegainsvariables"] == 0
+
+    
+    intelligent_text["bestvar"] = a[1,2]
+    intelligent_text["bestvar_gainsinperc"] = a[1,1]
+
+    intelligent_text["worstvar"] = a[end,2]
+    intelligent_text["worstvar_gainsinperc"] = a[end,1]
+
+    dict[string(GlobalSearchRegression.AllSubsetRegression.ALLSUBSETREGRESSION_EXTRAKEY)]["intelligent_text"] = intelligent_text
+
+
 end
