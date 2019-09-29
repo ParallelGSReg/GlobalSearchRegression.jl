@@ -1,13 +1,13 @@
 # GlobalSearchRegression [![Build Status](https://travis-ci.org/ParallelGSReg/GlobalSearchRegression.jl.svg?branch=master)](https://travis-ci.org/ParallelGSReg/GlobalSearchRegression.jl) [![](https://img.shields.io/badge/docs-latest-blue.svg)](https://parallelgsreg.github.io/GlobalSearchRegression.jl/)
 
 ## Abstract
-GlobalSearchRegression is both the world-fastest all-subset-regression command (a widespread tool for automatic model/feature selection) and a first-step to develop a coeherent framework to [merge](http://web.stanford.edu/class/ee380/Abstracts/140129-slides-Machine-Learning-and-Econometrics.pdf) Machine Learning and Econometric algorithms. 
+GlobalSearchRegression is both the world-fastest all-subset-regression command (a widespread tool for automatic model/feature selection) and a first-step to develop a coeherent framework to [merge](http://web.stanford.edu/class/ee380/Abstracts/140129-slides-Machine-Learning-and-Econometrics.pdf) Machine Learning and Econometric algorithms.
 
 Written in Julia, it is a High Performance Computing version of the [Stata-gsreg](https://www.researchgate.net/profile/Pablo_Gluzmann/publication/264782750_Global_Search_Regression_A_New_Automatic_Model-selection_Technique_for_Cross-section_Time-series_and_Panel-data_Regressions/links/53eed18a0cf23733e812c10d/Global-Search-Regression-A-New-Automatic-Model-selection-Technique-for-Cross-section-Time-series-and-Panel-data-Regressions.pdf?origin=publication_detail) command (get the original code [here](https://ideas.repec.org/c/boc/bocode/s457737.html)). In a multicore personal computer (we use a Threadripper 1950x build for benchmarks), it runs up-to 100 times faster than the original Stata-code and up-to 10 times faster than well-known R-alternatives ([pdredge](https://www.rdocumentation.org/packages/MuMIn/versions/1.42.1/topics/pdredge)).
 
 Notwithstanding, GlobalSearchRegression main focus is not only on execution-times but also on progressively combining Machine Learning  algorithms with Econometric diagnosis tools into a friendly Graphical User Interface ([GUI](https://github.com/ParallelGSReg/GlobalSearchRegressionGUI.jl)) to simplify embarrassingly parallel quantitative-research.
 
-In a Machine Learning environment (e.g. problems focusing on predictive analysis / forecasting accuracy) there is an increasing universe of “training/test” algorithms (many of them showing very interesting performance in Julia) to compare alternative results and find-out a suitable model. 
+In a Machine Learning environment (e.g. problems focusing on predictive analysis / forecasting accuracy) there is an increasing universe of “training/test” algorithms (many of them showing very interesting performance in Julia) to compare alternative results and find-out a suitable model.
 
 However, problems focusing on causal inference require five important econometric features: 1) Parsimony (to avoid very large atheoretical models); 2) Interpretability (for causal inference, rejecting “intuition-loss” transformation and/or complex combinations); 3) Across-models sensitivity analysis (uncertainty is the only certainty; parameter distributions are preferred against “best-model” unique results); 4) Robustness to time series and panel data information (preventing the use of raw bootstrapping or random subsample selection for training and test sets); and 5) advanced residual properties (e.g. going beyond the i.i.d assumption and looking for additional panel structure properties -for each model being evaluated-, which force a departure from many traditional machine learning algorithms).
 
@@ -38,7 +38,7 @@ To run the simplest analysis just type:
 julia> using GlobalSearchRegression, DelimitedFiles
 julia> dataname = readdlm("path_to_your_data/your_data.csv", ',', header=true)
 ```
-and 
+and
 
 ```julia
 julia> gsreg("your_dependent_variable your_explanatory_variable_1 your_explanatory_variable_2 your_explanatory_variable_3 your_explanatory_variable_4", dataname)
@@ -49,7 +49,7 @@ julia> gsreg("your_dependent_variable *", data)
 ```
 It performs an Ordinary Least Squares - all subset regression (OLS-ASR) approach to choose the best model among 2<sup>n</sup>-1 alternatives (in terms of in-sample accuracy, using the adjusted R<sup>2</sup>), where:
 * DelimitedFiles is the Julia buit-in package we use to read data from csv files (throught its readdlm function);
-* "path_to_your_data/your_data.csv" is a strign that indentifies your comma-separated database, allowing for missing observations. It's assumed that your database first row is used to identify variable names;
+* "path_to_your_data/your_data.csv" is a string that indentifies your comma-separated database, allowing for missing observations. It's assumed that your database first row is used to identify variable names;
 * gsreg is the GlobalSearchRegression function that estimates all-subset-regressions (e.g. all-possible covariate combinations). In its simplest form, it has two arguments separated by a comma;
 * The first gsreg argument is the general unrestricted model (GUM). It must be typed between double quotes. Its first string is the dependent variable name (csv-file names must be respected, remember that Julia is case sensitive). After that, you can include as many explanatory variables as you want. Alternative, you can replace covariates by wildcars as in the example above (e.g. * for all other variables in the csv-files, or qwert* for all other variables in the csv-file with names starting by "qwert"); and
 * The second gsreg argument is name of the object containing your database. Following the example above, it must match the name you use in dataname = readdlm("path_to_your_data/your_data.csv", ',', header=true)
@@ -64,7 +64,7 @@ julia> gsreg("y *", data)
 ```
 
 ### Alternative GUM syntax
-The general unrestricted model (GUM; the gsreg function first argument) can be written in many different ways, looking for a smooth transition for R and Stata users. 
+The general unrestricted model (GUM; the gsreg function first argument) can be written in many different ways, looking for a smooth transition for R and Stata users.
 ```julia
 # Stata like
 julia> gsreg("y x1 x2 x3", data)
@@ -98,8 +98,8 @@ GlobalSearchRegression advanced properties include almost all Stata-GSREG option
 * time: this option determines which variable will be used to date (and pre-sort) observations. Time variable must be included as a symbol (e.g. time=:x1). Neither, gaps nor missing observations are allowed in this variable (missing observations are allowed in any other variable). By using this option, additional residuals tests are enabled.
 * residualtest: White heteroskedasticity and Jarque-Bera normality  test  will be performed when this boolean option is set to true (default is residualtest=false). Additionally, when time variable is defined, a third residual test is calculated (the Breusch-Godfrey test for autocorrelation). For each model, residual tests p-values will be saved into the user defined CSV file.
 * csv / resultscsv: the string used in this option will define the name of the CSV file to be created into the working directory with output results. By default, no CSV file is created (only main results are displayed in the REPL).
-* orderresults: a boolean option to determine whether models should be sorted (by the user' specified information criteria) or not. By default there is no sorting performed (orderresults=false). It must be noticed that setting orderresults=true, method="precise" and vectoroperation=true will significantly increase execution times. 
-* parallel: the most important option. It defines how many workers will be asigned to GlobalSearchRegresssion in order to parallelize calcultions. Using physical cores, speed-up is impressive. It is even superlinear with small databases (exploiting LLC multiplication). Notwidhstanding, speed-up efficiency decreases with logical cores (e.g. enabling hyperthreading). In order to use this option, julia must be initialized with the -p auto option or additional processors must be enables (with the addprocs(#) option, see the example below). Otherwise, Julia will only use one core and the parallel option of GlobalSearchRegression will not be available. 
+* orderresults: a boolean option to determine whether models should be sorted (by the user' specified information criteria) or not. By default there is no sorting performed (orderresults=false). It must be noticed that setting orderresults=true, method="precise" and vectoroperation=true will significantly increase execution times.
+* parallel: the most important option. It defines how many workers will be asigned to GlobalSearchRegresssion in order to parallelize calcultions. Using physical cores, speed-up is impressive. It is even superlinear with small databases (exploiting LLC multiplication). Notwidhstanding, speed-up efficiency decreases with logical cores (e.g. enabling hyperthreading). In order to use this option, julia must be initialized with the -p auto option or additional processors must be enables (with the addprocs(#) option, see the example below). Otherwise, Julia will only use one core and the parallel option of GlobalSearchRegression will not be available.
 
 ## Full-syntax example
 This is a full-syntax example, assuming Julia 1.0.1 (or newer version), GlobalSearchRegression and DataFrames are already installed in a quad-core personal computer.
@@ -117,12 +117,12 @@ julia> cd("c:\\")  # in Windows, or
 julia> cd("/home/")  # in Linux
 # Final two lines are used to perform all-subset-regression
 julia> using GlobalSearchRegression
-julia> gsreg("y x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13 x14 x15", data, 
-    intercept=true, 
-    outsample=10, 
-    criteria=[:r2adj, :bic, :aic, :aicc, :cp, :rmse, :rmseout, :sse], 
-    ttest=true, 
-    method="precise", 
+julia> gsreg("y x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13 x14 x15", data,
+    intercept=true,
+    outsample=10,
+    criteria=[:r2adj, :bic, :aic, :aicc, :cp, :rmse, :rmseout, :sse],
+    ttest=true,
+    method="precise",
     vectoroperation=true,
     modelavg=true,
     residualtest=true,
