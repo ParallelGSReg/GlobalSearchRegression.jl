@@ -206,7 +206,7 @@ Through the gsreg function of the \verb interface.jl  internal package, users se
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 In table 1, we present a performance comparison of our GLobalSearchRegression Julia-package against its main alternatives: MuMin-pdredge and GSREG (written in R and Stata\footnote{The parallel version of Stata-GSREG is still under development. A preliminary version is available upon request from authors}, respectively).
-Execution times were obtained from a HED architecture using a Threadripper 1950x build, with 16 cores (32 threads) overclocked to 3.8GHz and 64 GiB of DDR4-RAM at 3200Mhz. Comparative scripts were implemented on Julia 1.0.3, R 3.6.0 and Stata 15 IC, running on Ubuntu 18.04.2 LTS -Linux kernel 4.15-\footnote{All these test are available \href{https://github.com/ParallelGSReg/GlobalSearchRegression.jl/tree/master/juliacon2019proceedings/reproducibility}{here}} \vskip 6pt
+Execution times were obtained from a HED architecture using a Threadripper 1950x build, with 16 cores (32 threads) overclocked to 3.8GHz and 64 GiB of DDR4-RAM at 3200Mhz. Comparative scripts were implemented on Julia 1.0.3, R 3.6.0 and Stata 15 IC, running on Ubuntu 18.04.2 LTS -Linux kernel 4.15-\footnote{All these test are available \href{https://github.com/ParallelGSReg/GlobalSearchRegression.jl/tree/master/Reproducibility}{here}} \vskip 6pt
 
 For experimental -random variable- databases with a few covariates -up to 15 explanatory variables-, our Julia algorithm only provides significant time improvement in standard personal computers -e.g. 4 cores-, being up to twice faster than R and 4 times faster than Stata. For HED computers or HPC nodes, there is almost no difference among the best result obtained for each alternative. \vskip 6pt
 
