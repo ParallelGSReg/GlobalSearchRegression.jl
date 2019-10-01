@@ -1,20 +1,15 @@
-using Documenter, GSReg
-
-# Build documentation.
-# ====================
+using Documenter, GlobalSearchRegression
 
 makedocs(
     # options
+    format = Documenter.HTML(assets = ["assets/logo.png"]),
     modules = [GlobalSearchRegression],
     doctest = false,
     clean = false,
     sitename = "GlobalSearchRegression.jl",
-    format = :html,
     pages = Any[
         "Introduction" => "index.md",
-        "API" => Any[
-            "Functions" => "lib/functions.md"
-        ]
+        "API" => "api.md"
     ]
 )
 
@@ -24,7 +19,7 @@ makedocs(
 deploydocs(
     repo = "github.com/ParallelGSReg/GlobalSearchRegression.jl.git",
     target = "build",
-    julia = "0.6",
+    julia = "1.0",
     deps = nothing,
     make = nothing,
 )
