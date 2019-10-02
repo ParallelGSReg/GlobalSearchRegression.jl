@@ -39,7 +39,7 @@ mutable struct GSRegResult
             onmessage,
             parallel
         )
-        if :r2adj ∉ criteria
+        if :r2adj ∉ criteria && size(criteria,1 ) == 0
             push!(criteria, :r2adj)
         end
 

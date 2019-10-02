@@ -375,7 +375,6 @@ function to_string(result::GSRegResult)
 
     out *= @sprintf("──────────────────────────────────────────────────────────────────────────────\n")
     out *= @sprintf(" Observations                        %-10d\n", result.bestresult[result.header[:nobs]])
-    out *= @sprintf(" Adjusted R²                         %-10f\n", result.bestresult[result.header[:r2adj]])
     out *= @sprintf(" F-statistic                         %-10f\n", result.bestresult[result.header[:F]])
     for criteria in result.criteria
         if AVAILABLE_CRITERIA[criteria]["verbose_show"]
@@ -417,7 +416,6 @@ function to_string(result::GSRegResult)
         out *= @sprintf("\n")
         out *= @sprintf("──────────────────────────────────────────────────────────────────────────────\n")
         out *= @sprintf(" Observations                        %-10d\n", result.average[result.header[:nobs]])
-        out *= @sprintf(" Adjusted R²                         %-10f\n", result.average[result.header[:r2adj]])
         out *= @sprintf(" F-statistic                         %-10f\n", result.average[result.header[:F]])
         out *= @sprintf(" Combined criteria                   %-10f\n", result.average[result.header[:order]])
         out *= @sprintf("──────────────────────────────────────────────────────────────────────────────\n")

@@ -32,7 +32,7 @@ const WEIGHT = :weight
 AVAILABLE_CRITERIA = Dict(
     :r2adj => Dict(
         "verbose_title" => "Adjusted R²",
-        "verbose_show" => false,
+        "verbose_show" => true,
         "index" => 1
     ),
     :bic => Dict(
