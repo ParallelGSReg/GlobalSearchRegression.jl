@@ -448,4 +448,4 @@ function to_dict(res::GSRegResult)
     dic
 end
 
-Base.show(io::IO, result::GSRegResult) = print(to_string(result))
+Base.show(io::IO, result::GSRegResult) = print(io, to_string(result))
