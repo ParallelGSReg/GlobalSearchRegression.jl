@@ -15,5 +15,6 @@ notifications:
 
 after_success:
   - julia -e 'using Pkg; cd(Pkg.dir("GlobalSearchRegression")); Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
+  - julia -e 'cd(Pkg.dir("GlobalSearchRegression")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
   - julia -e 'using Pkg; Pkg.add("Documenter")'
   - julia -e 'using Pkg; cd(Pkg.dir("GlobalSearchRegression")); include(joinpath("docs", "make.jl"))'
