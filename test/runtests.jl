@@ -89,3 +89,6 @@ gsreg("x2 x1 y", data; csv="results.csv")
 res = gsreg("x2 x1 y", data; resultscsv="results.csv")
 
 @test size(res.results,1) == 3
+
+data[:x2] = data[:x3]*2
+@test_throws ErrorException gsreg("y x1 x2 x3", data)
