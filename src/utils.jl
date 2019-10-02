@@ -217,7 +217,7 @@ end
 
 function convert_if_is_dataframe_to_array(data)
     if isa(data, DataFrames.DataFrame)
-        data = convert(Array{Float64}, data)
+        data = convert(Matrix{Float64}, data)
     end
     return data
 end
