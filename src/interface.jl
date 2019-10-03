@@ -286,7 +286,7 @@ function gsreg(
     maxcorr = maximum(corrminusiden)
 
     if maxcorr > 0.999
-        error("Your explanatory variables are not linearly independent -perfect colinearity among covariates-")
+        error("Your explanatory variables are not linearly independent -perfect multicollinearity among covariates-")
     end
 
     result = gsreg(
