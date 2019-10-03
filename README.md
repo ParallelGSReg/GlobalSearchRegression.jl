@@ -103,6 +103,8 @@ GlobalSearchRegression advanced properties include almost all Stata-GSREG option
 
 ## Full-syntax example
 This is a full-syntax example, assuming Julia 1.0.1 (or newer version), GlobalSearchRegression and DataFrames are already installed in a quad-core personal computer.
+For parallelism to be enable, the Distributed package (including its addprocs command) must be activated before GlobalSearchRegression (in three different lines, one for Distributed, one for addprocs() and the other for GlobalSearchRegreesion, see the example below).
+
 ```julia
 # The first four lines are used to simulate data with random variables
 julia> using DataFrames
