@@ -131,6 +131,8 @@ julia> gsreg("y x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13 x14 x15", data,
     parallel=4,
     orderresults=false)
 ```
+## Limitations
+GlobalSearchRegression.jl is not able to handle databases with perfectly-collinear covariates. An error message will be retreived and users will have to select a new database with just one of these perfectly-colllinear variables. Similarly, it is not possible yet to include categorical variables as potential covariates. They should be transformed into dummmy variables before using GlobalSearchRegression.jl. Finally, string variables are not allowed.
 
 ## Credits
-The GSReg module, which perform regression analysis, was written primarily by [Demian Panigo](https://github.com/dpanigo/), [Valentín Mari](https://github.com/vmari/) and [Adán Mauri Ungaro](https://github.com/adanmauri/). The GlobalSearchRegression.jl module was inpired by GSReg for Stata, written by Pablo Gluzmann and [Demian Panigo](https://github.com/dpanigo/).
+The GSReg module, which perform regression analysis, was written primarily by [Demian Panigo](https://github.com/dpanigo/), [Valentín Mari](https://github.com/vmari/), [Adán Mauri Ungaro](https://github.com/adanmauri/) and [Nicolas Monzon](https://github.com/nicomzn) under the supervision of [Esteban Mocskos] (https://github.com/emocskos). The GlobalSearchRegression.jl module was inpired by GSReg for Stata, written by Pablo Gluzmann and [Demian Panigo](https://github.com/dpanigo/).
