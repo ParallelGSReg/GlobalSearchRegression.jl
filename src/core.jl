@@ -315,7 +315,7 @@ function proc!(result::GSRegResult)
             end
         end
 
-        for criteria in [:nobs, :r2adj, :F, :order]
+        for criteria in [:nobs, :F, :order]
             result.average[result.header[criteria]] = sum(result.results[:, result.header[criteria]] .* result.results[:, result.header[:weight]])
         end
     end
