@@ -1,3 +1,33 @@
+"""
+    gsreg(equation, data; kwargs...)
+
+`gsreg` is a GlobalSearchRegression.jl function developed
+to perform all subset regressions on a set of potencial
+covariates, in order to select relevant features.
+
+# Basic Usage Example
+```julia-repl
+julia> using GlobalSearchRegression, CSV, DataFrames
+julia> data = CSV.read("path_to_your_data/your_data.csv")
+julia> gsreg("y *", data)
+```
+# Full-Syntax Example
+```julia-repl
+julia> using GlobalSearchRegression
+julia> gsreg("y x2 x3 x4 x5 x6 x7", data, 
+    intercept=true, 
+    outsample=10, 
+    criteria=[:r2adj, :bic, :aic, :aicc, :cp, :rmse, :rmseout, :sse], 
+    ttest=true, 
+    method="precise", 
+    vectoroperation=true,
+    modelavg=true,
+    residualtest=true,
+    time=:x1,
+    csv="output.csv",
+    orderresults=false)
+```
+"""
 function gsreg(
         depvar,
         expvars,

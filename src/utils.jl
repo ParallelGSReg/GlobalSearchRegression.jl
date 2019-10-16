@@ -225,7 +225,7 @@ end
 function filter_data_valid_columns(data, depvar, expvars, datanames)
     vars = vcat([depvar], expvars)
     if isa(data, DataFrames.DataFrame)
-        data = data[vars]
+        data = data[:,vars]
     elseif isa(data, Array)
         columns = []
         for i = 1:length(vars)
