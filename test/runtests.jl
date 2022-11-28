@@ -1,11 +1,9 @@
 using Test, GlobalSearchRegression, DataFrames, Distributions
 
-data = DataFrame(Array{Union{Missing,Float64}}(randn(100,6)))
-headers = [ :y ; [ Symbol("x$i") for i = 1:size(data,2) - 1 ] ]
-names!(data, headers )
-
+data = DataFrame(Array{Union{Missing, Float64}}(randn(100, 6)), :auto)
+headers = [:y; [Symbol("x$i") for i in 1:size(data, 2)-1]]
+rename!(data, headers)
 rename!(data, :x5 => Symbol("weird_name"))
-
 data[1, 2] = missing
 data[4, 5] = missing
 
@@ -43,52 +41,36 @@ gsreg("y ~ .", data)
 # dataframe with implicit datanames
 gsreg("x2 x1 y", data)
 
-
-headers = map(e->string(e),headers)
+headers = map(e -> string(e), headers)
 
 # array with explicit datanames
-gsreg("x2 x1 y", convert(Array,data); datanames=headers)
-
+gsreg("x2 x1 y", Matrix(data); datanames = headers)
 
 # tuple with explcit datanames
-gsreg("x2 x1 y", (convert(Array,data), headers) )
+gsreg("x2 x1 y", (Matrix(data), headers))
 
 
 ############### ARGUMENTS ##############
 
-gsreg("x2 x1 y", data; intercept=false) # without constant
+gsreg("x2 x1 y", data; intercept = false) # without constant
+gsreg("x2 x1 y", data; outsample = 10) # expect 88 obs
+gsreg("x2 x1 y", data; outsample = 10, criteria = [:r2adj, :bic, :aic, :aicc, :cp, :rmse, :rmseout, :sse])
+gsreg("x2 x1 y", data; ttest = true)
+gsreg("x2 x1 y", data; vectoroperation = true)
+gsreg("x2 x1 y", data; modelavg = true)
+gsreg("x2 x1 y", data; residualtest = true)
+gsreg("x2 x1 y", data; time = :x4)
+gsreg("x2 x1 y", Matrix(data); datanames = headers, time = :x4)
+gsreg("x2 x1 y", (Matrix(data), headers); time = :x4)
+gsreg("x2 x1 y", data; summary = "summary.txt")
+gsreg("x2 x1 y", data; orderresults = true)
+gsreg("x2 x1 y", data; onmessage = message -> (println(message)))
+gsreg("x2 x1 y", data; method = "fast")
+gsreg("x2 x1 y", data; method = "precise")
+gsreg("x2 x1 y", data; csv = "results.csv")
 
-gsreg("x2 x1 y", data; outsample=10) # expect 88 obs
+res = gsreg("x2 x1 y", data; resultscsv = "results.csv")
+@test size(res.results, 1) == 3
 
-gsreg("x2 x1 y", data; outsample=10, criteria=[:r2adj, :bic, :aic, :aicc, :cp, :rmse, :rmseout, :sse])
-
-gsreg("x2 x1 y", data; ttest=true)
-
-gsreg("x2 x1 y", data; vectoroperation=true)
-
-gsreg("x2 x1 y", data; modelavg=true)
-
-gsreg("x2 x1 y", data; residualtest=true)
-
-gsreg("x2 x1 y", data; time=:x4)
-gsreg("x2 x1 y", convert(Array,data); datanames=headers, time=:x4)
-gsreg("x2 x1 y", (convert(Array,data), headers); time=:x4)
-
-gsreg("x2 x1 y", data; summary="summary.txt")
-
-gsreg("x2 x1 y", data; orderresults=true)
-
-gsreg("x2 x1 y", data; onmessage= message -> (println(message)))
-
-gsreg("x2 x1 y", data; method="fast")
-
-gsreg("x2 x1 y", data; method="precise")
-
-gsreg("x2 x1 y", data; csv="results.csv")
-
-res = gsreg("x2 x1 y", data; resultscsv="results.csv")
-
-@test size(res.results,1) == 3
-
-data[:x2] = data[:x3]*2
+data[!, :x2] = data[!, :x3] * 2
 @test_throws ErrorException gsreg("y x1 x2 x3", data)
