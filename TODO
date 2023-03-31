@@ -5,3 +5,4 @@
     - GlobalSearchRegression.jl
     - gsreg_result.jl
     - Finish utils.jl
+    - update GUI
