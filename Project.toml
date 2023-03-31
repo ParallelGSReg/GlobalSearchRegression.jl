@@ -4,7 +4,7 @@ authors = ["Demian Panigo <panigo@gmail.com>", "Valentin Mari <valentinmari@hotm
 version = "1.0.5"
 
 [compat]
-julia = "1"
+julia = "1.9.0-rc1"
 Distributions = "0.14.0"
 DataFrames = "0.16.4"
 
