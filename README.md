@@ -14,7 +14,7 @@ However, problems focusing on causal inference require five important econometri
 For all these reasons, researchers increasingly prefer advanced all-subset-regression approaches, choosing among alternative models by means of in-sample and/or out-of-sample criteria, model averaging results, bayesian priors for theoretical bounds on covariates coefficients and different residual constraints. While still unfeasible for large problems (choosing among hundreds of covariates), hardware and software innovations allow researchers to implement this approach in many different scientific projects, choosing among one billion models in a few hours using standard personal computers.
 
 ## Installation
-GlobalSearchRegression requires [Julia 1.0.1 ](https://julialang.org/downloads/platform.html) (or newer releases) to be previously installed in your computer. Then, start Julia and type "]" (without double quotes) to open the package manager.
+GlobalSearchRegression requires [Julia 1.6.7 ](https://julialang.org/downloads/platform.html) (or newer releases) to be previously installed in your computer. Then, start Julia and type "]" (without double quotes) to open the package manager.
 
 ```julia
 julia> ]

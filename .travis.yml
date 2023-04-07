@@ -3,7 +3,7 @@ sudo: false
 os:
   - linux
 julia:
-  - 1.0
+  - 1.6.7
   - nightly
 
 matrix:
