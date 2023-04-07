@@ -5,7 +5,7 @@ os:
 julia:
   - 1.6.7
   - 1.8.5
-  - 1.9.0-rc2
+  - 1.9.0-rc1
   - nightly
 
 matrix:
