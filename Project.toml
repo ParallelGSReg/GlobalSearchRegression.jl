@@ -1,7 +1,7 @@
 name = "GlobalSearchRegression"
 uuid = "59d7ae3e-306c-44d6-acde-c1fccf4c0b2e"
 authors = ["Demian Panigo <panigo@gmail.com>", "Valentin Mari <valentinmari@hotmail.com>", "Adán Mauri Ungaro <adan.mauri@gmail.com>"]
-version = "1.1.0"
+version = "1.1.2"
 
 [deps]
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
