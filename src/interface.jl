@@ -289,6 +289,7 @@ function gsreg(
 		outsample = outsample,
 		criteria = criteria,
 		ttest = ttest,
+		method = method,
 		vectoroperation = vectoroperation,
 		modelavg = modelavg,
 		residualtest = residualtest,

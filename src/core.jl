@@ -36,6 +36,7 @@ function gsreg(
 	outsample = nothing,
 	criteria = nothing,
 	ttest = nothing,
+	method = nothing,
 	vectoroperation = nothing,
 	modelavg = nothing,
 	residualtest = nothing,
@@ -55,6 +56,7 @@ function gsreg(
 		outsample,
 		criteria,
 		ttest,
+		method,
 		vectoroperation,
 		modelavg,
 		residualtest,
@@ -84,12 +86,14 @@ function gsreg_single_proc_result!(
 	outsample,
 	criteria,
 	ttest,
+	method,
 	vectoroperation,
 	residualtest,
 	time,
 	datanames,
 	datatype,
-	header)
+	header,
+	)
 
 	cols = get_selected_cols(order)
 	data_cols_num = size(data, 2)
@@ -103,8 +107,18 @@ function gsreg_single_proc_result!(
 
 	nobs = size(depvar_data, 1)
 	ncoef = size(expvars_data, 2)
-	qrf = qr(expvars_data)
-	b = qrf \ depvar_data                   # estimate
+
+	if method == PRECISE
+		fact = qr(expvars_data)
+		denominator = depvar_data
+	elseif method == FAST
+		fact = cholesky(expvars_data'expvars_data)
+		denominator = expvars_data'depvar_data
+	else
+		error(METHOD_INVALID)
+	end
+
+	b = fact \ denominator                  # estimate
 	ŷ = expvars_data * b                    # predicted values
 	er = depvar_data - ŷ                    # in-sample residuals
 	er2 = er .^ 2                           # squared errors
@@ -112,9 +126,16 @@ function gsreg_single_proc_result!(
 	df_e = nobs - ncoef                     # degrees of freedom
 	rmse = sqrt(sse / nobs)                 # root mean squared error
 	r2 = 1 - var(er) / var(depvar_data)     # model R-squared
-
+	
 	if ttest
-		bstd = sqrt.(sum((UpperTriangular(qrf.R) \ Matrix(1.0LinearAlgebra.I, ncoef, ncoef)) .^ 2, dims = 2) * (sse / df_e)) # std deviation of coefficients
+		if method==PRECISE
+			uptriang = UpperTriangular(fact.R)
+		elseif method == FAST
+			uptriang = UpperTriangular(fact.U)
+		else
+			error(METHOD_INVALID)
+		end
+		bstd = sqrt.(sum((uptriang \ Matrix(1.0LinearAlgebra.I, ncoef, ncoef)) .^ 2, dims = 2) * (sse / df_e)) # std deviation of coefficients
 	end
 
 	if outsample > 0
@@ -159,31 +180,45 @@ function gsreg_single_proc_result!(
 
 		#wtest
 		regmatw = hcat((ŷ .^ 2), ŷ, ones(size(ŷ, 1)))
-		qrfw = qr(regmatw)
-		regcoeffw = qrfw \ er2
+		if method==PRECISE
+			factw = qr(regmatw)
+			denominatorw = er2
+		elseif method == FAST
+			factw = cholesky(regmatw'regmatw)
+			denominatorw = regmatw'er2
+		else
+			error(METHOD_INVALID)
+		end
+		regcoeffw = factw \ denominatorw
 		residw = er2 - regmatw * regcoeffw
 		rsqw = 1 - dot(residw, residw) / dot(er2, er2) # uncentered R^2
 		statisticw = n * rsqw
 		wtest = ccdf(Chisq(2), statisticw)
 
-
 		results[order, header[:wtest]] = wtest
 		results[order, header[:jbtest]] = jbtest
+		
 		if time != nothing
 			e = er
 			lag = 1
 			xmat = expvars_data
-
 			n = size(e, 1)
 			elag = zeros(Float64, n, lag)
 			for ii in 1:lag  # construct lagged residuals
 				elag[ii+1:end, ii] = e[1:end-ii]
 			end
-
 			offset = lag
 			regmatbg = [xmat[offset+1:end, :] elag[offset+1:end, :]]
-			qrfbg = qr(regmatbg)
-			regcoeffbg = qrfbg \ e[offset+1:end]
+			if method==PRECISE
+				factbg = qr(regmatbg)
+				denominatorbg = e[offset+1:end]
+			elseif method == FAST
+				factbg = cholesky(regmatbg'regmatbg)
+				denominatorbg = regmatbg'e[offset+1:end]
+			else
+				error(METHOD_INVALID)
+			end
+			regcoeffbg = factbg \ denominatorbg
 			residbg = e[offset+1:end] .- regmatbg * regcoeffbg
 			rsqbg = 1 - dot(residbg, residbg) / dot(e[offset+1:end], e[offset+1:end]) # uncentered R^2
 			statisticbg = (n - offset) * rsqbg
@@ -261,6 +296,7 @@ function proc!(result::GSRegResult)
 				result.outsample,
 				result.criteria,
 				result.ttest,
+				result.method,
 				result.vectoroperation,
 				result.residualtest,
 				result.time,
@@ -290,6 +326,7 @@ function proc!(result::GSRegResult)
 					result.outsample,
 					result.criteria,
 					result.ttest,
+					result.method,
 					result.vectoroperation,
 					result.residualtest,
 					result.time,
@@ -316,6 +353,7 @@ function proc!(result::GSRegResult)
 					result.outsample,
 					result.criteria,
 					result.ttest,
+					result.method,
 					result.vectoroperation,
 					result.residualtest,
 					result.time,

@@ -6,6 +6,7 @@ mutable struct GSRegResult
     outsample              # Amount of rows (observations) that will be use as outsample
     criteria               # Ordering criteria (r2adj, caic, aic, bic, cp, rmsein, rmseout)
     ttest                  # Calculate or not the ttest
+    method                 # Method to use (precise or fast)
     vectoroperation        # Calculate using vector operations
     modelavg               # Generate model averaging report
     residualtest           # Estimate white noise residual tests
@@ -29,6 +30,7 @@ mutable struct GSRegResult
             outsample::Int,
             criteria,
             ttest,
+            method,
             vectoroperation,
             modelavg,
             residualtest,
@@ -56,6 +58,6 @@ mutable struct GSRegResult
         end
 
         header = get_result_header(expvars, intercept, ttest, residualtest, time, criteria, modelavg)
-        new(depvar, expvars, data, intercept, outsample, criteria, ttest, vectoroperation, modelavg, residualtest, time, datanames, datatype, nobs, header, orderresults, onmessage, parallel)
+        new(depvar, expvars, data, intercept, outsample, criteria, ttest, method, vectoroperation, modelavg, residualtest, time, datanames, datatype, nobs, header, orderresults, onmessage, parallel)
     end
 end
