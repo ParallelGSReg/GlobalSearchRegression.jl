@@ -5,7 +5,7 @@ const INTERCEPT_DEFAULT = true
 const INSAMPLE_MIN_SIZE = 20
 const OUTSAMPLE_DEFAULT = 0
 const TTEST_DEFAULT = false
-const METHOD_DEFAULT = "fast"
+const METHOD_DEFAULT = ""
 const CRITERIA_DEFAULT = []
 const CRITERIA_DEFAULT_OUTSAMPLE = [:rmseout]
 const CRITERIA_DEFAULT_INSAMPLE = []
@@ -19,7 +19,7 @@ const SUMMARY_DEFAULT = nothing
 const ON_MESSAGE_DEFAULT = message -> ()
 const PARALLEL_DEFAULT = nothing
 
-const AVAILABLE_METHODS = ["precise", "fast"]
+const AVAILABLE_METHODS = ["precise", "standard", ""]
 const AVAILABLE_VARIABLES = [:b, :bstd, :t_test]
 
 const INDEX = :index

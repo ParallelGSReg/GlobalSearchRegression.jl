@@ -108,12 +108,15 @@ function gsreg_single_proc_result!(
 	nobs = size(depvar_data, 1)
 	ncoef = size(expvars_data, 2)
 
-	if method == PRECISE
+	if method == STANDARD
 		fact = qr(expvars_data)
 		denominator = depvar_data
 	elseif method == FAST
 		fact = cholesky(expvars_data'expvars_data)
 		denominator = expvars_data'depvar_data
+	elseif method == PRECISE
+		fact = svd(expvars_data)
+		denominator = depvar_data
 	else
 		error(METHOD_INVALID)
 	end
@@ -128,14 +131,16 @@ function gsreg_single_proc_result!(
 	r2 = 1 - var(er) / var(depvar_data)     # model R-squared
 	
 	if ttest
-		if method==PRECISE
-			uptriang = UpperTriangular(fact.R)
+		if method==STANDARD
+			diagvcov=sum((UpperTriangular(fact.R) \ Matrix(1.0LinearAlgebra.I, ncoef, ncoef)) .^ 2, dims = 2) * (sse / df_e)
 		elseif method == FAST
-			uptriang = UpperTriangular(fact.U)
+			diagvcov=sum((UpperTriangular(fact.U) \ Matrix(1.0LinearAlgebra.I, ncoef, ncoef)) .^ 2, dims = 2) * (sse / df_e)
+		elseif method == PRECISE
+			diagvcov=diag(fact2.V * diagm(fact2.S)^(-2) * fact2.Vt * (sse2 / df_e))
 		else
 			error(METHOD_INVALID)
 		end
-		bstd = sqrt.(sum((uptriang \ Matrix(1.0LinearAlgebra.I, ncoef, ncoef)) .^ 2, dims = 2) * (sse / df_e)) # std deviation of coefficients
+		bstd = sqrt.(diagvcov) # std deviation of coefficients
 	end
 
 	if outsample > 0
@@ -180,12 +185,15 @@ function gsreg_single_proc_result!(
 
 		#wtest
 		regmatw = hcat((ŷ .^ 2), ŷ, ones(size(ŷ, 1)))
-		if method==PRECISE
+		if method==STANDARD
 			factw = qr(regmatw)
 			denominatorw = er2
 		elseif method == FAST
 			factw = cholesky(regmatw'regmatw)
 			denominatorw = regmatw'er2
+		elseif method == PRECISE
+			factw = SVD(regmatw)
+			denominatorw = er2
 		else
 			error(METHOD_INVALID)
 		end
@@ -209,12 +217,15 @@ function gsreg_single_proc_result!(
 			end
 			offset = lag
 			regmatbg = [xmat[offset+1:end, :] elag[offset+1:end, :]]
-			if method==PRECISE
+			if method==STANDARD
 				factbg = qr(regmatbg)
 				denominatorbg = e[offset+1:end]
 			elseif method == FAST
 				factbg = cholesky(regmatbg'regmatbg)
 				denominatorbg = regmatbg'e[offset+1:end]
+			elseif method == PRECISE
+				factbg = svd(regmatbg)
+				denominatorbg = e[offset+1:end]
 			else
 				error(METHOD_INVALID)
 			end

@@ -208,8 +208,10 @@ function gsreg(
 )
 	if method == PRECISE
 		datatype = Float64
-	elseif method == FAST
+	elseif method == STANDARD
 		datatype = Float32
+	elseif method == FAST
+		datatype = Float16
 	else
 		error(METHOD_INVALID)
 	end
