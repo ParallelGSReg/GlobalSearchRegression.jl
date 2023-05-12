@@ -5,7 +5,7 @@ const INTERCEPT_DEFAULT = true
 const INSAMPLE_MIN_SIZE = 20
 const OUTSAMPLE_DEFAULT = 0
 const TTEST_DEFAULT = false
-const METHOD_DEFAULT = "standard"
+const METHOD_DEFAULT = "qr_32"
 const CRITERIA_DEFAULT = []
 const CRITERIA_DEFAULT_OUTSAMPLE = [:rmseout]
 const CRITERIA_DEFAULT_INSAMPLE = []
@@ -19,7 +19,7 @@ const SUMMARY_DEFAULT = nothing
 const ON_MESSAGE_DEFAULT = message -> ()
 const PARALLEL_DEFAULT = nothing
 
-const AVAILABLE_METHODS = ["precise", "standard", ""]
+const AVAILABLE_METHODS = ["svd_64", "svd_32", "svd_16", "qr_64", "qr_32", "qr_16", "cho_64", "cho_32", "cho_16"]
 const AVAILABLE_VARIABLES = [:b, :bstd, :t_test]
 
 const INDEX = :index

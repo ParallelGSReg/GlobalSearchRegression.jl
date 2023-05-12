@@ -206,11 +206,11 @@ function gsreg(
 	onmessage = ON_MESSAGE_DEFAULT,
 	parallel = PARALLEL_DEFAULT,
 )
-	if method == PRECISE
+	if method == SVD_64 | QR_64 | CHO_64
 		datatype = Float64
-	elseif method == STANDARD
+	elseif method == SVD_32 | QR_32 | CHO_32
 		datatype = Float32
-	elseif method == FAST
+	elseif method == SVD_16 | QR_16 | CHO_16
 		datatype = Float16
 	else
 		error(METHOD_INVALID)

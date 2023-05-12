@@ -6,7 +6,7 @@ mutable struct GSRegResult
     outsample              # Amount of rows (observations) that will be use as outsample
     criteria               # Ordering criteria (r2adj, caic, aic, bic, cp, rmsein, rmseout)
     ttest                  # Calculate or not the ttest
-    method                 # Method to use (precise, standard or fast)
+    method                 # Method to use ("svd_64", "svd_32", "svd_16", "qr_64", "qr_32", "qr_16", "cho_64", "cho_32", or "cho_16")
     vectoroperation        # Calculate using vector operations
     modelavg               # Generate model averaging report
     residualtest           # Estimate white noise residual tests
