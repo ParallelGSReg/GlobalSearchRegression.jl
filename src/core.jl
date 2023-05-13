@@ -108,13 +108,13 @@ function gsreg_single_proc_result!(
 	nobs = size(depvar_data, 1)
 	ncoef = size(expvars_data, 2)
 
-	if method == QR_64 | QR_32 | QR_16 
+	if method == QR_64 | method == QR_32 | method ==  QR_16 
 		fact = qr(expvars_data)
 		denominator = depvar_data
-	elseif method == CHO_64 | CHO_32 | CHO_16 
+	elseif method == CHO_64 | method ==  CHO_32 | method ==  CHO_16 
 		fact = cholesky(expvars_data'expvars_data)
 		denominator = expvars_data'depvar_data
-	elseif method == SVD_64 | SVD_32 | SVD_16 
+	elseif method == SVD_64 | method ==  SVD_32 | method ==  SVD_16 
 		fact = svd(expvars_data)
 		denominator = depvar_data
 	else
@@ -131,11 +131,11 @@ function gsreg_single_proc_result!(
 	r2 = 1 - var(er) / var(depvar_data)     # model R-squared
 	
 	if ttest
-		if method==QR_64 | QR_32 | QR_16 
+		if method==QR_64 | method ==  QR_32 | method ==  QR_16 
 			diagvcov=sum((UpperTriangular(fact.R) \ Matrix(1.0LinearAlgebra.I, ncoef, ncoef)) .^ 2, dims = 2) * (sse / df_e)
-		elseif method == CHO_64 | CHO_32 | CHO_16 
+		elseif method == CHO_64 | method ==  CHO_32 | method ==  CHO_16 
 			diagvcov=sum((UpperTriangular(fact.U) \ Matrix(1.0LinearAlgebra.I, ncoef, ncoef)) .^ 2, dims = 2) * (sse / df_e)
-		elseif method == SVD_64 | SVD_32 | SVD_16
+		elseif method == SVD_64 | method ==  SVD_32 | method ==  SVD_16
 			diagvcov=diag(fact2.V * diagm(fact2.S)^(-2) * fact2.Vt * (sse2 / df_e))
 		else
 			error(METHOD_INVALID)
@@ -185,13 +185,13 @@ function gsreg_single_proc_result!(
 
 		#wtest
 		regmatw = hcat((ŷ .^ 2), ŷ, ones(size(ŷ, 1)))
-		if method==QR_64 | QR_32 | QR_16 
+		if method==QR_64 | method ==  QR_32 | method ==  QR_16 
 			factw = qr(regmatw)
 			denominatorw = er2
-		elseif method == CHO_64 | CHO_32 | CHO_16 
+		elseif method == CHO_64 | method ==  CHO_32 | method ==  CHO_16 
 			factw = cholesky(regmatw'regmatw)
 			denominatorw = regmatw'er2
-		elseif method == SVD_64 | SVD_32 | SVD_16
+		elseif method == SVD_64 | method ==  SVD_32 | method ==  SVD_16
 			factw = SVD(regmatw)
 			denominatorw = er2
 		else
@@ -217,13 +217,13 @@ function gsreg_single_proc_result!(
 			end
 			offset = lag
 			regmatbg = [xmat[offset+1:end, :] elag[offset+1:end, :]]
-			if method==QR_64 | QR_32 | QR_16 
+			if method==QR_64 | method ==  QR_32 | method ==  QR_16 
 				factbg = qr(regmatbg)
 				denominatorbg = e[offset+1:end]
-			elseif method == CHO_64 | CHO_32 | CHO_16 
+			elseif method == CHO_64 | method ==  CHO_32 | method ==  CHO_16 
 				factbg = cholesky(regmatbg'regmatbg)
 				denominatorbg = regmatbg'e[offset+1:end]
-			elseif method == SVD_64 | SVD_32 | SVD_16
+			elseif method == SVD_64 | method ==  SVD_32 | method ==  SVD_16
 				factbg = svd(regmatbg)
 				denominatorbg = e[offset+1:end]
 			else
