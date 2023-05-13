@@ -136,7 +136,7 @@ function gsreg_single_proc_result!(
 		elseif method == CHO_64 || method  ==  CHO_32 || method  ==  CHO_16 
 			diagvcov=sum((UpperTriangular(fact.U) \ Matrix(1.0LinearAlgebra.I, ncoef, ncoef)) .^ 2, dims = 2) * (sse / df_e)
 		elseif method == SVD_64 || method  ==  SVD_32 || method  ==  SVD_16
-			diagvcov=diag(fact2.V * diagm(fact2.S)^(-2) * fact2.Vt * (sse2 / df_e))
+			diagvcov=diag(fact.V * diagm(fact.S)^(-2) * fact.Vt * (sse2 / df_e))
 		else
 			error(METHOD_INVALID)
 		end
@@ -192,7 +192,7 @@ function gsreg_single_proc_result!(
 			factw = cholesky(regmatw'regmatw)
 			denominatorw = regmatw'er2
 		elseif method == SVD_64 || method  ==  SVD_32 || method  ==  SVD_16
-			factw = SVD(regmatw)
+			factw = svd(regmatw)
 			denominatorw = er2
 		else
 			error(METHOD_INVALID)
