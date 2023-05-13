@@ -1,6 +1,6 @@
 using GlobalSearchRegression, DataFrames, Distributions, CSV, Random
 # Insert here your working directory path
-data = DataFrame(rand(100, 26), :auto)
+data = DataFrame(rand(100, 21), :auto)
 headers = [ :y ; [ Symbol("x$i") for i = 1:size(data,2) - 1 ] ]
 rename!(data, headers)
 gsreg("y x1 x2", data)
