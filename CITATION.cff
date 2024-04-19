@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: Panigo
+    given-names: Demian Tupac
+    orcid: https://orcid.org/0000-0003-2468-1632
+  - family-names: Mauri Ungaro
+    given-names: Adan
+    orcid: https://orcid.org/0000-0003-3106-3912
+  - family-names: Mari
+    given-names: Valentin
+    orcid: https://orcid.org/0000-0003-1489-6525
+  - family-names: Glüzmann
+    given-names: Pablo
+    orcid: https://orcid.org/0000-0001-6570-383X
+  - family-names: Monzón
+    given-names: Nicolás
+    orcid: https://orcid.org/0000-0002-4846-7916
+title: "GlobalSearchRegression.jl"
+version: 1.0.7
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.7932823
+date-released: May 13, 2023
