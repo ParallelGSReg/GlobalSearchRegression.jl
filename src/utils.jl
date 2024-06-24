@@ -311,20 +311,35 @@ function get_selected_cols(i)
 	return cols
 end
 
-function export_csv(io::IO, result::GSRegResult)
-	head = []
-	for elem in sort(collect(Dict(value => key for (key, value) in result.header)))
-		push!(head, elem[2])
-	end
-	writedlm(io, [head], ',')
-	writedlm(io, result.results, ',')
+function export_csv(io::IO, obm_io::IO, result::GSRegResult)
+    head = []
+    for elem in sort(collect(Dict(value => key for (key, value) in result.header)))
+        push!(head, elem[2])
+    end
+    
+    # Write the full results to the original file
+    writedlm(io, [head], ',')
+    writedlm(io, result.results, ',')
+    
+    # Write the header and the first row of data to the OBM file
+    writedlm(obm_io, [head], ',')
+    if size(result.results, 1) > 0
+        writedlm(obm_io, result.results[1:1, :], ',')
+    end
 end
 
 """
-Exports main results with headers to file
+Exports main results with headers to file and also creates a second file with _OBM suffix
 """
 function export_csv(output::String, result::GSRegResult)
-	file = open(output, "w")
-	export_csv(file, result)
-	close(file)
+    file = open(output, "w")
+    
+    # Create the second CSV file name with _OBM suffix
+    obm_output = replace(output, ".csv" => "_OBM.csv")
+    obm_file = open(obm_output, "w")
+    
+    export_csv(file, obm_file, result)
+    
+    close(file)
+    close(obm_file)
 end
