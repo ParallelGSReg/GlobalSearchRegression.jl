@@ -1,8 +1,2 @@
 - Improve parameter types
-- Convert method string to symbol
-- Refactor:
-    - core.jl
-    - GlobalSearchRegression.jl
-    - gsreg_result.jl
-    - Finish utils.jl
-    - update GUI
+- Include logistic estimator
