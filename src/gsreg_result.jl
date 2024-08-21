@@ -25,6 +25,7 @@ mutable struct GSRegResult
     bestmodelindex         # Best model index         # Time column
     panel_id_column        # Panel ID column
     datadiff               # Data in first differences for panel data tests
+    panel_id_columndiff    # Panel ID column for first differences
     in_sample_mask         # In-sample mask
     in_sample_maskdiff     # In-sample mask for first differences
     unique_ids             # Unique IDs
@@ -32,6 +33,7 @@ mutable struct GSRegResult
     time_column            # Time column
     fixedvars              # Fixed variables
     fixedvars_colnum       # Fixed variables column
+    vce                # Variance-covariance matrix
     results                # Results array
     bestresult             # Best result
     average                # Model averaging array data
@@ -60,6 +62,7 @@ mutable struct GSRegResult
             bestmodelindex::Int,
             panel_id_column::Union{Nothing, Array{Int}},
             datadiff::Union{Nothing, Array{Float64, 2}, Array{Float32, 2}, Array{Float16, 2}},
+            panel_id_columndiff::Union{Nothing, Array{Int}},
             in_sample_mask::BitVector,
             in_sample_maskdiff::Union{Nothing, BitVector},
             unique_ids::Union{Nothing, Array{Int}},
@@ -67,6 +70,7 @@ mutable struct GSRegResult
             time_column::Union{Nothing, Array{Int}},
             fixedvars::Union{Nothing, Symbol, Array{Symbol}},  
             fixedvars_colnum::Union{Nothing, Array{Int}},
+            vce::Union{Nothing, String},
         )
         if :r2adj ∉ criteria && size(criteria,1 ) == 0
             push!(criteria, :r2adj)
@@ -87,6 +91,6 @@ mutable struct GSRegResult
             push!(datanames, :_cons)
         end
         header = get_result_header(expvars, fixedvars, ttest, residualtests, time, criteria, modelavg, paneltests)
-        new(depvar, expvars, data, intercept, outsample, criteria, ttest, method, estimator, modelavg, residualtests, time, panel_id, datanames, datatype, nobs, header, orderresults, onmessage, parallel, paneltests, id_count, SSB, bestmodelindex, panel_id_column, datadiff, in_sample_mask, in_sample_maskdiff, unique_ids, unique_times, time_column, fixedvars, fixedvars_colnum)
+        new(depvar, expvars, data, intercept, outsample, criteria, ttest, method, estimator, modelavg, residualtests, time, panel_id, datanames, datatype, nobs, header, orderresults, onmessage, parallel, paneltests, id_count, SSB, bestmodelindex, panel_id_column, datadiff, panel_id_columndiff, in_sample_mask, in_sample_maskdiff, unique_ids, unique_times, time_column, fixedvars, fixedvars_colnum, vce)
     end
 end

@@ -29,6 +29,9 @@ module GlobalSearchRegression
 	const RESIDUAL_TESTS_CROSS = [:normtest, :hettest]
 	const ORDER = :order
 	const WEIGHT = :weight
+	const AVAILABLE_VCE = ["robust", "cluster"]
+	const VCE_DEFAULT = nothing
+
 	AVAILABLE_CRITERIA = Dict(
 		:r2adj => Dict(
 			"verbose_title" => "Adjusted R²",

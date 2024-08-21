@@ -24,6 +24,7 @@ function gsreg(
     bestmodelindex=nothing,
     panel_id_column = nothing,
     datadiff = nothing,
+    panel_id_columndiff = nothing,
     in_sample_mask=nothing,
     in_sample_maskdiff=nothing,
     unique_ids=nothing,
@@ -31,7 +32,9 @@ function gsreg(
     time_column=nothing,
     fixedvars = nothing,
     fixedvars_colnum = nothing,
+    vce = nothing,
 )
+
     result = GSRegResult(
         depvar,
         expvars,
@@ -57,6 +60,7 @@ function gsreg(
         bestmodelindex,
         panel_id_column,
         datadiff,
+        panel_id_columndiff,
         in_sample_mask,
         in_sample_maskdiff,
         unique_ids,
@@ -64,6 +68,7 @@ function gsreg(
         time_column,
         fixedvars,
         fixedvars_colnum,
+        vce,
     )
     proc!(result)
     if summary !== nothing
@@ -96,6 +101,7 @@ end
     SSB,
     panel_id_column,
     datadiff,
+    panel_id_columndiff,
     in_sample_mask,
     in_sample_maskdiff,
     unique_ids,
@@ -103,6 +109,7 @@ end
     time_column,
     fixedvars,
     fixedvars_colnum,
+    vce,
     met,
     )
 
@@ -117,13 +124,13 @@ end
     b, er, er2, sse, var_er, rmse, 
     r2, bstd, rmseout               =   @inline GSPR_main_estimation_block(
                                         depvar_data, expvars_data, depvar_out, expvars_out, 
-                                        nobs, ncoef, met, ttest, outsample
+                                        nobs, ncoef, met, ttest, outsample, vce, panel_id_column
                                         ) 
     
     jbtest, wtest, panelwtest, 
     bgtest, wootest                 =   @inline GSPR_residual_tests(
                                         residualtests, panel_id, cols, intercept, in_sample_maskdiff, 
-                                        datadiff, er, expvars_data, b, er2, met, nobs, id_count, 
+                                        datadiff, panel_id_columndiff, er, expvars_data, b, er2, met, nobs, id_count, 
                                         panel_id_column,var_er, time
                                         )
 
@@ -162,6 +169,7 @@ end
     SSB,
     panel_id_column,
     datadiff,
+    panel_id_columndiff,
     in_sample_mask,
     in_sample_maskdiff,
     unique_ids,
@@ -169,6 +177,7 @@ end
     time_column,
     fixedvars,
     fixedvars_colnum,
+    vce,
     met,
     )
 
@@ -183,7 +192,7 @@ end
     b, er, er2, sse, var_er, rmse, 
     r2, bstd, rmseout               =   @inline GSPR_main_estimation_block(
                                         depvar_data, expvars_data, depvar_out, expvars_out, 
-                                        nobs, ncoef, met, ttest, outsample
+                                        nobs, ncoef, met, ttest, outsample, vce, panel_id_column
                                         ) 
     
     jbtest, wtest, panelwtest, 
@@ -224,6 +233,7 @@ end
     SSB,
     panel_id_column,
     datadiff,
+    panel_id_columndiff,
     in_sample_mask,
     in_sample_maskdiff,
     unique_ids,
@@ -231,6 +241,7 @@ end
     time_column,
     fixedvars,
     fixedvars_colnum,
+    vce,
     met,
     )
 
@@ -245,13 +256,13 @@ end
     b, er, er2, sse, var_er, rmse, 
     r2, bstd, rmseout               =   @inline GSPR_main_estimation_block(
                                         depvar_data, expvars_data, depvar_out, expvars_out, 
-                                        nobs, ncoef, met, ttest, outsample
+                                        nobs, ncoef, met, ttest, outsample, vce, panel_id_column
                                         ) 
     
     jbtest, wtest, panelwtest, 
     bgtest, wootest                 =   @inline GSPR_residual_tests(
                                         residualtests, panel_id, cols, intercept, in_sample_maskdiff, 
-                                        datadiff, er, expvars_data, b, er2, met, nobs, id_count, 
+                                        datadiff, panel_id_columndiff, er, expvars_data, b, er2, met, nobs, id_count, 
                                         panel_id_column,var_er, time
                                         )
 
@@ -287,6 +298,7 @@ end
     SSB,
     panel_id_column,
     datadiff,
+    panel_id_columndiff,
     in_sample_mask,
     in_sample_maskdiff,
     unique_ids,
@@ -294,6 +306,7 @@ end
     time_column,
     fixedvars,
     fixedvars_colnum,
+    vce,
     met,
     )
 
@@ -308,7 +321,7 @@ end
     b, er, er2, sse, var_er, rmse, 
     r2, bstd, rmseout               =   @inline GSPR_main_estimation_block(
                                         depvar_data, expvars_data, depvar_out, expvars_out, 
-                                        nobs, ncoef, met, ttest, outsample
+                                        nobs, ncoef, met, ttest, outsample, vce, panel_id_column
                                         ) 
     
     jbtest, wtest, panelwtest, 
@@ -366,6 +379,7 @@ function proc!(result::GSRegResult)
                 result.SSB,
                 result.panel_id_column,
                 result.datadiff,
+                result.panel_id_columndiff,
                 result.in_sample_mask,
                 result.in_sample_maskdiff,
                 result.unique_ids,
@@ -373,6 +387,7 @@ function proc!(result::GSRegResult)
                 result.time_column,
                 result.fixedvars,
                 result.fixedvars_colnum,
+                result.vce,
                 met,
             )
         end
@@ -407,6 +422,7 @@ function proc!(result::GSRegResult)
                     result.SSB,
                     result.panel_id_column, 
                     result.datadiff,
+                    result.panel_id_columndiff,
                     result.in_sample_mask,
                     result.in_sample_maskdiff,
                     result.unique_ids,
@@ -414,6 +430,7 @@ function proc!(result::GSRegResult)
                     result.time_column,
                     result.fixedvars,
                     result.fixedvars_colnum,
+                    result.vce,
                     met,
                 )
             )
@@ -444,6 +461,7 @@ function proc!(result::GSRegResult)
                     result.SSB,
                     result.panel_id_column,
                     result.datadiff,
+                    result.panel_id_columndiff,
                     result.in_sample_mask,
                     result.in_sample_maskdiff,
                     result.unique_ids,
@@ -451,6 +469,7 @@ function proc!(result::GSRegResult)
                     result.time_column,
                     result.fixedvars,
                     result.fixedvars_colnum,
+                    result.vce,
                     met,
                 )
             end
@@ -543,7 +562,7 @@ function to_string(result::GSRegResult)
         cols = append!(cols, result.fixedvars_colnum)
     end
     all_vars = vcat(result.expvars, result.fixedvars)
-    for pos in cols
+    @inbounds @simd for pos in cols
         varname = all_vars[pos-1]
         out *= @sprintf(" %-35s", varname)
         out *= @sprintf(" %-10f", result.bestresult[result.header[Symbol(string(varname, "_b"))]])
@@ -561,7 +580,7 @@ function to_string(result::GSRegResult)
     if result.paneltests !== nothing && result.paneltests
         out *= @sprintf(" ANOVA F-test                        %-10f\n", result.bestresult[result.header[:anovaftest]])
     end
-    for criteria in result.criteria
+    @inbounds @simd for criteria in result.criteria
         if AVAILABLE_CRITERIA[criteria]["verbose_show"]
             out *= @sprintf(" %-30s      %-10f\n", AVAILABLE_CRITERIA[criteria]["verbose_title"], result.bestresult[result.header[criteria]])
         end
@@ -585,7 +604,7 @@ function to_string(result::GSRegResult)
         end
         out *= @sprintf("\n")
         out *= @sprintf("──────────────────────────────────────────────────────────────────────────────\n")
-        for varname in all_vars
+        @inbounds @simd for varname in all_vars
             out *= @sprintf(" %-35s", varname)
             out *= @sprintf(" %-10f", result.average[result.header[Symbol(string(varname, "_b"))]])
             if result.ttest

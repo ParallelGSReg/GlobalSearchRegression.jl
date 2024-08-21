@@ -27,4 +27,5 @@ REQUIRED_TIME_VARIABLE = "time variable is required for panel data"
 INVALID_NUMBER_OF_WORKERS = "Number of parallel workers cannot exceed available cores nor be less than 1. Use addprocs() appropiately"
 SELECTED_FIXED_VARIABLES_DOES_NOT_EXISTS = "selected fixed variables do not exist"
 SELECTED_FIXED_VARIABLES_IN_EQUATION = "selected fixed variables cannot be in the equation"
-
+INVALID_VCE = "Invalid VCE. It must be \"robust\" or \"cluster\", but \"cluster\" option is only available for panel data"
+CLUSTER_WITHOUT_PANEL_ID = "vce = \"cluster\" is only available for panel data. Identify the panel_id variable"

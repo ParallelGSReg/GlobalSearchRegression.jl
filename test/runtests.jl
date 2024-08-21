@@ -3,7 +3,7 @@ addprocs()
 @everywhere using GlobalSearchRegression, DataFrames, Distributions, LinearAlgebra
 n = nworkers()
 
-data = DataFrame([Vector{Union{Float64, Missing}}(rand(100)) for _ in 1:21], :auto)
+data = DataFrame([Vector{Union{Float64, Missing}}(rand(100)) for _ in 1:11], :auto)
 headers = [ :y ; [ Symbol("x$i") for i = 1:size(data, 2) - 1 ] ]
 rename!(data, headers)
 println("Data created")
@@ -11,13 +11,13 @@ println("Data created")
 # Perform initial regression
 gsreg("y x1 x2", data)
 println("Warm-up regression done")
-
-
-a1 = @elapsed gsreg("y x*", data; method="qr_32", parallel=n)
+a1 = @elapsed gsreg("y x1 x2 x3 x4 x5", data; method="cho_32", parallel=n)
 println("Elapsed time: $a1")
-
 a2 = @elapsed gsreg("y x*", data; method="qr_32", parallel=n)
-println("Test 1 passed")
+println("Test 1 passed, elapsed time: $a2")
+a3 = @elapsed gsreg("y x*", data; method="cho_32", parallel=n)
+println("Test 1 passed, elapsed time: $a3")
+
 
 # Additional data manipulations for testing purposes
 rename!(data, :x5 => Symbol("weird_name"))
@@ -77,7 +77,7 @@ gsreg("x2 x1 y", data; ttest=true, modelavg = true)
 println("Test 19 passed")
 gsreg("x2 x1 y", data; residualtests = true)
 println("Test 20 passed")
-gsreg("x2 x1 y", data; time = :x4)
+gsreg("x2 x1 y", data; time = :x4, residualtests = true)
 println("Test 21 passed")
 gsreg("x2 x1 y", Matrix(data); datanames = headers, time = :x4)
 println("Test 22 passed")
@@ -104,7 +104,6 @@ println("Test 32 passed")
 @test_throws ErrorException gsreg("y x1 x2 x3", data)
 println("Test 33 passed")
 
-
 ############### PANEL DATA ##############
 # NON-COLLINEAR INDEPENDET VARIABLES
 #########################################
@@ -112,13 +111,13 @@ println("Test 33 passed")
 # Set seed for reproducibility
 # Random.seed!(123)
 # Create artificial panel data
-N = 10  # number of individuals
-T = 10  # number of time periods
-K = 6   # number of variables including the dependent variable
+N = 100  # number of individuals
+T = 20  # number of time periods
+K = 13   # number of variables including the dependent variable
 
 # Generate random data without missing values
 panel_data = DataFrame([rand(Normal(), N * T) for _ in 1:K], :auto)
-headers = [:id, :time, :y, :x1, :x2, :x3]
+headers = [:id, :time, :y, :x1, :x2, :x3, :x4, :x5, :x6, :x7, :x8, :x9, :x10]
 rename!(panel_data, headers)
 
 # Add panel ID and time variables
@@ -130,7 +129,7 @@ panel_data[!, :time] = repeat(1:T, outer = N)
 model1=gsreg("y x1 x2 x3", panel_data; estimator = "ols", method="cho_32")
 println(model1)
 println("Panel Test 34 (POOLED OLS) passed")
-model2=gsreg("y x1 x2 x3", panel_data; time = :time, panel_id = :id, estimator = "ols_fe", method="cho_32")
+model2=gsreg("y x*", panel_data; time = :time, panel_id = :id, estimator = "ols_fe", method="cho_32", residualtests=true, paneltests=true)
 println(model2)
 println("Panel Test 35 (FIXED EFFECT ESTIMATOR) passed")
 
@@ -202,3 +201,8 @@ println("Panel Test 39 (FIXED EFFECT ESTIMATOR WITH NON-SIGNIFICANT FE AND ANOVA
 model7=gsreg("y x1 x3 x4", panel_data2; fixedvars = :x2, time = :time, panel_id = :id, estimator = "ols_fe", method="qr_32", ttest=true, resultscsv="panel_data3.csv")
 println(model7)
 println("Panel Test 40 (FIXED EFFECT ESTIMATOR WITH NON-SIGNIFICANT FE,  ANOVA F-TEST AND FIXED VARIABLES) passed")
+
+model8=gsreg("y x1 x3", panel_data2; fixedvars = [:x2, :x4], time = :time, panel_id = :id, estimator = "ols_fe", method="cho_32", ttest=true, residualtests = true, paneltests = true, resultscsv="panel_data4.csv")
+println(model8)
+println("Panel Test 41 (FIXED EFFECT ESTIMATOR WITH NON-SIGNIFICANT FE AND ALL TESTS) passed")
+

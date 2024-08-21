@@ -3,7 +3,7 @@ function gsreg(
 	data::Union{DataFrames.DataFrame, Array, Tuple, Matrix, Array{Union{Float64,Missing}}, Array{Union{Float32,Missing}}, Array{Union{Float16,Missing}}, Nothing};
     datanames::Union{Nothing, Vector{String}, Vector{Symbol}} = nothing,
     intercept::Union{Nothing, Bool} = INTERCEPT_DEFAULT,
-    outsample::Union{Nothing, Int64} = OUTSAMPLE_DEFAULT,
+    outsample::Union{Nothing, Int} = OUTSAMPLE_DEFAULT,
     criteria::Union{Nothing, Symbol, Vector{Symbol}} = CRITERIA_DEFAULT,
     ttest::Union{Nothing, Bool} = TTEST_DEFAULT,
     method::Union{Nothing, String} = METHOD_DEFAULT,
@@ -18,7 +18,8 @@ function gsreg(
     onmessage::Union{Nothing, Function} = ON_MESSAGE_DEFAULT,
     parallel::Union{Nothing, Int} = PARALLEL_DEFAULT,
     paneltests::Union{Nothing, Bool} = PANEL_TESTS_DEFAULT,
-    fixedvars::Union{Nothing, Symbol, Array{Symbol}} = FIXED_VARIABLES_DEFAULT,
+    fixedvars::Union{Nothing, Symbol, Vector{Symbol}} = FIXED_VARIABLES_DEFAULT,
+    vce::Union{Nothing, String} = VCE_DEFAULT,
 )
     if isa(equation, String)
         equation = equation_str_to_strarr(equation)
@@ -42,8 +43,8 @@ function gsreg(
             fixedvars = [fixedvars]
         end
     end
-    validate_parameters(estimator, equation, panel_id, data, datanames, time, criteria, outsample, parallel, paneltests, expvars, fixedvars)
-    data, datadiff, panel_id_column, id_count, SSB, in_sample_mask, in_sample_maskdiff, unique_ids, unique_times, time_column, fixedvars_colnum = preprocess_data(data, depvar, expvars, datanames, time, panel_id, paneltests, outsample, residualtests, fixedvars)
+    validate_parameters(estimator, equation, panel_id, data, datanames, time, criteria, outsample, parallel, paneltests, expvars, fixedvars, vce)
+    data, datadiff, panel_id_column, panel_id_columndiff, id_count, SSB, in_sample_mask, in_sample_maskdiff, unique_ids, unique_times, time_column, fixedvars_colnum = preprocess_data(data, depvar, expvars, datanames, time, panel_id, paneltests, outsample, residualtests, fixedvars)
     finalize_data(data, equation, datanames, expvars)
     criteria = select_criteria(criteria, outsample)
     datatype = select_datatype(method)
@@ -80,6 +81,7 @@ function gsreg(
         bestmodelindex=bestmodelindex,
         panel_id_column=panel_id_column,
         datadiff=datadiff,
+        panel_id_columndiff=panel_id_columndiff,
         in_sample_mask=in_sample_mask,
         in_sample_maskdiff=in_sample_maskdiff,
         unique_ids=unique_ids,
@@ -87,6 +89,7 @@ function gsreg(
         time_column=time_column,
         fixedvars=fixedvars,
         fixedvars_colnum=fixedvars_colnum,
+        vce=vce,
     )
     if resultscsv !== nothing
         export_csv(resultscsv, result)

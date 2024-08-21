@@ -1,7 +1,7 @@
 """
 Data preparation for inner loop in core.gsreg_single_proc_result!() function
 """
-function GSPR_data_preparation(order, data, fixedvars, fixedvars_colnum, intercept, in_sample_mask, panel_id, panel_id_column, outsample)
+@inline function GSPR_data_preparation(order, data, fixedvars, fixedvars_colnum, intercept, in_sample_mask, panel_id, panel_id_column, outsample)
     depvar_out, expvars_out = nothing, nothing
     cols = get_selected_cols(order)
     data_cols_num = size(data, 2)
@@ -25,9 +25,9 @@ function GSPR_data_preparation(order, data, fixedvars, fixedvars_colnum, interce
 end
 
 """
-Aggregation of main estimation instructions for inner loop in core.gsreg_single_proc_result!() function
+Aggregation of main estimation instructions for inner loop in core.gsreg_single_proc_result!() function V(1) : VCE_CLUSTER === NOTHING && VCE_ROBUST === NOTHING
 """
-function GSPR_main_estimation_block(depvar_data, expvars_data, depvar_out, expvars_out, nobs, ncoef, met, ttest, outsample)
+@inline function GSPR_main_estimation_block(depvar_data, expvars_data, depvar_out, expvars_out, nobs, ncoef, met, ttest, outsample, vce, panel_id_column)
     bstd, rmseout = nothing, nothing
     b, er, fact = ols(depvar_data, expvars_data, met)
     er2 = er .^ 2                           # squared errors
@@ -37,7 +37,13 @@ function GSPR_main_estimation_block(depvar_data, expvars_data, depvar_out, expva
     rmse = sqrt(sse / nobs)                 # root mean squared error
     r2 = 1 - var_er / var(depvar_data)      # model R-squared  
     if ttest
-        bstd = compute_beta_std(fact, met, sse, df_e, ncoef)
+        if vce === nothing
+            bstd = compute_beta_std(fact, met, sse, df_e, ncoef)
+        elseif vce == "cluster"
+            bstd = compute_beta_std_cluster(expvars_data, er, panel_id_column, fact, met)
+        else 
+            bstd = compute_beta_std_robust(expvars_data, er, fact, met)
+        end
     end
     if outsample > 0
         erout = depvar_out - expvars_out * b          # out-of-sample residuals
@@ -47,10 +53,11 @@ function GSPR_main_estimation_block(depvar_data, expvars_data, depvar_out, expva
     return b, er, er2, sse, var_er, rmse, r2, bstd, rmseout
 end
 
+
 """
 Code for residual tests in inner loop in core.gsreg_single_proc_result!() function
 """
-function GSPR_residual_tests(residualtests, panel_id, cols, intercept, in_sample_maskdiff, datadiff, er, expvars_data, b, er2, met, nobs, id_count, panel_id_column,var_er, time)
+function GSPR_residual_tests(residualtests, panel_id, cols, intercept, in_sample_maskdiff, datadiff, panel_id_columndiff, er, expvars_data, b, er2, met, nobs, id_count, panel_id_column,var_er, time)
     jbtest, wtest, panelwtest, bgtest, wootest = nothing, nothing, nothing, nothing, nothing
     if residualtests !== nothing && residualtests
         # Normality test
@@ -77,31 +84,32 @@ function GSPR_residual_tests(residualtests, panel_id, cols, intercept, in_sample
                 # Breusch-Godfrey serial correlation test
                 lag = 1
                 elag = zeros(Float64, nobs, lag)
-                for i in 1:lag  # construct lagged residuals
-                    elag[i+1:end, ii] = er[1:end-i]
+                @inbounds @simd for i in 1:lag  # construct lagged residuals
+                    elag[i+1:end, i] = er[1:end-i]
                 end
                 regmatbg = [expvars_data[lag+1:end, :] elag[lag+1:end, :]]
-                residbg = ols_small(e[lag+1:end], regmatbg, met)
-                rsqbg = 1 - dot(residbg, residbg) / dot(e[lag+1:end], e[lag+1:end]) # uncentered R^2
+                residbg = ols_small(er[lag+1:end], regmatbg, met)
+                rsqbg = 1 - dot(residbg, residbg) / dot(er[lag+1:end], er[lag+1:end]) # uncentered R^2
                 statisticbg = (nobs - lag) * rsqbg
                 bgtest = ccdf(Chisq(lag), statisticbg)
             end
         else
             # Panel heteroskedasticity test (Wald statistic - based on Stata xttest3 package)
+            T=eltype(er)
             si = zeros(nobs)            # ML variance for each observation
             incremental_count = zeros(Int, id_count)
             iota = zeros(Int, nobs)  # Count of observations per unit for each observation
-            v = Vector{Union{Float64, Missing}}(undef, nobs)  # Variance for each observation
-            wald = Vector{Union{Float64, Missing}}(undef, id_count)
+            v = Vector{Union{T, Missing}}(undef, nobs)  # Variance for each observation
+            wald = Vector{Union{T, Missing}}(undef, id_count)
             sums_er2data = [(panel_id_column[i], er2[i]) for i in 1:nobs]
             counts_panel_id_data = [(panel_id_column[i], 1) for i in 1:nobs]
-            e2_sum = reduce(aggregate_sums_counts, sums_er2data, init=zeros(Float32, id_count))
+            e2_sum = reduce(aggregate_sums_counts, sums_er2data, init=zeros(T, id_count))
             count = reduce(aggregate_sums_counts, counts_panel_id_data, init=zeros(Int, id_count))
             si .= e2_sum[panel_id_column] ./ count[panel_id_column]
             esig = (er2 .- si) .^ 2
             esigTuple = [(panel_id_column[i], esig[i]) for i in 1:nobs]
-            sum_esig = reduce(aggregate_sums_counts, esigTuple, init=zeros(Float32, id_count))
-            for i in 1:nobs
+            sum_esig = reduce(aggregate_sums_counts, esigTuple, init=zeros(T, id_count))
+            @inbounds @simd for i in 1:nobs
                 id = panel_id_column[i]
                 incremental_count[id] += 1
                 v[i] = sum_esig[id] / incremental_count[id]
@@ -111,8 +119,8 @@ function GSPR_residual_tests(residualtests, panel_id, cols, intercept, in_sample
                 end
             end
             panel_id_indices = [(panel_id_column[i], i) for i in 1:nobs]
-            v_reduced = reduce((acc, x) -> extract_last_observation(acc, x, v), panel_id_indices; init=zeros(Float32, id_count))
-            si_reduced = reduce((acc, x) -> extract_last_observation(acc, x, si), panel_id_indices; init=zeros(Float32, id_count))
+            v_reduced = reduce((acc, x) -> extract_last_observation(acc, x, v), panel_id_indices; init=zeros(T, id_count))
+            si_reduced = reduce((acc, x) -> extract_last_observation(acc, x, si), panel_id_indices; init=zeros(T, id_count))
             siS = (si_reduced .- var_er * (nobs - 1) / nobs) .^ 2
             wald .= siS ./ v_reduced  
             waldval = sum((wald))
@@ -128,20 +136,23 @@ function GSPR_residual_tests(residualtests, panel_id, cols, intercept, in_sample
             expvars_datadiff = @view(datadiff[in_sample_maskdiff, colsdiff])
             wooer = ols_small(depvar_datadiff, expvars_datadiff, met)
             lagwooer = [zero(eltype(wooer)); wooer[1:end-1]]
-            change_indices = vcat(1, findall(diff(panel_id_column) .!= 0) .+ 1)
+            change_indices = vcat(1, findall(diff(panel_id_columndiff) .!= 0) .+ 1)
             mask = trues(length(lagwooer))
             mask[change_indices] .= false
-            lagwooer = lagwooer[mask]
-            wooer = wooer[mask]
-            wooer_res = ols_small(wooer, lagwooer, met)
-            sse_unrestricted = sum(wooer_res .^ 2)
-            fitted_wooer_restricted = lagwooer * -0.5
-            wooer_res_restricted = wooer - fitted_wooer_restricted
-            sse_restricted = sum(wooer_res_restricted .^ 2)
+            lagwooer = @view(lagwooer[mask])
+            wooer = @view(wooer[mask])
+            panel_id_columndiff = @view(panel_id_columndiff[mask])
+            lagwooer = reshape(lagwooer, :, 1)  # Reshape to a column vector (matrix with one column)
+            β_hat, wooer_new, fact = ols(wooer, lagwooer, met)
+            β_hat_lag = β_hat[1]
+            #sse = sum(wooer_new .^ 2)
             df1 = 1
-            df2 =  length(wooer) - 1
-            F_stat = ((sse_restricted - sse_unrestricted) / df1) / (sse_unrestricted / df2)
-            wootest = 1 - cdf(FDist(df1, df2), F_stat)
+            df2 = length(unique(panel_id_columndiff)) - df1
+            se_β_hat =  compute_beta_std_cluster(lagwooer, wooer_new, panel_id_columndiff, fact, met)
+            se_β_hat_lag = se_β_hat[1]
+            wald_stat_wool = ((β_hat_lag + 0.5) / se_β_hat_lag)^2
+            F_stat_Wool = wald_stat_wool / df1  # df1 = 1 for single coefficient test
+            wootest = 1 - cdf(FDist(df1, df2), F_stat_Wool)
         end
     end
     return jbtest, wtest, panelwtest, bgtest, wootest
@@ -160,16 +171,22 @@ function GSPR_panel_tests(paneltests, SSB, id_count, sse, nobs, ncoef, unique_ti
         id_dict = Dict(g => i for (i, g) in enumerate(unique_ids))
         T = eltype(er)  # This will give you the type of elements in `er`
         e_wide = Array{Union{Missing, T}}(missing, n_times, n_groups)
-        for i in 1:nobs
+        @inbounds @simd for i in 1:nobs
             time_idx = time_dict[time_column[i]]
             group_idx = id_dict[panel_id_column[i]]
             e_wide[time_idx, group_idx] = er[i]
         end
-        valid_rows_mask = Bool[]  # Initialize an empty boolean array
-        for row in eachrow(e_wide)
+        #valid_rows_mask = Bool[]  # Initialize an empty boolean array
+        #=
+        @inbounds @simd for row in eachrow(e_wide)
             push!(valid_rows_mask, all(!ismissing, row))
         end
-        e_wide_valid_rows = e_wide[valid_rows_mask, :]
+        =#
+        valid_rows_mask = Vector{Bool}(undef, n_times)
+        @inbounds @simd for row_idx in 1:n_times
+            valid_rows_mask[row_idx] = all(!ismissing, e_wide[row_idx, :])
+        end
+        e_wide_valid_rows = @view(e_wide[valid_rows_mask, :])
         means = mean(e_wide_valid_rows, dims=1)
         centered_data = e_wide_valid_rows .- means
         n = size(e_wide_valid_rows, 1)  # Number of observations (rows)
@@ -441,6 +458,7 @@ Function ols for ordinary least squares regression.
 # Returns
 - A tuple with the estimated coefficients and the residuals.
 """
+
 @inline function ols(y, x, met)
     @inbounds @views begin
         if met == 'q'
@@ -462,10 +480,9 @@ end
 @inline function ols_small(y, x, met)
     @inbounds @views begin
         # Ensure `x` is a 2D matrix
-        if length(size(x)) == 1
-            x = reshape(x, :, 1)  # Reshape to a column vector (matrix with one column)
-        end
-        
+        #if length(size(x)) == 1
+        #    x = reshape(x, :, 1)  # Reshape to a column vector (matrix with one column)
+        #end     
         if met == 'q'
             er = y - x * (qr(x) \ y)
         elseif met == 'c'
@@ -480,9 +497,6 @@ end
 end
 
 
-
-
-
 """
 Function to compute standard deviation of coefficient 
 to be used in ttest estimation
@@ -495,7 +509,7 @@ to be used in ttest estimation
 # Returns
 - A vector with the standard deviation of the coefficients.
 """
-function compute_beta_std(fact, met, sse, df_e, ncoef)
+@inline function compute_beta_std(fact, met, sse, df_e, ncoef)
     if met == 'q'
         R_inv = UpperTriangular(fact.R) \ I(ncoef)
         diagvcov = sum(R_inv .^ 2, dims = 2) * (sse / df_e)
@@ -510,8 +524,62 @@ function compute_beta_std(fact, met, sse, df_e, ncoef)
     return bstd
 end
 
+@inline function bread(factor_object, met)
+    if met == 'q'
+        R = factor_object.R
+        return R \ (R' \ I(size(R, 1)))
+    elseif met == 'c'
+        U = factor_object.U
+        return U \ (U' \ I(size(U, 1)))
+    else
+        S = factor_object.S
+        V = factor_object.V
+        return V * Diagonal(1.0 ./ (S.^2)) * V'
+    end
+end
 
+@inline function clustered_covariance(X::AbstractMatrix, residuals, panel_id_column, factor_object, met)
+    T=eltype(X)
+    unique_clusters = unique(panel_id_column)
+    cluster_count = length(unique_clusters)
+    nobs, nvars = size(X)
+    sandwich_middle = zeros(T, nvars, nvars)
+    @inbounds @simd for cluster in unique_clusters
+        cluster_indices = findall(panel_id_column .== cluster)
+        X_c = X[cluster_indices, :]
+        u_c = residuals[cluster_indices]
+        sandwich_middle += X_c' * (u_c * u_c') * X_c
+    end
+    correction_factor = (cluster_count / (cluster_count - 1)) * (nobs - 1) / nobs
+    sandwich_middle *= correction_factor
+    bread_mat = bread(factor_object, met)
+    clustered_cov = (bread_mat * sandwich_middle * bread_mat) / (nobs^2)
+    return (clustered_cov + clustered_cov') / 2
+end
 
+# Function to compute clustered standard errors
+@inline function compute_beta_std_cluster(X_matrix, residuals, panel_id_column, factor_object, met)
+    clustered_cov = clustered_covariance(X_matrix, residuals, panel_id_column, factor_object, met)
+    clustered_variances = diag(clustered_cov)
+    bstd = sqrt.(clustered_variances)
+    return bstd
+end
+
+@inline function robust_covariance(X, residuals, factor_object, met)
+    nobs, nvars = size(X)
+    xe = X .* residuals  # Element-wise multiplication of X by residuals
+    sandwich_middle = (xe' * xe) / nobs  # Sandwich middle part
+    bread_mat = bread(factor_object, met)
+    white_cov = (bread_mat * sandwich_middle * bread_mat) / nobs
+    return (white_cov + white_cov') / 2
+end
+
+@inline function compute_beta_std_robust(X_matrix, residuals, factor_object, met)
+    white_cov = robust_covariance(X_matrix, residuals, factor_object, met)
+    white_variances = diag(white_cov)
+    bstd = sqrt.(white_variances)
+    return bstd
+end
 
 """
 Converts a multiformat equation string to a list of variables and/or wildcards.
@@ -708,16 +776,11 @@ Removes rows that has empty values.
 function filter_rows_with_empty_values(data::Union{DataFrames.DataFrame, Array})
 	if isa(data, DataFrames.DataFrame)
 		data = data[completecases(data), :]
-	elseif isa(data, Array{Union{Missing, Float64}, 2})
-		for i in axes(data, 2)
-			data = data[map(b -> !b, ismissing.(data[:, i])), :]
+	else
+		@inbounds @simd for i in axes(data, 2)
+            data = data[.!ismissing.(data[:, i]) .& (data[:, i] .!= ""), :]
 		end
-	elseif isa(data, Array)
-		for i in in
-			axes(data, 2)
-			data = data[data[:, i].!="", :]
-		end
-	end
+    end
 	return data
 end
 
@@ -758,15 +821,16 @@ function within_transformation(data::Matrix{Float64}, panel_id_column::Vector{In
     return transformed_data
 end
 
-    function firstdiff_transformation(data::Matrix{Float64}, panel_id_column::Vector{Int})
-        diff_data = diff(data, dims=1)
-        change_indices = vcat(1, findall(diff(panel_id_column) .!= 0) .+ 1)
-        mask = trues(size(diff_data, 1))
-        mask[change_indices] .= false
-        transformed_data = diff_data[mask, :]
-        transformed_panel_id_column = panel_id_column[2:end][mask]
-        return transformed_data, transformed_panel_id_column
-    end
+function firstdiff_transformation(data::Matrix{Float64}, panel_id_column::Vector{Int})
+    diff_data = diff(data, dims=1)
+    change_indices = findall(diff(panel_id_column) .!= 0)
+    mask = trues(size(diff_data, 1))
+    mask[change_indices] .= false
+    transformed_data = diff_data[mask, :]
+    transformed_panel_id_column = panel_id_column[2:end][mask]
+    return transformed_data, transformed_panel_id_column
+end
+
 
 """
 Gets the position of a variable in datanames.
@@ -961,7 +1025,7 @@ function in_sample_mask_func(panel_id_column::Union{Nothing, Vector{Int}}, id_co
 end
 
 # Helper functions for validation and preprocessing
-function validate_parameters(estimator, equation, panel_id, data, datanames, time, criteria, outsample, parallel, paneltests, expvars, fixedvars)
+function validate_parameters(estimator, equation, panel_id, data, datanames, time, criteria, outsample, parallel, paneltests, expvars, fixedvars, vce)
     if (equation == "") || (data === nothing)
         error(EQUATION_OR_DATA_NOT_DEFINED)
     end
@@ -1005,6 +1069,12 @@ function validate_parameters(estimator, equation, panel_id, data, datanames, tim
     end
     if fixedvars !== nothing && in_vector([fixedvars], expvars)
         error(SELECTED_FIXED_VARIABLES_IN_EQUATION)
+    end
+    if vce !== nothing && vce ∉ AVAILABLE_VCE
+        error(INVALID_VCE)
+    end
+    if vce === "cluster" && panel_id === nothing
+        error(CLUSTER_WITHOUT_PANEL_ID)
     end
 end
 
@@ -1075,7 +1145,7 @@ function preprocess_data(data, depvar, expvars, datanames, time, panel_id, panel
             push!(fixedvars_colnum, i)
         end
     end
-    return data, datadiff, panel_id_column, id_count, SSB, in_sample_mask, in_sample_maskdiff, unique_ids, unique_times, time_column, fixedvars_colnum
+    return data, datadiff, panel_id_column, panel_id_columndiff , id_count, SSB, in_sample_mask, in_sample_maskdiff, unique_ids, unique_times, time_column, fixedvars_colnum
 end
 
 function finalize_data(data, equation, datanames, expvars)
